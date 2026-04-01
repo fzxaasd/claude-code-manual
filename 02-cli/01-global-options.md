@@ -15,7 +15,6 @@ claude [options] [command] [prompt]
 | 参数 | 说明 | 示例 |
 |------|------|------|
 | `--add-dir <dirs...>` | 允许访问的额外目录（可重复） | `--add-dir /data/projects` |
-| `--api-key <key>` | 直接指定 API Key | `--api-key sk-ant-...` |
 | `--model <model>` | 指定模型 | `--model sonnet` |
 | `--fallback-model <model>` | 模型过载时的备用模型 | `--fallback-model opus` |
 

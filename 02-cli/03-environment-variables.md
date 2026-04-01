@@ -1,6 +1,6 @@
 # 2.3 环境变量
 
-> Claude Code 环境变量完整参考
+> Claude Code 环境变量完整参考（基于源码验证）
 
 ---
 
@@ -30,6 +30,14 @@ export ANTHROPIC_BASE_URL=https://api.anthropic.com
 export ANTHROPIC_BASE_URL=http://localhost:8080
 ```
 
+### `ANTHROPIC_AUTH_TOKEN`
+
+认证令牌（用于内部通信）。
+
+```bash
+export ANTHROPIC_AUTH_TOKEN=<token>
+```
+
 ### `ANTHROPIC_MODEL`
 
 指定默认模型。
@@ -47,11 +55,155 @@ export ANTHROPIC_MODEL=claude-haiku-4-20250507
 
 ---
 
-## 权限相关
+## 配置相关
 
-### CLI 参数设置权限模式
+### `CLAUDE_CONFIG_DIR`
 
-**注意**: `CLAUDE_PERMISSION_MODE` 环境变量 **不存在**。权限模式通过以下方式设置：
+配置目录位置。
+
+```bash
+# 默认值
+export CLAUDE_CONFIG_DIR=~/.claude
+
+# 项目配置优先
+export CLAUDE_CONFIG_DIR=.claude
+```
+
+### `CLAUDE_CODE_SIMPLE`
+
+简化模式（禁用高级功能）。
+
+```bash
+export CLAUDE_CODE_SIMPLE=1
+```
+
+---
+
+## 代理相关
+
+### `HTTP_PROXY` / `HTTPS_PROXY`
+
+HTTP/HTTPS 代理。
+
+```bash
+export HTTP_PROXY=http://proxy.example.com:8080
+export HTTPS_PROXY=http://proxy.example.com:8080
+```
+
+### `NO_PROXY`
+
+跳过代理的地址。
+
+```bash
+export NO_PROXY=localhost,127.0.0.1,.local
+```
+
+---
+
+## 功能开关
+
+### `CLAUDE_CODE_ENABLE_TASKS`
+
+启用 Tasks V2 系统。
+
+```bash
+export CLAUDE_CODE_ENABLE_TASKS=true
+```
+
+### `CLAUDE_CODE_PROACTIVE`
+
+启用主动模式。
+
+```bash
+export CLAUDE_CODE_PROACTIVE=1
+```
+
+### `CLAUDE_CODE_BRIEF`
+
+启用简短模式。
+
+```bash
+export CLAUDE_CODE_BRIEF=1
+```
+
+### `CLAUDE_CODE_DISABLE_TERMINAL_TITLE`
+
+禁用终端标题更新。
+
+```bash
+export CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1
+```
+
+---
+
+## Plan Mode 相关
+
+### `CLAUDE_CODE_PLAN_V2_AGENT_COUNT`
+
+Plan Mode V2 Agent 数量。
+
+```bash
+export CLAUDE_CODE_PLAN_V2_AGENT_COUNT=3
+```
+
+### `CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT`
+
+Plan Mode V2 探索 Agent 数量。
+
+```bash
+export CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT=5
+```
+
+### `CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE`
+
+启用 Plan Mode 面试阶段。
+
+```bash
+export CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=1
+```
+
+---
+
+## CLI 功能标志
+
+### `CLAUDE_CODE_CLI`
+
+启用 CLI 模式。
+
+```bash
+export CLAUDE_CODE_CLI=1
+```
+
+---
+
+## 已验证不存在的环境变量
+
+以下环境变量**不存在**于 Claude Code 源码中：
+
+| 变量名 | 说明 |
+|--------|------|
+| `CLAUDE_SESSION_DIR` | ❌ 不存在 |
+| `CLAUDE_SESSION_TIMEOUT` | ❌ 不存在 |
+| `CLAUDE_SETTINGS_FILE` | ❌ 不存在 |
+| `CLAUDE_DEBUG` | ❌ 不是正式环境变量 |
+| `CLAUDE_LOG_LEVEL` | ❌ 不存在 |
+| `CLAUDE_LOG_FILE` | ❌ 不存在 |
+| `CLAUDE_TOOL_TIMEOUT` | ❌ 不存在 |
+| `CLAUDE_BROWSER_TOOL` | ❌ 不存在 |
+| `CLAUDE_THEME` | ❌ 不存在 |
+| `CLAUDE_COLOR_OUTPUT` | ❌ 不存在 |
+| `CLAUDE_HOOKS_DIR` | ❌ 不存在 |
+| `CLAUDE_HOOK_TIMEOUT` | ❌ 不存在 |
+| `CLAUDE_FEATURE_FLAGS` | ❌ 不存在 |
+| `MCP_SERVERS` | ❌ 不存在 |
+| `MCP_SERVER_TIMEOUT` | ❌ 不存在 |
+| `CLAUDE_PERMISSION_MODE` | ❌ 不存在，应使用 `--permission-mode` CLI 参数 |
+
+---
+
+## 权限配置
+
+**注意**: `CLAUDE_PERMISSION_MODE` 环境变量**不存在**。权限模式通过以下方式设置：
 
 ```bash
 # CLI 参数
@@ -78,262 +230,21 @@ claude --permission-mode dontAsk
 
 ---
 
-## 会话相关
-
-### `CLAUDE_SESSION_DIR`
-
-会话存储目录。
-
-```bash
-# 默认值
-export CLAUDE_SESSION_DIR=~/.claude/sessions
-
-# 自定义位置
-export CLAUDE_SESSION_DIR=/mnt/sessions
-```
-
-### `CLAUDE_SESSION_TIMEOUT`
-
-会话超时时间（秒）。
-
-```bash
-export CLAUDE_SESSION_TIMEOUT=3600
-```
-
----
-
-## 配置相关
-
-### `CLAUDE_CONFIG_DIR`
-
-配置目录位置。
-
-```bash
-# 默认值
-export CLAUDE_CONFIG_DIR=~/.claude
-
-# 项目配置优先
-export CLAUDE_CONFIG_DIR=.claude
-```
-
-### `CLAUDE_SETTINGS_FILE`
-
-指定设置文件路径。
-
-```bash
-export CLAUDE_SETTINGS_FILE=~/.claude/custom-settings.json
-```
-
----
-
-## MCP 相关
-
-### `MCP_SERVERS`
-
-逗号分隔的 MCP 服务器列表。
-
-```bash
-export MCP_SERVERS=github,filesystem,slack
-```
-
-### `MCP_SERVER_TIMEOUT`
-
-MCP 服务器超时时间（毫秒）。
-
-```bash
-export MCP_SERVER_TIMEOUT=30000
-```
-
----
-
-## 调试相关
-
-### `CLAUDE_DEBUG`
-
-启用调试模式。
-
-```bash
-# 启用所有调试
-export CLAUDE_DEBUG=1
-
-# 启用特定调试
-export CLAUDE_DEBUG=hooks,tools,agent
-
-# 禁用
-unset CLAUDE_DEBUG
-```
-
-### `CLAUDE_LOG_LEVEL`
-
-日志级别。
-
-```bash
-export CLAUDE_LOG_LEVEL=debug
-export CLAUDE_LOG_LEVEL=info
-export CLAUDE_LOG_LEVEL=warn
-export CLAUDE_LOG_LEVEL=error
-```
-
-### `CLAUDE_LOG_FILE`
-
-日志输出文件。
-
-```bash
-export CLAUDE_LOG_FILE=/tmp/claude-debug.log
-```
-
----
-
-## 代理相关
-
-### `HTTP_PROXY` / `HTTPS_PROXY`
-
-HTTP/HTTPS 代理。
-
-```bash
-export HTTP_PROXY=http://proxy.example.com:8080
-export HTTPS_PROXY=http://proxy.example.com:8080
-```
-
-### `NO_PROXY`
-
-跳过代理的地址。
-
-```bash
-export NO_PROXY=localhost,127.0.0.1,.local
-```
-
----
-
-## 工具相关
-
-### `CLAUDE_TOOL_TIMEOUT`
-
-工具默认超时（毫秒）。
-
-```bash
-export CLAUDE_TOOL_TIMEOUT=60000
-```
-
-### `CLAUDE_BROWSER_TOOL`
-
-浏览器工具实现。
-
-```bash
-export CLAUDE_BROWSER_TOOL=playwright
-export CLAUDE_BROWSER_TOOL=selenium
-export CLAUDE_BROWSER_TOOL=none
-```
-
----
-
-## 用户界面
-
-### `CLAUDE_THEME`
-
-UI 主题。
-
-```bash
-export CLAUDE_THEME=dark
-export CLAUDE_THEME=light
-export CLAUDE_THEME=auto
-```
-
-### `CLAUDE_COLOR_OUTPUT`
-
-启用彩色输出。
-
-```bash
-export CLAUDE_COLOR_OUTPUT=1
-```
-
----
-
-## Hooks 相关
-
-### `CLAUDE_HOOKS_DIR`
-
-Hooks 脚本目录。
-
-```bash
-export CLAUDE_HOOKS_DIR=~/.claude/hooks
-```
-
-### `CLAUDE_HOOK_TIMEOUT`
-
-Hook 执行超时（毫秒）。
-
-```bash
-export CLAUDE_HOOK_TIMEOUT=30000
-```
-
----
-
-## 实验性功能
-
-### `CLAUDE_FEATURE_FLAGS`
-
-启用实验性功能。
-
-```bash
-export CLAUDE_FEATURE_FLAGS=multi-agent,advanced-compact
-```
-
----
-
 ## 完整环境变量配置示例
 
 ```bash
 # ~/.zshrc 或 ~/.bashrc
 
-# API 配置
+# API 配置 (必需)
 export ANTHROPIC_API_KEY=sk-ant-xxxxx
 export ANTHROPIC_BASE_URL=https://api.anthropic.com
-
-# 权限配置 (使用 CLI: --permission-mode 或 settings.json)
-# export CLAUDE_PERMISSION_MODE=ask  # 此环境变量不存在
-
-# 调试配置
-export CLAUDE_DEBUG=0
-export CLAUDE_LOG_LEVEL=info
-
-# 会话配置
-export CLAUDE_SESSION_DIR=~/.claude/sessions
 
 # 代理配置（如果需要）
 export HTTP_PROXY=http://localhost:8080
 export HTTPS_PROXY=http://localhost:8080
 
-# MCP 配置
-export MCP_SERVER_TIMEOUT=30000
-```
-
----
-
-## 跨平台配置
-
-### macOS (~/.zshrc)
-
-```bash
-echo 'export ANTHROPIC_API_KEY=sk-ant-xxxxx' >> ~/.zshrc
-source ~/.zshrc
-```
-
-### Linux (~/.bashrc)
-
-```bash
-echo 'export ANTHROPIC_API_KEY=sk-ant-xxxxx' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### Windows (PowerShell)
-
-```powershell
-[Environment]::SetEnvironmentVariable(
-    "ANTHROPIC_API_KEY",
-    "sk-ant-xxxxx",
-    "User"
-)
+# 配置目录
+export CLAUDE_CONFIG_DIR=~/.claude
 ```
 
 ---
@@ -358,7 +269,7 @@ op run -- echo $ANTHROPIC_API_KEY
 # 创建 .env 文件
 cat > ~/.claude/.env << 'EOF'
 ANTHROPIC_API_KEY=sk-ant-xxxxx
-# 注意: CLAUDE_PERMISSION_MODE 环境变量不存在，使用 --permission-mode CLI 参数
+ANTHROPIC_BASE_URL=https://api.anthropic.com
 EOF
 
 # 加载
@@ -378,7 +289,7 @@ set +a
 echo $ANTHROPIC_API_KEY
 
 # 检查配置文件
-cat ~/.zshrc | grep CLAUDE
+cat ~/.zshrc | grep ANTHROPIC
 
 # 重新加载
 source ~/.zshrc
