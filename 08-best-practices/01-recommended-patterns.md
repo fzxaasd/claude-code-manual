@@ -94,22 +94,30 @@ layers/
 
 ### 1. 分层配置
 
+**注意**: `permissionMode` 不存在！正确字段是 `permissions.defaultMode`。
+
 ```json
 // ~/.claude/settings.json (用户级)
 {
-  "permissionMode": "ask",
+  "permissions": {
+    "defaultMode": "default"
+  },
   "model": "sonnet"
 }
 
 // .claude/settings.json (项目级)
 {
-  "permissionMode": "dontAsk",
-  "permissions": {...}
+  "permissions": {
+    "defaultMode": "dontAsk",
+    ...
+  }
 }
 
 // .claude/settings.local.json (本地)
 {
-  "permissionMode": "acceptEdits"
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  }
 }
 ```
 
@@ -277,10 +285,12 @@ Claude (修复者)
 
 ### 1. 最小权限原则
 
+**注意**: `permissionMode` 不存在！正确字段是 `permissions.defaultMode`。
+
 ```json
 {
-  "permissionMode": "dontAsk",
   "permissions": {
+    "defaultMode": "dontAsk",
     "allow": ["Read", "Glob", "Grep"],
     "deny": ["Write", "Bash"]
   }
@@ -458,12 +468,14 @@ function calculateTotal(items: Item[]): number
 
 ### 项目初始化模板
 
+**注意**: `permissionMode` 不存在！正确字段是 `permissions.defaultMode`。
+
 ```bash
 mkdir -p .claude
 cat > .claude/settings.json << 'EOF'
 {
-  "permissionMode": "ask",
   "permissions": {
+    "defaultMode": "default",
     "allow": ["Read", "Write", "Edit", "Glob", "Grep"],
     "deny": ["Bash(rm -rf *)"]
   }
