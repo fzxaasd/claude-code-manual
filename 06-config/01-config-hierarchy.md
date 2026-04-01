@@ -2,38 +2,15 @@
 
 > Claude Code 配置系统深度解析
 
-## 配置来源优先级
+## 重要说明：不同配置类型有不同的优先级
 
-Claude Code 有 6 种配置来源，按优先级从低到高排列：
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  1. pluginSettings       (插件配置)                              │
-├─────────────────────────────────────────────────────────────────┤
-│  2. userSettings          (~/.claude/settings.json)           │
-├─────────────────────────────────────────────────────────────────┤
-│  3. projectSettings       (.claude/settings.json)              │
-├─────────────────────────────────────────────────────────────────┤
-│  4. localSettings         (.claude/settings.local.json)       │
-├─────────────────────────────────────────────────────────────────┤
-│  5. flagSettings          (--settings CLI 参数)               │
-├─────────────────────────────────────────────────────────────────┤
-│  6. policySettings        (managed-settings.json / API)        │
-│                          ← 最高优先级                         │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**注意**: flagSettings 和 policySettings 始终加载，不受 `--setting-sources` 控制。
-
-**注意**：权限规则（allow/deny/ask）的保存位置有单独的优先级：
-
-```
-localSettings > projectSettings > userSettings
-```
+**Claude Code 的不同配置类型有不同的优先级规则，不能用单一的 6 层优先级描述。**
 
 ---
 
-## 配置文件位置
+## 配置来源
+
+Claude Code 有 6 种配置来源：
 
 | 来源 | 文件路径 | 说明 |
 |------|----------|------|
@@ -42,10 +19,47 @@ localSettings > projectSettings > userSettings
 | Local | `.claude/settings.local.json` | 本地配置，gitignored |
 | Flag | CLI `--settings` 参数 | 临时配置 |
 | Policy | `managed-settings.json` | 企业管理配置（只读） |
+| Plugin | 插件内置配置 | 来自插件的默认配置 |
 
 ---
 
-## 配置文件路径解析
+## 不同配置类型的优先级规则
+
+### 1. Hooks 优先级
+
+```
+policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+```
+
+**特点**：policy 和 flag 设置优先级最高。
+
+### 2. Permissions 优先级
+
+```
+userSettings > projectSettings > localSettings > flagSettings > policySettings
+```
+
+**特点**：user 设置优先级最高（用户自主权优先）。
+
+### 3. Skills 优先级
+
+```
+policySettings > userSettings > projectSettings > bundled > plugin
+```
+
+**特点**：bundled skills 优先级高于 plugin skills。
+
+### 4. General Settings 优先级
+
+```
+policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+```
+
+**特点**：policy 设置优先级最高。
+
+---
+
+## 配置路径解析
 
 ```typescript
 // 从源码 src/utils/settings/constants.ts
@@ -177,19 +191,21 @@ Hooks、allowedMcpServers 等数组字段会合并：
 
 ---
 
-## 权限规则优先级
+## 权限规则执行优先级
 
-权限规则（allow/deny）有自己的保存优先级：
-
-```
-localSettings > projectSettings > userSettings
-```
-
-**但执行优先级相反**：
+权限规则的**执行**优先级（deny 总是优先于 allow）：
 
 ```
-deny > allow  // deny 总是优先
+deny > allow  // deny 规则总是优先
 ```
+
+### 权限配置的加载优先级
+
+```
+userSettings > projectSettings > localSettings > flagSettings > policySettings
+```
+
+**注意**：用户设置优先级最高（用户自主权优先），policy 设置优先级最低（不能覆盖用户选择）。
 
 ### 示例
 
@@ -218,7 +234,7 @@ deny > allow  // deny 总是优先
 
 // 最终权限结果
 允许: Bash(git *), Bash(npm *)
-拒绝: Bash(rm *), Bash(rm -rf *)  // 最终拒绝更严格
+拒绝: Bash(rm *), Bash(rm -rf *)  // deny 规则优先
 ```
 
 ---

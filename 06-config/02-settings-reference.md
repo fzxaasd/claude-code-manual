@@ -150,7 +150,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
   },
   "useAutoModeDuringPlan": true,  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated
   "skipAutoPermissionPrompt": false,  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated
-  "disableAutoMode": "disable",  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated（权限层级）
+  "disableAutoMode": "disable",  // ⚠️ 顶层字段，不是 permissions 子字段
 
   // === 安全 ===
   "skipWebFetchPreflight": false,
@@ -253,7 +253,8 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | `defaultMode` | enum | 默认权限模式 (default/acceptEdits/bypassPermissions/dontAsk/plan/auto) |
 | `disableBypassPermissionsMode` | "disable" | 禁用绕过权限模式 |
 | `additionalDirectories` | string[] | 额外允许访问的目录 |
-| `disableAutoMode` | "disable" | ⚠️ 禁用自动模式（TRANSCRIPT_CLASSIFIER feature-gated，ANT 用户） |
+
+> **注意**: `disableAutoMode` 是**顶层字段**，不是 `permissions` 的子字段。 |
 
 > **注意**: `defaultMode: "auto"` 是 TRANSCRIPT_CLASSIFIER feature-gated，仅 ANT 用户可用。
 
@@ -342,7 +343,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | `autoMode` | 自动权限模式配置 |
 | `useAutoModeDuringPlan` | 规划阶段启用自动模式 |
 | `skipAutoPermissionPrompt` | 跳过自动模式权限确认 |
-| `disableAutoMode` | 设置为 `"disable"` 可完全禁用自动模式（permissions 层级） |
+| `disableAutoMode` | 设置为 `"disable"` 可完全禁用自动模式（**顶层字段**） |
 
 ### 12. 企业管理配置
 
