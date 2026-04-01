@@ -1,0 +1,454 @@
+# 7.7 Plan Mode (计划模式)
+
+> 基于源码 `src/tools/EnterPlanModeTool/`, `src/tools/ExitPlanModeTool/`, `src/utils/planModeV2.ts`, `src/utils/plans.ts` 深度分析
+
+## 核心概念
+
+Plan Mode 是一种专为复杂任务设计的探索和规划模式，允许 Claude Code 在开始编写代码之前先理解代码库、探索方案、设计实现策略。
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                      Plan Mode 流程                          │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  1. 进入计划模式                                            │
+│     └── EnterPlanModeTool                                  │
+│         ├── 切换权限模式到 'plan'                          │
+│         └── 禁止写文件（除 plan 文件外）                    │
+│                                                            │
+│  2. 探索阶段                                               │
+│     ├── 探索代码库                                          │
+│     ├── 理解现有模式                                        │
+│     ├── 识别相似功能                                        │
+│     └── 设计多种方案及其权衡                                 │
+│                                                            │
+│  3. 编写计划                                               │
+│     └── 写入 ~/.claude/plans/{slug}.md                     │
+│                                                            │
+│  4. 退出计划模式                                            │
+│     └── ExitPlanModeV2Tool                                 │
+│         ├── 用户审批计划                                    │
+│         └── 恢复执行模式                                    │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 工具定义
+
+### EnterPlanModeTool
+
+基于 `src/tools/EnterPlanModeTool/EnterPlanModeTool.ts`：
+
+```typescript
+interface EnterPlanModeTool {
+  name: "EnterPlanMode"
+  input: {}                    // 无需参数
+  output: {
+    message: string            // 确认消息
+  }
+  enabled: boolean             // KAIROS channels 禁用
+  isReadOnly: true            // 只读模式
+}
+```
+
+**触发条件**：
+- `KAIROS` 或 `KAIROS_CHANNELS` feature 开启且有活跃 channel 时禁用
+- 子 Agent 上下文中不可用
+
+### ExitPlanModeV2Tool
+
+基于 `src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.ts`：
+
+```typescript
+interface ExitPlanModeV2Tool {
+  name: "ExitPlanMode"
+  input: {
+    allowedPrompts?: {         // 计划需要的语义权限 (新增)
+      tool: 'Bash'
+      prompt: string          // 如 "run tests"
+    }[]
+  }
+  output: {
+    plan: string | null        // 计划内容
+    isAgent: boolean           // 是否为子 Agent
+    filePath?: string          // 计划文件路径
+    hasTaskTool?: boolean      // AgentTool 是否可用
+    planWasEdited?: boolean    // 用户是否编辑过计划
+    awaitingLeaderApproval?: boolean  // 等待团队领导审批
+    requestId?: string         // 审批请求 ID
+  }
+  requiresUserInteraction: true  // 需要用户确认
+}
+```
+
+**新增参数 `allowedPrompts`**：
+- 用于在退出计划模式时请求特定的 Bash 权限
+- 例如：`{ tool: 'Bash', prompt: 'run tests' }` 请求运行测试的权限
+- 仅在 Teammate 模式下自动绕过权限 UI
+
+**权限验证**：
+- 仅在 `mode === 'plan'` 时可用
+- Teammate 模式下自动绕过权限 UI
+- 普通用户需要确认对话框
+
+---
+
+## 权限模式转换
+
+### Plan Mode 权限状态
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                  权限模式转换                                │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  default/acceptEdits/auto ──[EnterPlanMode]──> plan        │
+│                                                            │
+│  plan ──[ExitPlanMode 审批通过]──> 恢复 prePlanMode        │
+│                                                            │
+│  plan ──[ExitPlanMode 拒绝]──> 保持 plan 模式              │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+### Plan Mode 行为差异
+
+| 行为 | 普通模式 | Plan Mode |
+|------|---------|-----------|
+| 文件写入 | 正常 | 限制（仅 plan 文件） |
+| 工具执行 | 正常 | 受限 |
+| 权限检查 | 正常 | 额外验证 |
+| 计划审批 | 无 | 必须 |
+
+---
+
+## 计划文件管理
+
+### 计划目录
+
+基于 `src/utils/plans.ts`：
+
+```typescript
+// 配置：settings.json
+settings.plansDirectory: string  // 相对路径，默认 ~/.claude/plans/
+
+// 默认位置
+~/.claude/plans/
+```
+
+**路径验证**：
+- 必须位于项目根目录下
+- 防止路径遍历攻击
+
+### 计划文件名
+
+```typescript
+// 主会话计划
+getPlanFilePath(): `${slug}.md`
+// 如：swift-violet-bird.md
+
+// 子 Agent 计划
+getPlanFilePath(agentId): `${slug}-agent-${agentId}.md`
+// 如：swift-violet-bird-agent-subagent-1.md
+```
+
+### 计划恢复机制
+
+```
+┌────────────────────────────────────────────────────────────┐
+│                  计划文件恢复流程                            │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  1. 直接读取计划文件                                         │
+│     └── 成功 → 返回计划                                      │
+│                                                            │
+│  2. 文件不存在时尝试恢复                                     │
+│     ├── 远程会话 (CCR)                                       │
+│     │   └── 尝试从文件快照恢复                               │
+│     │       └── 尝试从消息历史恢复                           │
+│     │           └── 尝试从 plan_file_reference 恢复          │
+│     └── 本地会话 → 返回 null                                 │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+**恢复来源**：
+1. `ExitPlanMode` 工具输入中的 plan 字段
+2. UserMessage 的 `planContent` 字段
+3. `plan_file_reference` 附件
+
+---
+
+## V2 高级功能
+
+### Plan Mode V2 Agent 数量
+
+基于 `src/utils/planModeV2.ts`：
+
+```typescript
+// 根据订阅类型决定并行探索 Agent 数量
+getPlanModeV2AgentCount(): number
+
+// 返回值：
+// - CLAUDE_CODE_PLAN_V2_AGENT_COUNT 环境变量 (1-10)
+// - Claude Max + 20x 速率限制: 3
+// - Enterprise/Team 订阅: 3
+// - 其他: 1
+
+getPlanModeV2ExploreAgentCount(): number
+// 默认: 3 (可配置)
+```
+
+### Interview Phase (采访阶段)
+
+```typescript
+isPlanModeInterviewPhaseEnabled(): boolean
+
+// 启用条件（满足任一即可）：
+// 1. USER_TYPE === 'ant' (内部用户) - 始终启用
+// 2. CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=true 环境变量
+// 3. tengu_plan_mode_interview_phase feature flag
+
+// 功能：
+// - 在 5 阶段计划流程前增加采访阶段
+// - Claude 通过提问澄清需求
+// - 作为参考群体，不受 Pewter Ledger 实验影响
+```
+
+### Pewter Ledger (计划大小控制实验)
+
+```typescript
+type PewterLedgerVariant = 'trim' | 'cut' | 'cap' | null
+
+getPewterLedgerVariant(): PewterLedgerVariant
+// 控制 Phase 4 "Final Plan" 子弹数量
+// 实验目标：减少计划文件大小，提升用户接受率
+```
+
+**Pewter Ledger 实验详情**：
+
+```
+实验名称: tengu_pewter_ledger
+控制组: null
+实验组: 'trim' | 'cut' | 'cap' (逐步严格)
+
+实验臂说明：
+- trim: 修剪建议，去除冗余
+- cut: 精简内容，减少细节
+- cap: 硬性限制，最大子弹数
+
+基线数据 (14天, N=26.3M):
+- p50: 4,906 chars
+- p90: 11,617 chars
+- mean: 6,207 chars
+- 82% Opus 4.6
+
+拒绝率与大小关系:
+- <2K: 20%
+- 20K+: 50%
+
+主要指标: session-level Avg Cost (fact__201omjcij85f)
+- Opus 输出价格是输入的 5 倍
+- cost 是输出加权的代理指标
+
+护栏指标:
+- feedback-bad rate
+- requests/session (过薄计划 → 更多迭代)
+- tool error rate
+```
+
+**注意**：
+- Interview Phase (采访阶段) 不受 Pewter Ledger 实验影响
+- 作为参考群体，始终使用原始计划格式
+
+---
+
+## Teammate 集成
+
+### 团队领导审批流程
+
+```
+Agent 请求退出计划模式
+        ↓
+  isPlanModeRequired()?
+        ↓
+    Yes ────────── No
+     ↓              ↓
+发送 plan_approval_request  到 mailbox
+        ↓
+等待 team-lead 审批
+        ↓
+  收到审批响应
+        ↓
+继续执行 / 重新规划
+```
+
+### 权限特殊处理
+
+| 场景 | 权限行为 |
+|------|---------|
+| Teammate 调用 ExitPlanMode | 自动允许，发送审批请求 |
+| 非 Teammate 调用 | 显示确认对话框 |
+| plan_mode_required teammate | 必须有计划才能退出 |
+
+---
+
+## 配置选项
+
+### settings.json 配置
+
+```json
+{
+  // 计划文件目录 (相对于项目根目录)
+  "plansDirectory": ".claude/plans/",
+
+  // 显示上下文清除选项
+  "showClearContextOnPlanAccept": false,
+
+  // 计划模式期间使用自动模式
+  "useAutoModeDuringPlan": true,
+
+  // 跳过自动模式权限提示
+  "skipAutoPermissionPrompt": false
+}
+```
+
+### 环境变量
+
+| 变量 | 说明 | 值范围 |
+|------|------|--------|
+| `CLAUDE_CODE_PLAN_V2_AGENT_COUNT` | 并行探索 Agent 数 | 1-10 |
+| `CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT` | 探索 Agent 数 | 1-10 |
+| `CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE` | 启用采访阶段 | true/false |
+
+---
+
+## 使用示例
+
+### 进入计划模式
+
+```
+> 帮我重构整个认证系统
+
+# Claude Code 会调用 EnterPlanMode
+# 切换到只读探索模式
+```
+
+### 计划阶段操作
+
+```
+# 探索代码库
+Read src/auth/...
+
+# 理解现有模式
+Grep pattern "jwt" src/
+
+# 设计方案
+Write .claude/plans/xxx.md
+# 包含：
+# - 问题分析
+# - 方案对比
+# - 实现步骤
+# - 风险评估
+```
+
+### 退出计划模式
+
+```
+# 调用 ExitPlanMode
+# 用户审批计划
+# 开始实现
+```
+
+---
+
+## 最佳实践
+
+### 1. 计划文件结构
+
+```markdown
+# 认证系统重构计划
+
+## 问题分析
+- 当前认证逻辑耦合度高
+- JWT 刷新机制存在问题
+- 缺乏统一的错误处理
+
+## 方案对比
+
+### 方案 A：模块化重构
+优点：改动小，风险低
+缺点：无法根本解决问题
+
+### 方案 B：全新设计
+优点：架构清晰，易维护
+缺点：工作量大
+
+## 推荐方案
+方案 B，配合渐进式迁移
+
+## 实现步骤
+1. 创建新的 auth-core 模块
+2. 实现基础认证逻辑
+3. 迁移现有代码
+4. 更新测试
+5. 部署验证
+
+## 风险评估
+- 数据迁移风险 → 已准备回滚方案
+- 停机时间 → 蓝绿部署
+```
+
+### 2. 有效计划要点
+
+```
+✅ 明确的问题定义
+✅ 多种方案对比
+✅ 清晰的实现步骤
+✅ 风险评估和缓解措施
+✅ 时间/资源估算
+
+❌ 模糊的目标
+❌ 单一方案
+❌ 缺乏细节的实现步骤
+❌ 忽视潜在风险
+```
+
+### 3. 团队协作
+
+```
+1. Leader 创建任务 → 指定 Agent
+2. Agent 进入 Plan Mode → 编写计划
+3. Agent 调用 ExitPlanMode → 请求审批
+4. Leader 审批计划 → Agent 执行
+5. Leader 验收结果 → 任务完成
+```
+
+---
+
+## 与其他模式对比
+
+| 特性 | 普通模式 | Plan Mode | Auto Mode |
+|------|---------|-----------|-----------|
+| 文件写入 | 完全 | 仅 plan 文件 | 按规则自动 |
+| 权限提示 | 每次询问 | 计划审批 | 自动处理 |
+| 适用场景 | 简单任务 | 复杂重构 | 批量操作 |
+| 用户交互 | 高 | 中 | 低 |
+
+---
+
+## 测试验证
+
+验证 Plan Mode 配置：
+```bash
+# 检查计划目录
+ls ~/.claude/plans/
+
+# 查看计划文件
+cat ~/.claude/plans/xxx.md
+
+# 测试权限配置
+claude --debug permissions
+```
