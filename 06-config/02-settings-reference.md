@@ -73,9 +73,11 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
     "ask": [],
     "defaultMode": "default",
     "disableBypassPermissionsMode": "disable",
-    "additionalDirectories": ["path"],
-    "disableAutoMode": "disable"  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated（ANT 用户）
+    "additionalDirectories": ["path"]
   },
+
+  // === 自动模式 (TRANSCRIPT_CLASSIFIER feature-gated) ===
+  "disableAutoMode": "disable",  // 禁用自动模式（ANT 用户）
 
   // === Hooks ===
   "hooks": {
