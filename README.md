@@ -77,8 +77,8 @@
 | 实际有 **27 种 Hook 类型** | ⭐⭐⭐ | [Hook 类型详解](./05-hooks/01-hook-types.md) |
 | **Plugin = Skills + Agents + Hooks + Tools** | ⭐⭐⭐ | [插件系统](./07-advanced/03-plugins.md) |
 | **6 层配置优先级** | ⭐⭐ | [配置层次结构](./06-config/01-config-hierarchy.md) |
-| **Skill frontmatter 有 18 个字段** | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
-| Skills 支持 **条件激活** (when/paths) | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
+| **Skill frontmatter 有 17 个字段** | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
+| Skills 支持 **条件激活** (paths/arguments) | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
 
 ---
 
@@ -207,7 +207,7 @@
 | 文档文件 | 39 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
-| Skill frontmatter 字段 | 18 |
+| Skill frontmatter 字段 | 17 |
 | 配置层级 | 6 |
 | 进阶功能模块 | 9 |
 
