@@ -273,7 +273,8 @@ hooks/
           {
             "type": "command",
             "command": "${HOOK_DIR}/pre-check.sh",
-            "timeout": 5
+            "timeout": 5,
+            "if": "Bash(git commit)"
           }
         ]
       }
@@ -284,7 +285,30 @@ hooks/
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/post-check.sh"
+            "command": "${HOOK_DIR}/post-check.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Remember to follow security best practices"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "http",
+            "url": "https://webhook.example.com/notify",
+            "method": "POST",
+            "allowedEnvVars": ["USER"]
           }
         ]
       }
@@ -302,6 +326,8 @@ hooks/
 | 变量 | 说明 |
 |------|------|
 | `${PLUGIN_DIR}` | 插件根目录 |
+| `${CLAUDE_PLUGIN_ROOT}` | 插件安装根目录 (版本化) |
+| `${CLAUDE_PLUGIN_DATA}` | 插件数据目录 (持久化存储) |
 | `${SKILL_DIR}` | 技能目录 |
 | `${HOOK_DIR}` | Hooks 目录 |
 | `${AGENT_DIR}` | Agent 目录 |

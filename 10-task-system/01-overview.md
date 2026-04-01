@@ -179,11 +179,12 @@ Cron 工具允许调度定时提示，支持一次性任务和循环任务。循
 input: {
   cron: string          // 5字段 cron 表达式 (分钟 小时 日 月 星期)
   prompt: string        // 要执行的提示
-  recurring?: boolean   // 是否循环 (默认 false)
-  durable?: boolean    // 是否持久化 (session外存活, GrowthBook: tengu_kairos_cron_durable)
-  agentId?: string     // 路由到指定队友
-  permanent?: boolean  // 永久任务 (系统任务)
+  recurring?: boolean   // 是否循环 (默认 true)
+  durable?: boolean     // 是否持久化 (session外存活, GrowthBook: tengu_kairos_cron_durable)
 }
+```
+
+**注意**: `agentId` 和 `permanent` 是运行时内部字段，通过 teammate context 设置，不在输入 schema 中。
 ```
 
 **功能开关**: `isKairosCronEnabled()` — GrowthBook `tengu_kairos_cron` feature flag
@@ -234,7 +235,7 @@ recurring: true
 // 一次性任务 (5分钟后)
 cron: "*/5 * * * *"
 prompt: "remind me to review PR"
-recurring: false
+recurring: false  // 单次任务
 ```
 
 ### 限制
