@@ -62,13 +62,18 @@ claude --permission-mode acceptEdits
 - 无法审计操作历史
 - 违背安全原则
 
-### 2. `--bypassPermissions`
+### 2. `--permission-mode bypassPermissions`
 
 ```bash
-# ❌ 危险！--bypassPermissions 是 --permission-mode bypassPermissions 的简写
-# 不同于 --dangerously-skip-permissions（完全跳过权限检查）
-claude --bypassPermissions
+# 正确语法: --permission-mode 是 CLI 参数，bypassPermissions 是值
+claude --permission-mode bypassPermissions
+
+# ❌ --bypassPermissions 单独作为 CLI flag 不存在！
 ```
+
+**注意**: `--bypassPermissions` 单独作为 flag 不存在于源码中。正确用法是 `claude --permission-mode bypassPermissions`。
+
+`--dangerously-skip-permissions` 是完全不同的 flag，仅在沙箱容器内且无网络时可用。
 
 ### 3. 过度依赖 auto mode
 
