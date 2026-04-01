@@ -8,11 +8,11 @@
 
 ## 致谢
 
-本手册的所有内容均基于 [instructkr/claude-code](https://github.com/instructkr/claude-code) 开源项目的源码分析编写。
+本手册的所有内容均基于 [anthropic/claude-code](https://github.com/anthropic/claude-code) 开源项目的源码分析编写。
 
 特别感谢：
-- **instructkr** 团队开源了 Claude Code 的核心实现
-- 本手册通过深度阅读源码 `src/` 目录，归纳总结出 42 篇文档
+- **Anthropic** 团队开源了 Claude Code 的核心实现
+- 本手册通过深度阅读源码 `src/` 目录，归纳总结出 39 篇文档
 - 所有技术细节均经过源码验证，确保准确性
 
 ---
@@ -36,7 +36,7 @@
 | 内存系统 | 3 篇 | 概述、API、最佳实践 |
 | 任务系统 | 1 篇 | 任务管理 |
 | 插件开发 | 4 篇 | 概述、结构、API、开发示例 |
-| **总计** | **42 篇** | 覆盖 Claude Code 全部核心系统 |
+| **总计** | **39 篇** | 覆盖 Claude Code 全部核心系统 |
 
 ### 源码验证
 
@@ -77,8 +77,8 @@
 | **PreCommit Hook 不存在** | ⭐⭐⭐ | [Hook 类型详解](./05-hooks/01-hook-types.md) |
 | 实际有 **27 种 Hook 类型** | ⭐⭐⭐ | [Hook 类型详解](./05-hooks/01-hook-types.md) |
 | **Plugin = Skills + Agents + Hooks + Tools** | ⭐⭐⭐ | [插件系统](./07-advanced/03-plugins.md) |
-| **5 层配置优先级** | ⭐⭐ | [配置层次结构](./06-config/01-config-hierarchy.md) |
-| **Skill frontmatter 有 16 个字段** | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
+| **6 层配置优先级** | ⭐⭐ | [配置层次结构](./06-config/01-config-hierarchy.md) |
+| **Skill frontmatter 有 18 个字段** | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
 | Skills 支持 **条件激活** (when/paths) | ⭐⭐ | [原生技能机制](./04-skills/01-native-skills.md) |
 
 ---
@@ -205,11 +205,11 @@
 
 | 指标 | 数量 |
 |------|------|
-| 文档文件 | 42 |
-| 测试脚本 | 11 |
+| 文档文件 | 39 |
+| 测试脚本 | 10 |
 | Hook 类型 | 27 |
-| Skill frontmatter 字段 | 16 |
-| 配置层级 | 5 |
+| Skill frontmatter 字段 | 18 |
+| 配置层级 | 6 |
 | 进阶功能模块 | 9 |
 
 ---
