@@ -2,3 +2,4 @@
 /.claude/scheduled_tasks.json
 /.claude/memory/*
 /CLAUDE.md
+/.claude/scheduled_tasks.lock
