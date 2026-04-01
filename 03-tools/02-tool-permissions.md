@@ -24,11 +24,16 @@
 claude --permission-mode acceptEdits
 
 # 环境变量
-export CLAUDE_PERMISSION_MODE=plan
+# CLAUDE_PERMISSION_MODE 环境变量不存在，应使用 CLI 参数或 settings.json
+
+# CLI 参数
+claude --permission-mode acceptEdits
 
 # 配置文件
 {
-  "permissionMode": "acceptEdits"
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  }
 }
 ```
 
@@ -240,8 +245,9 @@ claude --permission-mode bypassPermissions
 
 ```json
 {
-  "permissionMode": "acceptEdits",
-  "permissions": {}
+  "permissions": {
+    "defaultMode": "acceptEdits"
+  }
 }
 ```
 
@@ -249,10 +255,10 @@ claude --permission-mode bypassPermissions
 
 ```json
 {
-  "permissionMode": "default",
   "permissions": {
-    "alwaysAllow": ["Read", "Glob", "Grep"],
-    "alwaysDeny": ["Bash(rm -rf *)", "Write(/etc/**)"]
+    "defaultMode": "default",
+    "allow": ["Read", "Glob", "Grep"],
+    "deny": ["Bash(rm -rf *)", "Write(/etc/**)"]
   }
 }
 ```
@@ -261,10 +267,10 @@ claude --permission-mode bypassPermissions
 
 ```json
 {
-  "permissionMode": "dontAsk",
   "permissions": {
-    "alwaysAllow": ["Read", "Glob", "Grep", "Bash(npm run build)", "Bash(npm test)"],
-    "alwaysDeny": ["Bash(sudo *)", "Bash(chmod *)", "Write(/etc/**)", "Write(*.pem)", "Write(*.key)"]
+    "defaultMode": "dontAsk",
+    "allow": ["Read", "Glob", "Grep", "Bash(npm run build)", "Bash(npm test)"],
+    "deny": ["Bash(sudo *)", "Bash(chmod *)", "Write(/etc/**)", "Write(*.pem)", "Write(*.key)"]
   }
 }
 ```
@@ -273,7 +279,9 @@ claude --permission-mode bypassPermissions
 
 ```json
 {
-  "permissionMode": "plan"
+  "permissions": {
+    "defaultMode": "plan"
+  }
 }
 ```
 
@@ -323,7 +331,7 @@ echo "$input" >> ~/.claude/permission_audit.log
 // 检查 permissions 配置
 {
   "permissions": {
-    "alwaysAllow": ["Bash"]
+    "allow": ["Bash"]
   }
 }
 ```
