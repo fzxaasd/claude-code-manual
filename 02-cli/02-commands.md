@@ -61,23 +61,12 @@ claude --resume --rewind-files <user-message-id>
 ### `claude config` - 配置管理
 
 ```bash
-# 查看当前配置
-claude config show
-
-# 查看特定配置
-claude config get permissionMode
-claude config get model
-
-# 设置配置
-claude config set permissionMode ask
-claude config set model sonnet
-
-# 重置配置
-claude config reset
-claude config reset permissionMode
+# 打开交互式配置面板
+claude config
+claude settings
 ```
 
-> **别名**: `claude settings` 是 `claude config` 的别名，指向同一命令。
+> **注意**: `config` 是 local-jsx 命令，打开交互式 UI。`show/get/set/reset` 等子命令不存在于 CLI 层。
 
 ### `claude init` - 项目初始化
 
@@ -150,14 +139,18 @@ claude hooks
 claude plugin list
 
 # 安装插件
-claude plugin add <plugin-id>
+claude plugin install <plugin>
 
 # 卸载插件
-claude plugin remove <plugin-id>
+claude plugin uninstall <plugin>
 
 # 更新插件
-claude plugin update
-claude plugin update --all
+claude plugin update <plugin>
+
+# 启用/禁用插件
+claude plugin enable <plugin>
+claude plugin disable <plugin>
+claude plugin disable --all
 ```
 
 ### `claude skills` - 技能管理
@@ -180,7 +173,7 @@ claude skills
 claude mcp list
 
 # 添加服务器
-claude mcp add --name github --command "npx @modelcontextprotocol/server-github"
+claude mcp add github --command "npx @modelcontextprotocol/server-github"
 
 # 从 Claude Desktop 导入
 claude mcp add-from-claude-desktop
@@ -188,14 +181,19 @@ claude mcp add-from-claude-desktop
 # JSON 添加
 claude mcp add-json <name> <json>
 
+# 获取服务器详情
+claude mcp get <name>
+
+# 重置项目选择
+claude mcp reset-project-choices
+
 # 移除服务器
-claude mcp remove github
+claude mcp remove <name>
 
-# 状态检查
-claude mcp status
-
-# 启动 MCP 服务器
+# 启动 Claude Code 作为 MCP 服务器
 claude mcp serve
+
+# 注意: claude mcp status 和 claude mcp reconnect 不存在（reconnect 仅在交互模式下可用）
 ```
 
 ---
@@ -420,18 +418,30 @@ claude keybindings
 
 ## 认证命令
 
-### `claude login` - 登录认证
+### `claude auth login` - 登录认证
 
 ```bash
 # 启动登录流程
-claude login
+claude auth login
+
+# 带选项登录
+claude auth login --sso
+claude auth login --console
+claude auth login --claudeai
+claude auth login --email user@example.com
 ```
 
-### `claude logout` - 登出认证
+### `claude auth logout` - 登出认证
 
 ```bash
 # 登出当前账号
-claude logout
+claude auth logout
+```
+
+### `claude auth status` - 查看认证状态
+
+```bash
+claude auth status
 ```
 
 ---
@@ -549,11 +559,11 @@ claude memory delete <id>
 # 列出服务器
 claude mcp list
 
-# 添加服务器
+# 添加服务器 (name 是位置参数)
 claude mcp add <name> --command <command>
 
-# 启动服务
-claude mcp serve
+# 启动 Claude Code 作为 MCP 服务器
+claude mcp serve [--debug] [--verbose]
 ```
 
 ### `claude exit` - 退出会话
