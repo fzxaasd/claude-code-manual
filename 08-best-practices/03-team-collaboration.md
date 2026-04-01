@@ -260,11 +260,10 @@ changelog:
 ### 1. 项目命名
 
 ```json
+// 注意: project.slug 和 project.language 不存在于源码中
 {
   "project": {
-    "name": "my-app",
-    "slug": "my-app",
-    "language": "zh-CN"
+    "name": "my-app"
   }
 }
 ```
