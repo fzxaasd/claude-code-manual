@@ -177,6 +177,138 @@ exit 0
 
 ---
 
+## Sandbox 配置
+
+> 沙箱配置用于控制 Claude Code 命令执行的安全隔离级别
+
+### 基础结构
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": false,
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": true,
+    "network": { ... },
+    "filesystem": { ... },
+    "ignoreViolations": {},
+    "enableWeakerNestedSandbox": false,
+    "enableWeakerNetworkIsolation": false,
+    "excludedCommands": [],
+    "ripgrep": { "command": "rg" }
+  }
+}
+```
+
+### 网络沙箱配置
+
+```json
+{
+  "sandbox": {
+    "network": {
+      "allowedDomains": ["github.com", "api.example.com"],
+      "allowManagedDomainsOnly": false,
+      "allowUnixSockets": ["/var/run/docker.sock"],
+      "allowAllUnixSockets": false,
+      "allowLocalBinding": false,
+      "httpProxyPort": 8080,
+      "socksProxyPort": 1080
+    }
+  }
+}
+```
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `allowedDomains` | string[] | - | 允许访问的域名列表 |
+| `allowManagedDomainsOnly` | boolean | false | 仅使用托管设置中的域名（企业配置） |
+| `allowUnixSockets` | string[] | - | macOS 专用：允许的 Unix 套接字路径 |
+| `allowAllUnixSockets` | boolean | false | 允许所有 Unix 套接字（禁用平台阻塞） |
+| `allowLocalBinding` | boolean | false | 允许本地绑定连接 |
+| `httpProxyPort` | number | - | HTTP 代理端口 |
+| `socksProxyPort` | number | - | SOCKS 代理端口 |
+
+### 文件系统沙箱配置
+
+```json
+{
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": ["/tmp/cache"],
+      "denyWrite": ["/etc/**", "/root/**"],
+      "denyRead": ["/private/**", "/.ssh/**"],
+      "allowRead": ["/tmp/public/**"],
+      "allowManagedReadPathsOnly": false
+    }
+  }
+}
+```
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `allowWrite` | string[] | - | 允许写入的额外路径（合并自 Edit 权限规则） |
+| `denyWrite` | string[] | - | 禁止写入的路径（合并自 Edit deny 权限规则） |
+| `denyRead` | string[] | - | 禁止读取的路径（合并自 Read deny 权限规则） |
+| `allowRead` | string[] | - | 在 denyRead 区域中重新允许读取的路径 |
+| `allowManagedReadPathsOnly` | boolean | false | 仅使用托管设置中的读取路径（企业配置） |
+
+### 完整配置示例
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "network": {
+      "allowedDomains": ["github.com", "*.anthropic.com"],
+      "allowManagedDomainsOnly": true,
+      "allowUnixSockets": ["/var/run/docker.sock"],
+      "allowLocalBinding": false
+    },
+    "filesystem": {
+      "allowWrite": ["/tmp/project-cache"],
+      "denyWrite": ["*.pem", "*.key", ".env"],
+      "denyRead": ["/private/**", "/.ssh/**"]
+    },
+    "ignoreViolations": {
+      "Bash": ["timeout"]
+    },
+    "enableWeakerNestedSandbox": false,
+    "enableWeakerNetworkIsolation": false,
+    "excludedCommands": ["dangerous-tool"],
+    "ripgrep": {
+      "command": "/usr/local/bin/rg",
+      "args": ["--smart-case"]
+    }
+  }
+}
+```
+
+### 配置说明
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `enabled` | boolean | - | 启用沙箱 |
+| `failIfUnavailable` | boolean | false | 沙箱不可用时退出错误（用于强制沙箱部署） |
+| `autoAllowBashIfSandboxed` | boolean | false | 沙箱启用时自动允许 Bash 命令 |
+| `allowUnsandboxedCommands` | boolean | true | 允许通过 dangerouslyDisableSandbox 参数绕过沙箱 |
+| `ignoreViolations` | Record<string, string[]> | - | 忽略特定工具/命令的沙箱违规 |
+| `enableWeakerNestedSandbox` | boolean | false | 启用弱化嵌套沙箱 |
+| `enableWeakerNetworkIsolation` | boolean | false | macOS 专用：允许访问 trustd（用于 MITM 代理证书验证，**降低安全性**） |
+| `excludedCommands` | string[] | - | 从沙箱排除的命令 |
+| `ripgrep.command` | string | - | 自定义 ripgrep 命令路径 |
+| `ripgrep.args` | string[] | - | ripgrep 额外参数 |
+
+> **平台说明**:
+> - `allowUnixSockets` 仅在 macOS 上生效（Linux seccomp 无法按路径过滤）
+> - `enableWeakerNetworkIsolation` 仅在 macOS 上生效
+> - 企业部署建议设置 `failIfUnavailable: true` 以确保沙箱强制执行
+
+---
+
 ## .claudeignore
 
 ### 语法
