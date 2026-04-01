@@ -57,7 +57,10 @@ interface EnterPlanModeTool {
 - `KAIROS` 或 `KAIROS_CHANNELS` feature 开启且有活跃 channel 时禁用
 - 子 Agent 上下文中不可用
 
-### ExitPlanModeV2Tool
+### ExitPlanModeV2Tool requiresUserInteraction()
+
+队友 (isTeammate()) 返回 false — 无需本地用户交互
+非队友返回 true — 需要用户确认才能退出
 
 基于 `src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.ts`：
 
@@ -239,7 +242,7 @@ getPewterLedgerVariant(): PewterLedgerVariant
 - cut: 精简内容，减少细节
 - cap: 硬性限制，最大子弹数
 
-基线数据 (14天, N=26.3M):
+基线数据 (14天, 截止 2026-03-02, N=26.3M):
 - p50: 4,906 chars
 - p90: 11,617 chars
 - mean: 6,207 chars

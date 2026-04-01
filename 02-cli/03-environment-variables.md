@@ -54,16 +54,17 @@ export ANTHROPIC_MODEL=claude-haiku-4-20250507
 默认权限模式。
 
 ```bash
-# 可选值: all, ask, limiting, safeExit
-export CLAUDE_PERMISSION_MODE=ask
+# 可选值: acceptEdits, bypassPermissions, default, dontAsk, plan
+export CLAUDE_PERMISSION_MODE=default
 ```
 
 | 值 | 说明 |
 |----|------|
-| `all` | 允许所有操作 |
-| `ask` | 每次询问 |
-| `limiting` | 仅白名单 |
-| `safeExit` | 仅安全命令 |
+| `default` | 每次询问 |
+| `acceptEdits` | 自动接受编辑 |
+| `bypassPermissions` | 绕过所有检查 |
+| `dontAsk` | 不询问，直接拒绝 |
+| `plan` | 仅在计划模式 |
 
 ---
 

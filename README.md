@@ -1,11 +1,11 @@
-# Claude Code 使用手册
+# Claude Code 使用手册 / Claude Code Manual
 
-> 深度研究 + 实践测试产出的 Claude Code 完整使用指南
+> Deep Research + Practical Testing produced Complete Claude Code Usage Guide
 
-**版本**: 2.0.0
-**更新日期**: 2026-04-01
-**源码版本**: 2.1.81
-**状态**: 方向调整中 → 详尽使用手册 + 插件开发指南
+**Version**: 2.0.0
+**Last Updated**: 2026-04-01
+**Source Version**: 2.1.81
+**Status**: Direction Adjusted → Comprehensive Usage Manual + Plugin Development Guide
 
 ---
 
@@ -16,7 +16,7 @@
 **核心内容**:
 - 详述 27 种 Hook 类型及使用场景
 - 完整的 Skills/Agent/Plugins 开发指南
-- 插件外挂开发指南（进行中）
+- 插件外挂开发指南
 - 团队协作最佳实践
 
 ---
@@ -36,7 +36,7 @@
 
 | 优先级 | 章节 | 文件 | 说明 |
 |--------|------|------|------|
-| ⭐⭐⭐ | [Hook 类型详解](./05-hooks/01-hook-types.md) | 5.1 | 27种Hook类型 |
+| ⭐⭐⭐ | [Hook 类型详解](./05-hooks/01-hook-types.md) | 5.1 | 10种Hook类型 |
 | ⭐⭐ | [权限配置](./06-config/02-settings-reference.md) | 6.2 | 生产环境必配 |
 | ⭐⭐ | [Skills 系统](./04-skills/01-native-skills.md) | 4.1 | 自定义技能入门 |
 | ⭐⭐⭐ | [插件系统](./07-advanced/03-plugins.md) | 7.3 | 插件开发基础 |
@@ -115,7 +115,7 @@
 - [11.4 开发示例](./11-plugin-dev/04-examples.md) ✅
 
 ### 第十二部分：源码验证
-- [源码对照验证](./12-source-verification/README.md) ✅
+- [源码对照验证]（规划中）🔄
 
 ---
 
@@ -124,7 +124,7 @@
 | 发现 | 重要性 | 章节 |
 |------|--------|------|
 | **PreCommit Hook 不存在** | ⭐⭐⭐ | [5.1 Hook 类型详解](./05-hooks/01-hook-types.md) |
-| 27 种 Hook 类型 | ⭐⭐⭐ | [5.1 Hook 类型详解](./05-hooks/01-hook-types.md) |
+| 10 种 Hook 类型 | ⭐⭐⭐ | [5.1 Hook 类型详解](./05-hooks/01-hook-types.md) |
 | 5 层配置优先级 | ⭐⭐ | [6.1 配置层次结构](./06-config/01-config-hierarchy.md) |
 | Skills paths 条件激活 | ⭐⭐ | [4.1 原生技能机制](./04-skills/01-native-skills.md) |
 | Plugin = Skills + Agents + Hooks | ⭐⭐⭐ | [7.3 插件系统](./07-advanced/03-plugins.md) |
@@ -153,12 +153,12 @@
 
 | 指标 | 数量 |
 |------|------|
-| 文档文件 | 41 |
+| 文档文件 | 40 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 16 |
 | 配置层级 | 5 |
-| 源码验证项 | 100% |
+| 源码验证项 | 进行中 |
 
 ---
 
@@ -185,4 +185,4 @@
 
 如发现文档问题或有补充内容，请提交 Issue 或 PR。
 
-手册基于 Claude Code 源码 `src/` 目录分析编写，验证文件位于 [12-source-verification/README.md](./12-source-verification/README.md)。
+手册基于 Claude Code 源码 `src/` 目录分析编写，源码对照验证功能规划中。

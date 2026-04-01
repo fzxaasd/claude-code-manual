@@ -5,7 +5,7 @@
       "cron": "*/15 * * * *",
       "prompt": "进入 /Volumes/dev/github/claude-code 目录，使用 claude code 命令和直接读源码的方式，逐系统深度分析并与 /Volumes/dev/project/claude-code-manual 中的文档对比。任务目标：(1)找出文档与源码的偏差错误，(2)找出源码中未被文档覆盖的章节，(3)修复错误并补充遗漏内容，(4)更新 /tmp/claude_code_manual_checkpoint.json 记录进度。每次loop报告：发现了哪些错误、补充了哪些章节、剩余待检系统列表。每次loop优先处理不同系统模块。可以使用 subagent 并行执行多个系统的检查，tests 目录的测试脚本可通过 subagent 执行来验证文档准确性。",
       "createdAt": 1775051941742,
-      "lastFiredAt": 1775055664313,
+      "lastFiredAt": 1775056564700,
       "recurring": true
     }
   ]

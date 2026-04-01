@@ -63,6 +63,16 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=true
 claude --agent-teams
 ```
 
+### Team Mode 环境变量
+
+| 环境变量 | 来源 | 说明 |
+|----------|------|------|
+| `CLAUDE_CODE_TEAMMATE_COMMAND` | constants.ts | 覆盖队友启动命令 |
+| `CLAUDE_CODE_AGENT_COLOR` | constants.ts | 队友显示颜色 |
+| `CLAUDE_CODE_PLAN_MODE_REQUIRED` | constants.ts | 队友是否强制使用 Plan Mode |
+| `CLAUDE_CODE_AGENT_ID` | 全局 | 格式: agentName@teamName |
+| `CLAUDE_CODE_AGENT_NAME` | 全局 | 队友显示名称 |
+
 ---
 
 ## 工具定义
@@ -175,7 +185,7 @@ type BackendType = 'tmux' | 'iterm2' | 'in-process'
 ```bash
 ~/.claude/teams/{team-name}/config.json
 ~/.claude/tasks/{sanitized-team-name}/  # 任务列表目录
-~/.claude/teams/{team-name}/mailbox/    # 消息邮箱
+~/.claude/teams/{team-name}/inboxes/    # 消息收件箱
 ```
 
 ---
@@ -211,8 +221,7 @@ await team({
 │  2. 选择后端类型                                            │
 │     ├── tmux: tmux 窗格                                    │
 │     ├── iterm2: iTerm2 分屏                               │
-│     ├── in-process: 同一进程                               │
-│     └── remote: 远程会话                                    │
+│     └── in-process: 同一进程                               │
 │                                                            │
 │  3. 创建 Agent 进程                                         │
 │     ├── 分配 tmuxPaneId                                    │
@@ -229,18 +238,18 @@ await team({
 
 **消息传递**：
 - 共享 TeamFile (`~/.claude/teams/{team-name}/config.json`)
-- 邮箱机制 (`~/.claude/teams/{team-name}/mailbox/`)
+- 邮箱机制 (`~/.claude/teams/{team-name}/inboxes/`)
 - 任务更新 (`~/.claude/tasks/{taskListId}/`)
 
 **订阅机制**：
 ```typescript
-// 工具人订阅的消息类型
+// 工具人订阅的消息类型 (可为任意自定义字符串)
 subscriptions: [
   "task_assignment",
   "plan_approval_request",
   "shutdown_request"
 ]
-```
+// 注意: subscriptions 是 string[]，无固定枚举值
 
 ### SendMessageTool 完整协议
 
@@ -263,11 +272,14 @@ interface SendMessageTool {
 // 关闭请求
 { type: 'shutdown_request', reason?: string }
 
-// 关闭响应
-{ type: 'shutdown_response', request_id: string, approve: boolean, reason?: string }
+// 关闭批准 (不是 shutdown_response)
+{ type: 'shutdown_approved', request_id: string, reason?: string }
+
+// 关闭拒绝 (不是 shutdown_response)
+{ type: 'shutdown_rejected', request_id: string, reason?: string }
 
 // 计划审批响应
-{ type: 'plan_approval_response', request_id: string, approve: boolean, feedback?: string }
+{ type: 'plan_approval_response', requestId: string, approved: boolean, feedback?: string, timestamp?: string, permissionMode?: PermissionMode }
 ```
 
 **输出类型**：
@@ -648,6 +660,9 @@ if (isTeammate() && isPlanModeRequired()) {
     requestId: ...
   }
 }
+
+// 注意: isTeammate() 对队友返回 true，team-lead 不是 teammate
+// 实际 leader 端检查用 isTeamLead() (src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.ts)
 ```
 
 ### 权限模式同步
@@ -676,7 +691,7 @@ function syncTeammateMode(mode: PermissionMode): void {
 ~/.claude/teams/{team-name}/config.json
 
 # 消息邮箱
-~/.claude/teams/{team-name}/mailbox/
+~/.claude/teams/{team-name}/inboxes/
 
 # 任务列表
 ~/.claude/tasks/{sanitized-team-name}/

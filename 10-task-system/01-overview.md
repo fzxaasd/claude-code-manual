@@ -105,6 +105,11 @@ const TodoItemSchema = z.object({
 })
 
 const TodoListSchema = z.array(TodoItemSchema)
+
+// 输入结构: { todos: TodoItem[] } — 不是裸数组
+const inputSchema = z.strictObject({
+  todos: TodoListSchema().describe('The updated todo list'),
+})
 ```
 
 ### 字段说明
@@ -114,6 +119,16 @@ const TodoListSchema = z.array(TodoItemSchema)
 | `content` | string | 任务内容描述 |
 | `status` | enum | 状态：`pending`/`in_progress`/`completed` |
 | `activeForm` | string | 进行时形式（如"修复认证 bug"） |
+
+### 输入结构
+
+```typescript
+// 正确: 使用对象包裹
+{ todos: [{ content: "...", status: "in_progress", activeForm: "..." }] }
+
+// 错误: 直接传入数组（文档旧版本曾有此错误）
+[{ content: "...", status: "in_progress", activeForm: "..." }]
+```
 
 ### 输出结构
 
@@ -130,6 +145,103 @@ const TodoListSchema = z.array(TodoItemSchema)
 1. **多会话支持**：使用 `agentId ?? sessionId` 作为 todo key
 2. **全完成清空**：所有任务完成时自动清空列表
 3. **验证提醒**：3+ 任务完成且无验证步骤时提示
+
+### Tasks V2 系统 (feature-gated)
+
+当 `CLAUDE_CODE_ENABLE_TASKS=true` 或非交互会话时，TodoWriteTool 被禁用，启用 Tasks V2：
+
+```typescript
+// 源码 src/utils/tasks.ts
+function isTodoV2Enabled(): boolean {
+  if (isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_TASKS)) {
+    return true
+  }
+  return !getIsNonInteractiveSession()
+}
+```
+
+Tasks V2 包含: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListTool`
+
+---
+
+## Cron 调度工具 ⭐ GA 功能
+
+基于 `src/tools/ScheduleCronTool/` 深度分析。Crontab 定时任务工具。
+
+### 概述
+
+Cron 工具允许调度定时提示，支持一次性任务和循环任务。循环任务默认 7 天后自动过期。
+
+### CronCreateTool
+
+```typescript
+// 调度定时提示
+input: {
+  cron: string          // 5字段 cron 表达式 (分钟 小时 日 月 星期)
+  prompt: string        // 要执行的提示
+  recurring?: boolean   // 是否循环 (默认 false)
+  durable?: boolean    // 是否持久化 (session外存活, GrowthBook: tengu_kairos_cron_durable)
+  agentId?: string     // 路由到指定队友
+  permanent?: boolean  // 永久任务 (系统任务)
+}
+```
+
+**功能开关**: `isKairosCronEnabled()` — GrowthBook `tengu_kairos_cron` feature flag
+
+### CronDeleteTool
+
+```typescript
+// 取消定时任务
+input: {
+  id: string  // CronJob ID
+}
+```
+
+### CronListTool
+
+```typescript
+// 列出活跃任务
+input: {}  // 无参数
+
+output: {
+  jobs: CronJob[]
+}
+```
+
+队友只能查看/删除自己的 cron jobs (跨会话隔离)。
+
+### Cron 抖动配置
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| `recurringFrac` | 0.1 (10%) | 循环任务 jitter |
+| `recurringCapMs` | 15分钟 | 抖动上限 |
+| `oneShotMaxMs` | 90秒 | 单次任务最多提前 |
+| one-shot | 随机分钟 | :00/:30 前后随机 |
+
+### 使用示例
+
+```typescript
+// 每 30 分钟检查一次
+cron: "*/30 * * * *"
+prompt: "/check-deploy"
+
+// 每天早上 9 点
+cron: "0 9 * * *"
+prompt: "run smoke tests"
+recurring: true
+
+// 一次性任务 (5分钟后)
+cron: "*/5 * * * *"
+prompt: "remind me to review PR"
+recurring: false
+```
+
+### 限制
+
+- 最大任务数: 50 (`MAX_JOBS`)
+- 默认过期: 7 天 (`DEFAULT_MAX_AGE_DAYS`)
+- 队友不支持持久化 cron (跨会话不存活)
 
 ---
 

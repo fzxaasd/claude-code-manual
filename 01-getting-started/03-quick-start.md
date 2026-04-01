@@ -148,10 +148,10 @@ EOF
 
 ```bash
 # 开发环境 - 宽松权限
-export CLAUDE_PERMISSION_MODE=all
+export CLAUDE_PERMISSION_MODE=acceptEdits
 
 # 生产环境 - 严格限制
-export CLAUDE_PERMISSION_MODE=limiting
+export CLAUDE_PERMISSION_MODE=dontAsk
 ```
 
 ---
@@ -209,7 +209,7 @@ Ctrl+S
 A: `Ctrl+C` 或输入 `stop`
 
 ### Q: 命令执行被拒绝怎么办？
-A: 检查 `permissions.json` 配置，或使用 `claude --permissions all`
+A: 检查 `settings.json` 中的 `permissions` 字段配置，或使用 `claude --permission-mode acceptEdits`
 
 ### Q: 如何查看之前的输出？
 A: `Ctrl+O` 打开完整输出视图

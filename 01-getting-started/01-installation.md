@@ -45,7 +45,7 @@ npm install -g @anthropic-ai/claude-code
 ### 方式 1: 交互式登录
 
 ```bash
-claude login
+claude auth login
 ```
 
 这会打开浏览器进行 OAuth 认证。

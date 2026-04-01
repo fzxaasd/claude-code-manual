@@ -153,7 +153,7 @@ assistant: [saves team reference memory: grafana.internal/d/api-latency is the o
 ```markdown
 ---
 name: {{memory name}}
-description: {{one-line description — used to decide relevance in future conversations}}
+description: {{one-line description — used to decide relevance in future conversations, so be specific}}
 type: {{user, feedback, project, reference}}
 ---
 
@@ -172,7 +172,7 @@ MEMORY.md 是索引文件，每行一个指向具体 memory 文件的链接：
 - [Title](file.md) — one-line hook
 ```
 
-**限制**：行数超过 200 行后截断
+**限制**：行数超过 200 行后截断，文件大小超过 25,000 字节时截断
 
 ---
 
@@ -206,6 +206,37 @@ memory/
 | 调试方案或修复方法 | 修复在代码中；提交消息有上下文 | 代码本身 |
 | CLAUDE.md 中已记录内容 | 已有文档 | CLAUDE.md |
 | 临时任务细节 | 进行中的工作、临时状态、当前会话上下文 | - |
+
+### 团队记忆安全警告 ⚠️
+
+**必须避免在共享团队记忆中保存敏感数据**。例如：绝不保存 API keys 或用户凭据。
+
+---
+
+## 高级功能
+
+### 自动内存索引限制
+
+| 限制 | 值 |
+|------|-----|
+| MEMORY.md 最大行数 | 200 行 |
+| MEMORY.md 最大字节 | 25,000 bytes |
+| Memory 文件扫描上限 | 200 个文件 |
+| Frontmatter 最大行数 | 30 行 |
+
+### AI 驱动的记忆相关性选择
+
+`findRelevantMemories()` 函数使用 Sonnet 模型对扫描的头部进行相关性选择，返回最多 5 个相关记忆。
+
+### 自动内存启用条件
+
+`isAutoMemoryEnabled()` 解析链：
+
+1. `CLAUDE_CODE_DISABLE_AUTO_MEMORY` 环境变量
+2. `CLAUDE_CODE_SIMPLE` (`--bare`) → 禁用
+3. CCR 无 `CLAUDE_CODE_REMOTE_MEMORY_DIR` → 禁用
+4. `settings.json` 中 `autoMemoryEnabled`
+5. 默认：启用
 
 **注意**：即使用户明确要求保存以上内容，也应询问"有什么出乎意料或非显而易见的？"那才是值得保留的部分。
 

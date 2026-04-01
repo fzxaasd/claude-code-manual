@@ -11,9 +11,7 @@
 ```
 项目根目录/
 ├── .claude/
-│   ├── settings.json         # ✅ 提交 - 统一规范
-│   ├── permissions.json      # ✅ 提交 - 统一权限
-│   └── hooks.json            # ✅ 提交 - 统一 Hooks
+│   ├── settings.json         # ✅ 提交 - 统一规范 (permissions 在 settings.json 的 permissions 字段)
 ├── .claudeignore             # ✅ 提交 - 忽略规则
 └── settings.local.json      # ❌ 不提交 - 本地覆盖
 ```
@@ -22,9 +20,9 @@
 
 | 级别 | 配置 | 适用人员 |
 |------|------|----------|
-| 严格 | `limiting` + 详细白名单 | 所有成员 |
-| 中等 | `ask` + 有限 allow | 开发者 |
-| 宽松 | `all` | 管理员 |
+| 严格 | `dontAsk` + 详细白名单 | 所有成员 |
+| 中等 | `default` + 有限 allow | 开发者 |
+| 宽松 | `acceptEdits` | 管理员 |
 
 ### 3. 统一配置示例
 
@@ -251,7 +249,7 @@ claude init
 ```
 
 ### 权限配置
-本项目使用 `limiting` 权限模式。
+本项目使用 `dontAsk` 权限模式。
 
 ### 团队 Hooks
 - pre-command: 命令执行前检查

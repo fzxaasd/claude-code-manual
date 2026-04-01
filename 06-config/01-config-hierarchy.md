@@ -4,22 +4,26 @@
 
 ## 配置来源优先级
 
-Claude Code 有 5 种配置来源，按优先级从低到高排列：
+Claude Code 有 6 种配置来源，按优先级从低到高排列：
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. userSettings          (~/.claude/settings.json)           │
+│  1. pluginSettings       (插件配置)                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  2. projectSettings       (.claude/settings.json)              │
+│  2. userSettings          (~/.claude/settings.json)           │
 ├─────────────────────────────────────────────────────────────────┤
-│  3. localSettings         (.claude/settings.local.json)       │
+│  3. projectSettings       (.claude/settings.json)              │
 ├─────────────────────────────────────────────────────────────────┤
-│  4. flagSettings          (--settings CLI 参数)               │
+│  4. localSettings         (.claude/settings.local.json)       │
 ├─────────────────────────────────────────────────────────────────┤
-│  5. policySettings        (managed-settings.json / API)        │
+│  5. flagSettings          (--settings CLI 参数)               │
+├─────────────────────────────────────────────────────────────────┤
+│  6. policySettings        (managed-settings.json / API)        │
 │                          ← 最高优先级                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**注意**: flagSettings 和 policySettings 始终加载，不受 `--setting-sources` 控制。
 
 **注意**：权限规则（allow/deny/ask）的保存位置有单独的优先级：
 
@@ -55,9 +59,15 @@ localSettings > projectSettings > userSettings
 // 本地设置（gitignored）
 <CWD>/.claude/settings.local.json
 
-// 管理设置
-~/.claude/managed-settings.json
-// 或从远程 API 获取
+// 管理设置 (平台相关)
+macOS:    /Library/Application Support/ClaudeCode/managed-settings.json
+Windows:  C:\Program Files\ClaudeCode\managed-settings.json
+Linux:    /etc/claude-code/managed-settings.json
+
+// 可选的 drop-in 目录 (按字母顺序合并)
+macOS:    /Library/Application Support/ClaudeCode/managed-settings.d/*.json
+Windows:  C:\Program Files\ClaudeCode\managed-settings.d\*.json
+Linux:    /etc/claude-code/managed-settings.d/*.json
 ```
 
 ---
@@ -73,9 +83,11 @@ claude --setting-sources user,project
 # 只加载 project 设置
 claude --setting-sources project
 
-# 默认：加载所有来源
+# 默认：加载所有来源 (user, project, local, flag, policy)
 claude
 ```
+
+**注意**: `--setting-sources` 只控制 user/project/local，flag 和 policy 始终加载。
 
 ### --settings 参数
 
