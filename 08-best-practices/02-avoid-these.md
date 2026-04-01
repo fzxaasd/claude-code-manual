@@ -180,7 +180,7 @@ cd /very/deep/nested/directory/structure/project  # 性能下降
           {
             "type": "command",
             "command": "security-check.sh",
-            "if": "Bash(!git status)"  # 排除 git status
+            "if": "Bash(git commit)"
           }
         ]
       }

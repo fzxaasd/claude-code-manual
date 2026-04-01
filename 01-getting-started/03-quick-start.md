@@ -190,15 +190,13 @@ Claude 会：
 ### 保存与恢复
 
 ```bash
-# 查看所有会话
-claude sessions list
-
 # 恢复会话
 claude --resume <session-id>
 
-# 新会话
-claude --new
+# 新会话 (直接运行 claude 即可)
 ```
+
+> 注意: `claude sessions list` 和 `claude --new` 命令不存在。
 
 ### 导出与分享
 
@@ -224,7 +222,7 @@ A: 检查 `settings.json` 中的 `permissions` 字段配置，或使用 `claude 
 A: `Ctrl+O` 打开完整输出视图
 
 ### Q: 会话历史丢失怎么办？
-A: 使用 `claude sessions list` 恢复，或定期导出
+A: 使用 `claude --resume <session-id>` 恢复会话，或定期导出
 
 ---
 

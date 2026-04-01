@@ -75,7 +75,7 @@ claude settings
 claude init
 
 # 初始化并指定配置
-claude init --project-name my-project --permission-mode all
+claude init --project-name my-project --permission-mode acceptEdits
 
 # 交互式初始化流程
 claude init --interactive

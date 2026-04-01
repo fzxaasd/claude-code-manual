@@ -475,10 +475,10 @@ my-plugin/
 
 ```bash
 # 本地测试
-claude plugins install ./my-plugin
+claude plugin install ./my-plugin
 
 # 验证插件
-claude plugins validate ./my-plugin
+claude plugin validate ./my-plugin
 ```
 
 ---

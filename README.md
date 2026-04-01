@@ -129,7 +129,7 @@
 
 | 章节 | 内容 | 状态 |
 |------|------|------|
-| [配置层次结构](./06-config/01-config-hierarchy.md) | 5 层配置优先级 | ✅ |
+| [配置层次结构](./06-config/01-config-hierarchy.md) | 6 层配置优先级 | ✅ |
 | [settings.json 参考](./06-config/02-settings-reference.md) | 完整配置项说明 | ✅ |
 | [项目级配置](./06-config/03-project-config.md) | .claude/ 目录配置 | ✅ |
 

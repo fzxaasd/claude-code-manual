@@ -288,7 +288,7 @@ cd code-review-plugin
 ls -la .claude-plugin/
 
 # 在 Claude Code 中安装
-claude plugins install ./code-review-plugin
+claude plugin install ./code-review-plugin
 
 # 测试
 > 使用 code-review 技能审查 src/auth/login.ts

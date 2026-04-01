@@ -105,7 +105,7 @@ Hook 触发自己，导致无限循环。
           {
             "type": "command",
             "command": "security-check.sh",
-            "if": "Bash(!git status)"
+            "if": "Bash(git commit)"
           }
         ]
       }
