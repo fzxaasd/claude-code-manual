@@ -105,8 +105,8 @@ interface BaseAgentDefinition {
   model?: string             // 指定模型
   effort?: EffortValue       // 努力级别
 
-  // 权限与安全
-  permissionMode?: PermissionMode  // 权限模式
+  // 注意: permissionMode 不是有效的 agent frontmatter 字段
+  // 权限模式通过 settings.json 的 permissions.defaultMode 配置
 
   // MCP 配置
   mcpServers?: AgentMcpServerSpec[]  // MCP 服务器
@@ -225,7 +225,6 @@ disallowedTools:
   - Bash(sudo *)
 model: sonnet
 effort: medium
-permissionMode: default
 mcpServers:
   - github
 skills:
@@ -311,13 +310,16 @@ color: blue
 
 ### 4. 权限模式
 
+Agent 的权限模式通过会话上下文控制，不是 agent 定义中的直接配置字段。
+
+**注意**: `permissionMode` 不存在于 agent markdown frontmatter 或 settings.json 顶层。正确字段是 `permissions.defaultMode`。
+
 ```json
+// settings.json 中的正确配置
 {
-  "permissionMode": "default",       // 每次询问
-  "permissionMode": "plan",         // 计划模式（只读探索）
-  "permissionMode": "acceptEdits",  // 自动接受编辑
-  "permissionMode": "dontAsk",      // 不询问（静默允许/拒绝）
-  "permissionMode": "bypassPermissions"  // 绕过所有权限检查
+  "permissions": {
+    "defaultMode": "default"
+  }
 }
 ```
 
@@ -327,6 +329,7 @@ color: blue
 - `acceptEdits` - 自动接受所有编辑
 - `dontAsk` - 静默允许/拒绝，不显示提示
 - `bypassPermissions` - 绕过所有权限检查
+- `auto` - 自动模式（TRANSCRIPT_CLASSIFIER feature-gated）
 - `auto` - 自动模式（需 feature `TRANSCRIPT_CLASSIFIER`，ant-only）
 
 ### 5. MCP 服务器
