@@ -700,6 +700,22 @@ HTTP Hook 不支持以下事件：
 | agent | 调用 Agent 处理 |
 | http | 发送 HTTP 请求 |
 
+### Hook 字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `type` | string | hook 类型: command/prompt/agent/http |
+| `command` | string | 要执行的命令 (command type) |
+| `prompt` | string | LLM prompt (prompt type) |
+| `agent` | string | Agent 名称 (agent type) |
+| `url` | string | HTTP URL (http type) |
+| `method` | string | HTTP 方法 (http type, 默认 POST) |
+| `async` | boolean | 异步执行，不阻塞工具 |
+| `once` | boolean | 仅执行一次后移除 |
+| `asyncRewake` | boolean | 异步钩子出错时唤醒模型 (隐含 async) |
+| `if` | string | permission rule 语法条件 |
+| `timeout` | number | 超时秒数 |
+
 ---
 
 ## ⚠️ 重要发现
