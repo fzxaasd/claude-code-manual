@@ -304,14 +304,23 @@ context: fork
 
 ## 技能格式参考
 
-| 字段 | 说明 | Claude Code 实现 |
-|------|------|-----------------|
-| 标识 | `name` | 必需 |
-| 描述 | `description` | 必需 |
-| 使用场景 | `when_to_use` | 推荐 |
-| 条件激活 | `paths` | 可选 |
-| 工具限制 | `allowed-tools` | 可选 |
-| 执行模式 | `context` | 可选 |
+| 字段 | 说明 | 必需 |
+|------|------|------|
+| `name` | 技能标识符 | 是 |
+| `description` | 一句话描述 | 是 |
+| `when_to_use` | 何时自动调用 | 推荐 |
+| `allowed-tools` | 工具权限白名单 | 可选 |
+| `arguments` | 参数定义 | 可选 |
+| `argument-hint` | 参数示例格式 | 可选 |
+| `context` | `inline` 或 `fork` | 可选 |
+| `model` | 指定模型 | 可选 |
+| `effort` | `low`/`medium`/`high` | 可选 |
+| `agent` | fork 模式时的 agent 类型 | 可选 |
+| `shell` | 执行 shell 类型 | 可选 |
+| `hide-from-slash-command-tool` | 从 /skills 列表隐藏 | 可选 |
+| `disableModelInvocation` | 禁用模型调用 | 可选 |
+| `paths` | 路径模式激活 | 可选 |
+| `files` | 相关文件 | 可选 |
 
 ### 完整示例
 
