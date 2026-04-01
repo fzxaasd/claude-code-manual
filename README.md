@@ -11,8 +11,7 @@
 本手册的所有内容均基于 [instructkr/claude-code](https://github.com/instructkr/claude-code) 开源项目的源码分析编写。
 
 特别感谢：
-- **Anthropic** 团队开源了 Claude Code 的核心实现
-- 本手册通过深度阅读源码 `src/` 目录，归纳总结出 39 篇文档
+- 本手册通过深度阅读源码目录，归纳总结出 39 篇文档
 - 所有技术细节均经过源码验证，确保准确性
 
 ---
