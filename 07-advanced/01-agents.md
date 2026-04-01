@@ -359,12 +359,13 @@ initialPrompt: 请仔细审查代码的每个细节
 多个来源定义同名 Agent 时的覆盖规则：
 
 ```
-managedAgents (policySettings) > flagAgents (CLI --agents) > projectAgents > userAgents > pluginAgents > builtInAgents
+builtInAgents < pluginAgents < userAgents < projectAgents < flagAgents < managedAgents
 ```
 
 **实际行为**：
 - 优先级高的 Agent 定义会完全覆盖低的同名 Agent
 - 通过 `getActiveAgentsFromList()` 实现去重
+- managedAgents (policySettings) 最高，可覆盖 CLI `--agents` 传入的 flagAgents
 - 使用 `Map` 保留最后一个出现的定义
 
 ```typescript
