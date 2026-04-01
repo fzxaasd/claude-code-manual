@@ -63,7 +63,8 @@ claude mcp add-from-claude-desktop
 
 ```
 plugin-name/
-├── plugin.json              # 插件清单
+├── .claude-plugin/
+│   └── plugin.json      # 插件清单（必需，位于 .claude-plugin/ 子目录）
 ├── skills/
 │   └── my-skill/
 │       └── SKILL.md
@@ -73,6 +74,8 @@ plugin-name/
 │   └── hooks.json
 └── README.md
 ```
+
+> 注意：插件清单必须位于 `.claude-plugin/plugin.json`，不是根目录的 `plugin.json`。
 
 ### plugin.json
 
