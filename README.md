@@ -8,7 +8,7 @@
 
 ## 致谢
 
-本手册的所有内容均基于 [anthropic/claude-code](https://github.com/anthropic/claude-code) 开源项目的源码分析编写。
+本手册的所有内容均基于 [instructkr/claude-code](https://github.com/instructkr/claude-code) 开源项目的源码分析编写。
 
 特别感谢：
 - **Anthropic** 团队开源了 Claude Code 的核心实现
@@ -206,7 +206,7 @@
 | 指标 | 数量 |
 |------|------|
 | 文档文件 | 39 |
-| 测试脚本 | 10 |
+| 测试脚本 | 11 |
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 18 |
 | 配置层级 | 6 |
