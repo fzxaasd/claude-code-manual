@@ -28,12 +28,7 @@
 
 ```json
 // .claude/settings.json
-// 注意: permissionMode 不存在，正确字段是 permissions.defaultMode
 {
-  "project": {
-    "name": "team-project",
-    "version": "1.0.0"
-  },
   "permissions": {
     "defaultMode": "dontAsk",
     "allow": [
@@ -365,10 +360,11 @@ brew install anthropic/formulae/claude-code
 claude init
 
 # 4. 查看团队配置
-claude config show --scope project
+# 直接查看 .claude/settings.json 或使用 /config 命令
+cat .claude/settings.json
 
 # 5. 了解权限
-claude permissions show
+# Claude Code 会在需要时自动提示权限请求
 ```
 
 ### 2. 日常开发

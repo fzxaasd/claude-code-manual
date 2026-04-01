@@ -53,14 +53,16 @@ curl -H "Authorization: Bearer sk-xxx"       # ❌ 暴露密钥
 # ❌ 危险！跳过所有权限检查
 claude --dangerously-skip-permissions
 
-# ✅ 替代方案：使用白名单模式
-claude --permission-mode acceptEdits
+# ✅ 替代方案：使用细粒度白名单或 plan 模式
+claude --permission-mode plan
 ```
 
 **风险**：
 - 无法阻止危险操作
 - 无法审计操作历史
 - 违背安全原则
+
+**注意**: `--permission-mode acceptEdits` 只自动批准文件写入操作（Edit, Write），不会跳过 Bash 等命令的权限检查。它不是 `--dangerously-skip-permissions` 的安全替代。
 
 ### 2. `--permission-mode bypassPermissions`
 
