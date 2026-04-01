@@ -17,6 +17,10 @@ policySettings > userSettings > projectSettings > bundled > plugin
 | Project | `.claude/skills/` | 项目级 |
 | Bundled | 内置技能 | CLI 自带 |
 | Plugin | `~/.claude/plugins/*/skills/` | 插件提供 |
+| MCP | `mcpServers` 配置 | MCP 工具导出为技能 |
+| Commands (legacy) | `commands/` 目录 | 旧版命令技能 |
+
+> 注意: 技能名称来自目录名，而非 frontmatter 的 `name` 字段。
 
 ---
 
@@ -26,8 +30,8 @@ policySettings > userSettings > projectSettings > bundled > plugin
 
 ```yaml
 ---
+# 注意: 技能名称来自目录名，不是 frontmatter 字段
 # === 核心字段 ===
-name: display-name              # 可选，显示名称
 description: 简短描述           # 推荐，技能用途
 when_to_use: 使用场景描述       # 推荐，模型参考
 
