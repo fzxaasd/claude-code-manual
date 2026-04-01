@@ -138,6 +138,7 @@ allowed-tools:
 |------|------|------|
 | `paths` | string/string[] | 路径模式匹配后才激活 |
 | `arguments` | string/string[] | 接受的参数列表 |
+| `argument-hint` | string | 参数使用提示/示例 |
 
 **Paths 语法**：
 ```yaml
@@ -154,6 +155,12 @@ paths:                             # 数组
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `shell` | string | `bash` 或 `powershell` |
+
+### 版本与元数据
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `version` | string | 技能版本号 |
 
 ---
 
