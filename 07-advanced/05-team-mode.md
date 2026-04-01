@@ -533,7 +533,7 @@ async function cleanupOldResolutions(
 │   │   └── perm-{timestamp}-{random}.json
 │   └── resolved/            # 已解决请求
 │       └── perm-{timestamp}-{random}.json
-└── mailbox/                 # 消息邮箱
+└── inboxes/                 # 消息收件箱
     └── {teammate-name}/
         └── messages.json
 ```
