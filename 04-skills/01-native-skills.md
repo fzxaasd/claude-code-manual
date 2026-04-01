@@ -47,6 +47,9 @@ argument-hint: "参数提示"       # 可选，参数示例
 # === Agent 配置 ===
 agent: agent-name              # 可选，使用的 Agent 名称
 skills: skill-name              # 可选，agent 预加载技能列表
+model: sonnet                   # 可选，指定模型
+effort: medium                  # 可选，low/medium/high
+context: inline                 # 可选，额外上下文或 fork
 
 # === 条件激活 ===
 paths:                         # 可选，路径模式
@@ -119,10 +122,11 @@ allowed-tools:
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `model` | string | 指定模型 |
-| `effort` | string | effort 级别 (low/medium/high) |
-| `context` | string | `fork`=子 Agent 执行 |
+| `effort` | 'low' \| 'medium' \| 'high' | effort 级别 |
+| `context` | string | 额外上下文；`fork`=子 Agent 执行 |
 | `agent` | string | 使用的 Agent 名称 |
 | `skills` | string | agent 预加载技能列表 |
+| `shell` | 'bash' \| 'powershell' | 默认 shell |
 
 ### 条件激活
 
@@ -201,29 +205,30 @@ paths:                             # 数组
 | `disableModelInvocation` | boolean | 是否禁用模型调用 |
 | `context` | 'inline' \| 'fork' | 执行模式 |
 | `agent` | string | 使用的 Agent 名称 |
+| `files` | string[] | 关联文件 |
 | `hooks` | HooksSettings | 内置 Hooks |
 
 ### 技能列表
 
-| 技能 | 命令 | 功能 | Feature Flag / 触发条件 | 备注 |
-|------|------|------|-------------------------|------|
-| updateConfig | `/updateConfig` | 更新配置 | 默认启用 | |
-| keybindings-help | `/keybindings-help` | 快捷键 | `isKeybindingCustomizationEnabled()` | 非默认，需功能开关 |
-| verify | `/verify` | 验证 | `USER_TYPE === 'ant'` | ANT-only |
-| debug | `/debug` | 调试 | 默认启用 | |
-| lorem-ipsum | `/lorem-ipsum` | 生成占位文本 | `USER_TYPE === 'ant'` | ANT-only |
-| skillify | `/skillify` | 转换为技能 | `USER_TYPE === 'ant'` | ANT-only |
-| remember | `/remember` | 记忆 | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
-| simplify | `/simplify` | 简化文本 | 默认启用 | |
-| batch | `/batch` | 批量处理 | 默认启用 | |
-| stuck | `/stuck` | 卡住帮助 | `USER_TYPE === 'ant'` | ANT-only |
-| loop | `/loop` | 循环任务 | `AGENT_TRIGGERS` | |
-| schedule | `/schedule` | 远程调度 | `tengu_surreal_dali` + `allow_remote_sessions` policy | 需要 claude.ai OAuth 认证 |
-| claude-api | `/claude-api` | Claude API | `BUILDING_CLAUDE_APPS` | |
-| dream | `/dream` | Dream Mode | `KAIROS` 或 `KAIROS_DREAM` | |
-| hunter | `/hunter` | Code Hunter | `REVIEW_ARTIFACT` | |
-| claude-in-chrome | `/claude-in-chrome` | Chrome 扩展 | `auto (shouldAutoEnableClaudeInChrome)` | |
-| run-skill-generator | `/run-skill-generator` | 技能生成器 | `RUN_SKILL_GENERATOR` | |
+| 技能 | 命令 | 别名 | 功能 | Feature Flag / 触发条件 | 备注 |
+|------|------|------|------|-------------------------|------|
+| updateConfig | `/updateConfig` | updateConfig | 更新配置 | 默认启用 | |
+| keybindings-help | `/keybindings-help` | keybindings | 快捷键 | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - 仅模型可调用 |
+| verify | `/verify` | verify | 验证 | `USER_TYPE === 'ant'` | ANT-only |
+| debug | `/debug` | debug | 调试 | 默认启用 | |
+| lorem-ipsum | `/lorem-ipsum` | loremIpsum | 生成占位文本 | `USER_TYPE === 'ant'` | ANT-only |
+| skillify | `/skillify` | skillify | 转换为技能 | `USER_TYPE === 'ant'` | ANT-only |
+| remember | `/remember` | remember | 记忆 | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
+| simplify | `/simplify` | simplify | 简化文本 | 默认启用 | |
+| batch | `/batch` | batch | 批量处理 | 默认启用 | |
+| stuck | `/stuck` | stuck | 卡住帮助 | `USER_TYPE === 'ant'` | ANT-only |
+| loop | `/loop` | loop | 循环任务 | `AGENT_TRIGGERS` | ⚠️ 运行时还需 `isKairosCronEnabled()` 检查 |
+| schedule | `/schedule` | schedule | 远程调度 | `AGENT_TRIGGERS_REMOTE` 注册 + 运行时 `tengu_surreal_dali` + `allow_remote_sessions` | 需要 claude.ai OAuth 认证 |
+| claude-api | `/claude-api` | claudeApi | Claude API | `BUILDING_CLAUDE_APPS` | |
+| dream | `/dream` | dream | Dream Mode | `KAIROS` 或 `KAIROS_DREAM` | |
+| hunter | `/hunter` | hunter | Code Hunter | `REVIEW_ARTIFACT` | |
+| claude-in-chrome | `/claude-in-chrome` | claudeInChrome | Chrome 扩展 | `auto (shouldAutoEnableClaudeInChrome)` | |
+| run-skill-generator | `/run-skill-generator` | runSkillGenerator | 技能生成器 | `RUN_SKILL_GENERATOR` | |
 
 ---
 

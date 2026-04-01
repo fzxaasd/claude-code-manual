@@ -16,7 +16,16 @@ Claude Code 有三种 Agent 来源：
 
 ### 内置 Agent 清单
 
-基于 `src/tools/AgentTool/builtInAgents.ts`：
+基于 `src/tools/AgentTool/built-in/` 目录下的独立文件：
+
+| 文件 | Agent | 说明 |
+|------|-------|------|
+| `generalPurposeAgent.ts` | GENERAL_PURPOSE_AGENT | 通用子 Agent |
+| `statuslineSetup.ts` | STATUSLINE_SETUP_AGENT | 状态栏设置 |
+| `exploreAgent.ts` | EXPLORE_AGENT | 代码库探索 |
+| `planAgent.ts` | PLAN_AGENT | 任务规划 |
+| `claudeCodeGuideAgent.ts` | CLAUDE_CODE_GUIDE_AGENT | Claude Code 使用指南 |
+| `verificationAgent.ts` | VERIFICATION_AGENT | 验证 Agent |
 
 ```typescript
 export function getBuiltInAgents(): AgentDefinition[] {
@@ -60,9 +69,9 @@ export function getBuiltInAgents(): AgentDefinition[] {
 | CLAUDE_CODE_GUIDE_AGENT | 启用（非 SDK） | 仅 `sdk-ts/py/cli` 入口时禁用 |
 | VERIFICATION_AGENT | 关闭 | `VERIFICATION_AGENT` feature + `tengu_hive_evidence` |
 
-**Explorer/Plan Agent Model 差异**：
+**Explore/Plan Agent Model 配置**：
 - Explore/Plan agents 读取 `omitClaudeMd` 字段，省略 CLAUDE.md 上下文以节省 token
-- 两者都使用相对轻量的模型配置（sonnet），适合探索和规划任务
+- 模型配置: `explore: haiku (非ANT) / inherit (ANT) | plan: inherit`
 
 ### Agent 与 Skill 的区别
 
@@ -114,7 +123,6 @@ interface BaseAgentDefinition {
   skills?: string[]          // 预加载技能
 
   // 提示词
-  prompt?: string           // 系统提示词
   initialPrompt?: string    // 初始提示词
   criticalSystemReminder_EXPERIMENTAL?: string  // 每次用户输入时注入
 
@@ -134,6 +142,8 @@ interface BaseAgentDefinition {
   baseDir?: string          // 基础目录
 }
 ```
+
+> 注意: `prompt` 字段仅存在于 JSON 格式（`--agents` CLI 参数），Markdown 文件的提示词来自正文内容
 
 ### Agent 定义来源
 
@@ -176,16 +186,20 @@ const agentGroups = [
 ]
 ```
 
-**Agent 来源详解**：
+**优先级顺序（低 → 高）**：
+```
+built-in < plugin < user < project < flag < managed
+```
+
+**来源详解**：
 | 来源 | SettingSource | 配置位置 |
 |------|--------------|----------|
+| built-in | `built-in` | Claude Code 内置 |
+| plugin | `plugin` | 插件提供 |
 | user | `userSettings` | `~/.claude/agents/*.md` 或 `settings.json` |
 | project | `projectSettings` | `.claude/agents/*.md` 或项目 settings |
-| local | `localSettings` | 临时配置 |
 | flag | `flagSettings` | `--agents` CLI 参数 |
 | policy | `policySettings` | 企业策略托管 |
-| plugin | `plugin` | 插件提供 |
-| built-in | `built-in` | Claude Code 内置 |
 
 ---
 

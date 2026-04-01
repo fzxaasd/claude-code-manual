@@ -97,12 +97,15 @@ interface ISandboxManager {
   getProxyPort(): number | undefined
   getSocksProxyPort(): number | undefined
   getLinuxGlobPatternWarnings(): string[]  // Linux glob 警告
+  checkDependencies(): { errors: string[], warnings: string[] }  // 依赖检查
+  getLinuxHttpSocketPath(): string | undefined  // Linux HTTP socket 路径
+  getLinuxSocksSocketPath(): string | undefined  // Linux SOCKS socket 路径
 
   // 网络
   waitForNetworkInitialization(): Promise<boolean>
 
   // 命令执行
-  wrapWithSandbox(command: string, shell?: string, customConfig?: Partial<SandboxRuntimeConfig>, abortSignal?: AbortSignal): Promise<string>
+  wrapWithSandbox(command: string, binShell?: string, customConfig?: Partial<SandboxRuntimeConfig>, abortSignal?: AbortSignal): Promise<string>
   cleanupAfterCommand(): void
 
   // 沙箱违规

@@ -45,7 +45,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
   "fastModePerSessionOptIn": false,
   "promptSuggestionEnabled": true,
   "showClearContextOnPlanAccept": false,
-  "skipDangerousModePermissionPrompt": false,
+  "skipDangerousModePermissionPrompt": false, // 已接受过 bypass 权限模式确认（状态标记）
 
   // === 输出与显示 ===
   "outputStyle": "default",
@@ -73,7 +73,8 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
     "ask": [],
     "defaultMode": "default",
     "disableBypassPermissionsMode": "disable",
-    "additionalDirectories": ["path"]
+    "additionalDirectories": ["path"],
+    "disableAutoMode": "disable"  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated（ANT 用户）
   },
 
   // === Hooks ===
@@ -139,15 +140,15 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
   "includeCoAuthoredBy": false,
   "includeGitInstructions": true,
 
-  // === Auto Mode ===
+  // === Auto Mode（⚠️ TRANSCRIPT_CLASSIFIER feature-gated，仅 ANT 用户）===
   "autoMode": {
     "allow": ["Bash(git *)"],
     "soft_deny": ["Bash(rm *)"],
     "environment": []
   },
-  "useAutoModeDuringPlan": true,
-  "skipAutoPermissionPrompt": false,
-  "disableAutoMode": "disable",
+  "useAutoModeDuringPlan": true,  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated
+  "skipAutoPermissionPrompt": false,  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated
+  "disableAutoMode": "disable",  // ⚠️ TRANSCRIPT_CLASSIFIER feature-gated（权限层级）
 
   // === 安全 ===
   "skipWebFetchPreflight": false,
@@ -250,6 +251,9 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | `defaultMode` | enum | 默认权限模式 (default/acceptEdits/bypassPermissions/dontAsk/plan/auto) |
 | `disableBypassPermissionsMode` | "disable" | 禁用绕过权限模式 |
 | `additionalDirectories` | string[] | 额外允许访问的目录 |
+| `disableAutoMode` | "disable" | ⚠️ 禁用自动模式（TRANSCRIPT_CLASSIFIER feature-gated，ANT 用户） |
+
+> **注意**: `defaultMode: "auto"` 是 TRANSCRIPT_CLASSIFIER feature-gated，仅 ANT 用户可用。
 
 > **数组合并语义**: 权限数组（allow/deny/ask）在多级配置中采用"拼接去重"合并策略。
 
@@ -321,7 +325,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 ]
 ```
 
-### 11. Auto Mode 配置
+### 11. Auto Mode 配置（⚠️ TRANSCRIPT_CLASSIFIER feature-gated，仅 ANT 用户）
 
 ```json
 "autoMode": {
@@ -333,7 +337,10 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 
 | 字段 | 说明 |
 |------|------|
-| `disableAutoMode` | 设置为 `"disable"` 可完全禁用自动模式 |
+| `autoMode` | 自动权限模式配置 |
+| `useAutoModeDuringPlan` | 规划阶段启用自动模式 |
+| `skipAutoPermissionPrompt` | 跳过自动模式权限确认 |
+| `disableAutoMode` | 设置为 `"disable"` 可完全禁用自动模式（permissions 层级） |
 
 ### 12. 企业管理配置
 
@@ -345,6 +352,21 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | `strictKnownMarketplaces` | array | 允许的市场 |
 | `blockedMarketplaces` | array | 禁止的市场 |
 | `pluginTrustMessage` | string | 插件信任消息 |
+
+### 13. 其他设置
+
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `defaultShell` | string | - | 默认 shell |
+| `claudeMdExcludes` | string[] | - | 排除加载的 CLAUDE.md 路径（glob 模式） |
+| `fastModePerSessionOptIn` | boolean | false | Fast mode 不跨会话持久化 |
+| `classifierPermissionsEnabled` | boolean | - | ⚠️ Bash(prompt:...) AI 分类权限（TRANSCRIPT_CLASSIFIER feature-gated，ANT 用户） |
+| `voiceEnabled` | boolean | - | ⚠️ 语音模式（需 VOICE_MODE feature） |
+| `channelsEnabled` | boolean | - | ⚠️ 团队/企业渠道通知（需 KAIROS_CHANNELS feature） |
+| `forceLoginMethod` | 'claudeai' \\| 'console' | - | 强制登录方式 |
+| `companyAnnouncements` | string[] | - | 公司公告 |
+| `feedbackSurveyRate` | number | - | 反馈调查频率 |
+| `plansDirectory` | string | ~/.claude/plans/ | 计划文件目录 |
 
 ---
 
