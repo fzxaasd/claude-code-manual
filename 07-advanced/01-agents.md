@@ -110,7 +110,8 @@ interface BaseAgentDefinition {
 
   // MCP 配置
   mcpServers?: AgentMcpServerSpec[]  // MCP 服务器
-  requiredMcpServers?: string[]      // 必需的 MCP 服务器名称（不区分大小写匹配）
+  requiredMcpServers?: string[]      // 必需的 MCP 服务器名称（仅限内置 Agent，不支持用户配置）
+  // 注意: requiredMcpServers 只能在内置 Agent 代码中设置，无法通过用户 markdown/JSON 配置
 
   // 钩子
   hooks?: HooksSettings      // 关联 Hooks
@@ -124,7 +125,7 @@ interface BaseAgentDefinition {
 
   // 提示词
   initialPrompt?: string    // 初始提示词
-  criticalSystemReminder_EXPERIMENTAL?: string  // 每次用户输入时注入
+  criticalSystemReminder_EXPERIMENTAL?: string  // 每轮用户消息重新注入的系统提示
 
   // 记忆
   memory?: AgentMemoryScope // 记忆范围
@@ -137,9 +138,11 @@ interface BaseAgentDefinition {
   omitClaudeMd?: boolean    // 省略 CLAUDE.md (Explore/Plan agents 默认)
   color?: AgentColorName    // Agent 颜色
 
-  // 元数据
-  filename?: string         // 原始文件名
-  baseDir?: string          // 基础目录
+  // 元数据 (内部字段，由 loader 填充，不属于 frontmatter)
+  /** @internal 原始文件名（loader 填充） */
+  filename?: string
+  /** @internal 基础目录（loader 填充） */
+  baseDir?: string
 }
 ```
 
@@ -230,6 +233,7 @@ skills:
 maxTurns: 50
 background: false
 initialPrompt: 请仔细审查代码的每个细节
+color: blue
 ---
 
 # 代码审查 Agent
