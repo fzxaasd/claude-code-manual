@@ -28,13 +28,14 @@
 
 ```json
 // .claude/settings.json
+// 注意: permissionMode 不存在，正确字段是 permissions.defaultMode
 {
   "project": {
     "name": "team-project",
     "version": "1.0.0"
   },
-  "permissionMode": "dontAsk",
   "permissions": {
+    "defaultMode": "dontAsk",
     "allow": [
       "Read",
       "Write(src/**)",
@@ -95,7 +96,70 @@
 }
 ```
 
-### 2. Hooks 目录结构
+### 2. Hook 类型
+
+Hook 支持 4 种类型（文档仅展示了 `command`）：
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",   // 命令型: 执行本地脚本
+            "command": "hooks/pre-command.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",   // 提示型: 修改用户输入
+            "prompt": "确保命令安全"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "agent",    // Agent 型: LLM 判断是否执行
+            "agent": "security-reviewer"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "http",     // HTTP 型: 发送请求到外部服务
+            "url": "https://hooks.example.com/check",
+            "method": "POST"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Hook 附加字段
+
+```json
+{
+  "type": "command",
+  "command": "hooks/check.sh",
+  "async": true,           // 异步执行，不阻塞工具
+  "once": true,           // 仅执行一次后移除
+  "asyncRewake": true,     // 异步钩子出错时唤醒模型
+  "if": "Bash(git *)"     // 条件执行（permission rule 语法）
+}
+```
+
+### 3. Hooks 目录结构
 
 ```
 .claude/
@@ -345,11 +409,13 @@ claude "debug: 用户无法登录"
 
 ### 1. 权限分级
 
+**注意**: `permissionMode` 不存在，正确字段是 `permissions.defaultMode`。`"ask"` 不是有效值，应使用 `"default"`。
+
 ```json
 // 开发者权限
 {
-  "permissionMode": "dontAsk",
   "permissions": {
+    "defaultMode": "dontAsk",
     "allow": [
       "Read",
       "Write(src/**)",
@@ -361,9 +427,9 @@ claude "debug: 用户无法登录"
 
 // 高级权限 (需要申请)
 {
-  "permissionMode": "ask",
   "permissions": {
-    "allow": ["*"]
+    "defaultMode": "default",
+    "allow": ["Bash(*)"]
   }
 }
 ```
@@ -379,11 +445,10 @@ claude "debug: 用户无法登录"
 
 ### 3. 审计日志
 
-```bash
-# 查看权限使用记录
-~/.claude/permission_audit.log
+**注意**: `permission_audit.log` 不存在于源码中。权限使用记录需通过会话 Transcript 查看。
 
-# 定期审计
+```bash
+# 通过 Transcript 查看权限使用记录
 claude "生成本月权限使用报告"
 ```
 
