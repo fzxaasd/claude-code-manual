@@ -223,4 +223,4 @@ A: 使用 `claude sessions list` 恢复，或定期导出
 
 - [安装与认证](./01-installation.md) - 详细安装说明
 - [核心概念](./02-core-concepts.md) - 深入理解术语
-- [全局选项](./02-cli/01-global-options.md) - 命令行参数
+- [全局选项](../02-cli/01-global-options.md) - 命令行参数

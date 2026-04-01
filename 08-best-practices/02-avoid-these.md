@@ -22,9 +22,9 @@ curl | sh             # 管道到 shell
 {
   "permissions": {
     "deny": [
-      { "tool": "Bash", "match": "rm -rf /" },
-      { "tool": "Bash", "match": "sudo rm *" },
-      { "tool": "Bash", "match": "chmod 777 *" }
+      "Bash(rm -rf *)",
+      "Bash(sudo rm *)",
+      "Bash(chmod 777 *)"
     ]
   }
 }
@@ -65,7 +65,8 @@ claude --permission-mode acceptEdits
 ### 2. `--bypassPermissions`
 
 ```bash
-# ❌ 危险！等同于 dangerously-skip-permissions
+# ❌ 危险！--bypassPermissions 是 --permission-mode bypassPermissions 的简写
+# 不同于 --dangerously-skip-permissions（完全跳过权限检查）
 claude --bypassPermissions
 ```
 

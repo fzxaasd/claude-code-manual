@@ -103,13 +103,13 @@ layers/
 
 // .claude/settings.json (项目级)
 {
-  "permissionMode": "limiting",
+  "permissionMode": "dontAsk",
   "permissions": {...}
 }
 
 // .claude/settings.local.json (本地)
 {
-  "permissionMode": "all"
+  "permissionMode": "acceptEdits"
 }
 ```
 
@@ -279,7 +279,7 @@ Claude (修复者)
 
 ```json
 {
-  "permissionMode": "limiting",
+  "permissionMode": "dontAsk",
   "permissions": {
     "allow": ["Read", "Glob", "Grep"],
     "deny": ["Write", "Bash"]

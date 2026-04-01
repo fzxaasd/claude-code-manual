@@ -35,7 +35,7 @@
     "name": "team-project",
     "version": "1.0.0"
   },
-  "permissionMode": "limiting",
+  "permissionMode": "dontAsk",
   "permissions": {
     "allow": [
       "Read",
@@ -350,7 +350,7 @@ claude "debug: 用户无法登录"
 ```json
 // 开发者权限
 {
-  "permissionMode": "limiting",
+  "permissionMode": "dontAsk",
   "permissions": {
     "allow": [
       "Read",
@@ -488,7 +488,7 @@ claude "analyze bundle size"
 [实际结果]
 
 ## Claude Code 版本
-[verson]
+[version]
 
 ## 配置信息
 [相关配置]

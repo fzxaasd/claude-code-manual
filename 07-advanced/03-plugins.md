@@ -63,7 +63,7 @@ claude mcp add-from-claude-desktop
 
 ```
 plugin-name/
-├── manifest.json           # 插件清单
+├── plugin.json              # 插件清单
 ├── skills/
 │   └── my-skill/
 │       └── SKILL.md
@@ -74,7 +74,7 @@ plugin-name/
 └── README.md
 ```
 
-### manifest.json
+### plugin.json
 
 ```json
 {
@@ -110,7 +110,7 @@ plugin-name/
 
 ```
 my-plugin/
-├── manifest.json
+├── plugin.json
 └── skills/
     └── custom-skill/
         └── SKILL.md
@@ -281,7 +281,7 @@ claude plugin marketplace add --type github --repo my-org/plugins
 ### 插件不加载
 
 1. 检查插件目录存在
-2. 验证 manifest.json 格式
+2. 验证 plugin.json 格式
 3. 查看错误日志
 
 ```bash
@@ -338,7 +338,7 @@ claude mcp add slack -- npx -y @modelcontextprotocol/server-slack
 ### 创建新插件
 
 1. 创建目录结构
-2. 编写 manifest.json
+2. 编写 plugin.json
 3. 添加技能/Agents/Hooks
 4. 测试验证
 5. 发布到市场

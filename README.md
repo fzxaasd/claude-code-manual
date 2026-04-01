@@ -102,8 +102,10 @@
 - [8.2 ⚠️ 避免使用的功能](./08-best-practices/02-avoid-these.md) ✅
 - [8.3 团队协作规范](./08-best-practices/03-team-collaboration.md) ✅
 
-### 第九部分：内存与任务系统
-- [9.1 内存系统概述](./09-memory-system/01-overview.md) ✅
+### 第九部分：内存系统
+- [9.1 内存系统概述](./09-memory/01-memory-overview.md) ✅
+
+### 第十部分：任务系统
 - [10.1 任务系统](./10-task-system/01-overview.md) ✅
 
 ### 第十一部分：插件外挂开发指南
@@ -151,7 +153,7 @@
 
 | 指标 | 数量 |
 |------|------|
-| 文档文件 | 37 |
+| 文档文件 | 41 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 16 |
@@ -175,7 +177,7 @@
 
 1. **首次使用**: 从 [快速上手](./01-getting-started/03-quick-start.md) 开始
 2. **Hooks 开发**: 先读 [Hook 类型详解](./05-hooks/01-hook-types.md)，再看 [Python Hooks](./05-hooks/03-python-hooks.md)
-4. **团队配置**: 参考 [项目级配置](./06-config/03-project-config.md)
+3. **团队配置**: 参考 [项目级配置](./06-config/03-project-config.md)
 
 ---
 

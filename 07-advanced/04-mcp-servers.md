@@ -559,8 +559,8 @@ type McpbPath = RelativePath.endsWith('.mcpb' | '.dxt')
 ### 服务器启动失败
 
 ```bash
-# 检查命令是否正确
-claude mcp get <name>
+# 检查配置是否正确
+/mcp list
 
 # 检查环境变量
 echo $VAR_NAME

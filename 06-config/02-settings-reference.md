@@ -247,7 +247,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | `allow` | string[] | 允许的操作 |
 | `deny` | string[] | 禁止的操作 |
 | `ask` | string[] | 始终询问的操作 |
-| `defaultMode` | enum | 默认权限模式 (default/all/ask/limiting/bypass) |
+| `defaultMode` | enum | 默认权限模式 (default/acceptEdits/bypassPermissions/dontAsk/plan/auto) |
 | `disableBypassPermissionsMode` | "disable" | 禁用绕过权限模式 |
 | `additionalDirectories` | string[] | 额外允许访问的目录 |
 

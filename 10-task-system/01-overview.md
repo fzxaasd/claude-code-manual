@@ -417,8 +417,6 @@ cat ~/.claude/tasks/${taskId}.log
 
 ## 相关文档
 
-- [TodoWrite Tool 使用](./02-todo-tool.md)
-- [后台任务管理](./03-background-tasks.md)
 - [Team Mode 任务协作](../07-advanced/05-team-mode.md)
 
 ---

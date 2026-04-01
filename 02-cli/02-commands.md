@@ -101,13 +101,7 @@ claude init --interactive
 
 ### `claude model` - 模型选择
 
-```bash
-# 查看可用模型
-claude model list
-
-# 设置默认模型
-claude model set sonnet
-```
+启动交互式菜单界面，用于选择和管理模型。
 
 ---
 
@@ -115,16 +109,11 @@ claude model set sonnet
 
 ### `claude permissions` - 权限规则
 
+启动交互式菜单界面，用于管理权限规则。
+
 ```bash
-# 编辑权限规则
-claude permissions edit
-
-# 查看当前权限
-claude permissions show
-
-# 测试权限
-claude permissions test "Bash(rm -rf /)"
-# 输出: DENIED - 危险命令
+# 启动交互式权限管理菜单
+claude permissions
 ```
 
 ### `claude privacy-settings` - 隐私设置
@@ -142,18 +131,11 @@ claude privacy-settings
 
 ### `claude hooks` - Hooks 操作
 
+启动交互式菜单界面，用于管理 Hooks。
+
 ```bash
-# 列出所有 Hook
-claude hooks list
-
-# 测试 Hook
-claude hooks test PreToolUse --matcher "Bash"
-
-# 验证 Hook 配置
-claude hooks validate
-
-# 调试 Hook
-claude hooks debug --event PreToolUse
+# 启动交互式 Hooks 管理菜单
+claude hooks
 ```
 
 ---
@@ -179,15 +161,11 @@ claude plugins update --all
 
 ### `claude skills` - 技能管理
 
+启动交互式菜单界面，用于管理技能。
+
 ```bash
-# 列出可用技能
-claude skills list
-
-# 查看技能详情
-claude skills info <skill-name>
-
-# 重新加载技能缓存
-claude skills reload
+# 启动交互式技能管理菜单
+claude skills
 ```
 
 ---
@@ -273,6 +251,13 @@ claude stats
 claude effort high
 ```
 
+### `claude insights` - 会话分析报告
+
+```bash
+# 生成会话分析报告
+claude insights
+```
+
 ---
 
 ## Git 集成
@@ -322,18 +307,11 @@ claude branch checkout <branch-name>
 
 ### `claude context` - 上下文管理
 
+启动交互式菜单界面，用于管理上下文。
+
 ```bash
-# 列出当前上下文
-claude context list
-
-# 查看上下文大小
-claude context show
-
-# 导出上下文
-claude context export
-
-# 导入上下文
-claude context import <file>
+# 启动交互式上下文管理菜单
+claude context
 ```
 
 ### `claude files` - 追踪文件列表
@@ -349,14 +327,14 @@ claude files add <path>
 claude files remove <path>
 ```
 
-### `claude thinkback` - 回溯思考
+### `claude think-back` - 回溯思考
 
 ```bash
 # 查看之前的思考过程
-claude thinkback
+claude think-back
 
 # 回溯到特定点
-claude thinkback <message-id>
+claude think-back <message-id>
 ```
 
 ### `claude rewind` - 回退会话
@@ -368,19 +346,27 @@ claude rewind <message-id>
 
 ---
 
+### `claude export` - 导出功能
+
+```bash
+# 导出会话数据
+claude export
+
+# 导出到指定路径
+claude export --output <path>
+```
+
+---
+
 ## UI 定制
 
 ### `claude theme` - 终端主题
 
+启动交互式菜单界面，用于选择和管理终端主题。
+
 ```bash
-# 列出可用主题
-claude theme list
-
-# 应用主题
-claude theme <theme-name>
-
-# 预览主题
-claude theme preview <theme-name>
+# 启动交互式主题选择菜单
+claude theme
 ```
 
 ### `claude color` - Agent 颜色
@@ -411,14 +397,40 @@ claude statusline
 claude statusline on
 ```
 
-### `claude keybindings` - 快捷键
+### `claude ide` - IDE 相关设置
+
+启动交互式菜单界面，用于配置 IDE 相关选项。
 
 ```bash
-# 列出快捷键
-claude keybindings list
+# 启动 IDE 设置菜单
+claude ide
+```
 
-# 自定义快捷键
-claude keybindings set <key> <action>
+### `claude keybindings` - 快捷键
+
+启动交互式菜单界面，用于管理快捷键绑定。
+
+```bash
+# 启动交互式快捷键管理菜单
+claude keybindings
+```
+
+---
+
+## 认证命令
+
+### `claude login` - 登录认证
+
+```bash
+# 启动登录流程
+claude login
+```
+
+### `claude logout` - 登出认证
+
+```bash
+# 登出当前账号
+claude logout
 ```
 
 ---
