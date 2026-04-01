@@ -95,9 +95,10 @@ claude init --interactive
 **初始化创建的文件:**
 ```
 .claude/
-├── settings.json      # 项目设置
-└── permissions.json   # 权限规则
+└── settings.json      # 项目设置 (permissions 在 settings.json 的 permissions 字段中)
 ```
+
+**注意**: `--permission-mode` 参数值应为 `acceptEdits`/`dontAsk` 等，而非 `all`/`limiting`。
 
 ### `claude model` - 模型选择
 
@@ -142,21 +143,21 @@ claude hooks
 
 ## 插件与技能管理
 
-### `claude plugins` - 插件操作
+### `claude plugin` - 插件操作
 
 ```bash
 # 列出已安装插件
-claude plugins list
+claude plugin list
 
 # 安装插件
-claude plugins install <plugin-id>
+claude plugin add <plugin-id>
 
 # 卸载插件
-claude plugins uninstall <plugin-id>
+claude plugin remove <plugin-id>
 
 # 更新插件
-claude plugins update
-claude plugins update --all
+claude plugin update
+claude plugin update --all
 ```
 
 ### `claude skills` - 技能管理
@@ -657,7 +658,7 @@ claude fork
 claude voice
 ```
 
-### `claude proactive` (PROACTIVE)
+### `claude proactive` (PROACTIVE | KAIROS)
 
 主动模式。
 
@@ -679,6 +680,70 @@ claude assistant
 
 ```bash
 claude bridge
+```
+
+### `claude ultraplan` (ULTRAPLAN)
+
+高级计划模式。
+
+```bash
+claude ultraplan
+```
+
+### `claude subscribe-pr` (KAIROS_GITHUB_WEBHOOKS)
+
+订阅 PR 通知。
+
+```bash
+claude subscribe-pr <pr-url>
+```
+
+### `claude force-snip` (HISTORY_SNIP)
+
+强制截断历史。
+
+```bash
+claude force-snip
+```
+
+### `claude buddy` (BUDDY)
+
+Buddy 模式。
+
+```bash
+claude buddy
+```
+
+### `claude torch` (TORCH)
+
+Torch 模式。
+
+```bash
+claude torch
+```
+
+### `claude peers` (UDS_INBOX)
+
+对等连接模式。
+
+```bash
+claude peers
+```
+
+### `claude server` (DIRECT_CONNECT)
+
+启动 Claude Code 会话服务器。
+
+```bash
+claude server
+```
+
+### `claude ssh` (SSH_REMOTE)
+
+通过 SSH 连接到远程会话。
+
+```bash
+claude ssh <host> [dir]
 ```
 
 ---

@@ -148,10 +148,19 @@ EOF
 
 ```bash
 # 开发环境 - 宽松权限
-export CLAUDE_PERMISSION_MODE=acceptEdits
+claude --permission-mode acceptEdits
 
 # 生产环境 - 严格限制
-export CLAUDE_PERMISSION_MODE=dontAsk
+claude --permission-mode dontAsk
+```
+
+**settings.json 配置**:
+```json
+{
+  "permissions": {
+    "defaultMode": "dontAsk"
+  }
+}
 ```
 
 ---

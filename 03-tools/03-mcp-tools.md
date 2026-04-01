@@ -267,34 +267,22 @@ python my_mcp_server.py
 
 ## MCP 工具权限
 
-### 沙箱配置
+MCP 工具权限通过 Claude Code 的 `permissions` 配置控制，不在 server config 中设置。
 
+**McpStdioServerConfig 实际支持的字段**：
 ```json
 {
-  "mcpServers": {
-    "github": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-github"],
-      "allowedTools": ["list_repos", "get_file"],
-      "deniedTools": ["delete_repo"]
-    }
-  }
+  "command": "npx",
+  "args": ["@modelcontextprotocol/server-github"],
+  "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" }
 }
 ```
+
+**注意**: `allowedTools`/`deniedTools`/`allowedPaths`/`deniedPaths` 等字段 **不存在**于 MCP server config schema 中。这些是各 MCP server 自身实现的限制，不是 Claude Code 层面的配置。
 
 ### 工具限制
 
-```json
-{
-  "mcpServers": {
-    "filesystem": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/server-filesystem"],
-      "allowedPaths": ["/project/src", "/project/docs"]
-    }
-  }
-}
-```
+MCP server 的路径限制由各个 server 自己实现（如 filesystem server），不是 Claude Code 配置的一部分。
 
 ---
 
@@ -315,11 +303,16 @@ python my_mcp_server.py
 ### MCP 服务器不响应
 
 ```bash
-# 检查服务器状态
-claude mcp status
+# 列出所有 MCP server 状态
+claude mcp list
 
-# 检查日志
-claude mcp debug github
+# 获取特定 server 详情
+claude mcp get <server-name>
+
+# 重连 server
+claude mcp reconnect <server-name>
+
+# 注意: claude mcp status 和 claude mcp debug 命令不存在
 ```
 
 ### 工具不可用
@@ -369,32 +362,11 @@ export MCP_SERVER_TIMEOUT=60000
 
 ### 2. 权限隔离
 
-```json
-{
-  "mcpServers": {
-    "read-only": {
-      "command": "npx",
-      "args": ["read-only-server"],
-      "allowedTools": ["read_file", "list_directory"]
-    }
-  }
-}
-```
+MCP server 的工具限制由 server 自身实现。Claude Code 通过 `permissions.allow`/`permissions.deny` 控制用户可调用的工具。
 
 ### 3. 性能优化
 
-```json
-{
-  "mcpServers": {
-    "cached": {
-      "command": "npx",
-      "args": ["cached-server"],
-      "cacheEnabled": true,
-      "cacheTTL": 300
-    }
-  }
-}
-```
+MCP server 的缓存行为由各 server 自己实现。Claude Code 不提供 `cacheEnabled`/`cacheTTL` 配置。
 
 ---
 
@@ -422,14 +394,4 @@ export MCP_SERVER_TIMEOUT=60000
 
 ### MCP 上下文
 
-```json
-{
-  "mcpServers": {
-    "context-aware": {
-      "command": "npx",
-      "args": ["context-server"],
-      "includeContext": ["git_status", "current_file"]
-    }
-  }
-}
-```
+MCP server 的上下文包含功能由各 server 自己实现。Claude Code 不提供 `includeContext` 配置。

@@ -49,13 +49,14 @@ export ANTHROPIC_MODEL=claude-haiku-4-20250507
 
 ## 权限相关
 
-### `CLAUDE_PERMISSION_MODE`
+### CLI 参数设置权限模式
 
-默认权限模式。
+**注意**: `CLAUDE_PERMISSION_MODE` 环境变量 **不存在**。权限模式通过以下方式设置：
 
 ```bash
-# 可选值: acceptEdits, bypassPermissions, default, dontAsk, plan
-export CLAUDE_PERMISSION_MODE=default
+# CLI 参数
+claude --permission-mode acceptEdits
+claude --permission-mode dontAsk
 ```
 
 | 值 | 说明 |
@@ -65,6 +66,15 @@ export CLAUDE_PERMISSION_MODE=default
 | `bypassPermissions` | 绕过所有检查 |
 | `dontAsk` | 不询问，直接拒绝 |
 | `plan` | 仅在计划模式 |
+
+**settings.json 配置**:
+```json
+{
+  "permissions": {
+    "defaultMode": "dontAsk"
+  }
+}
+```
 
 ---
 
@@ -280,8 +290,8 @@ export CLAUDE_FEATURE_FLAGS=multi-agent,advanced-compact
 export ANTHROPIC_API_KEY=sk-ant-xxxxx
 export ANTHROPIC_BASE_URL=https://api.anthropic.com
 
-# 权限配置
-export CLAUDE_PERMISSION_MODE=ask
+# 权限配置 (使用 CLI: --permission-mode 或 settings.json)
+# export CLAUDE_PERMISSION_MODE=ask  # 此环境变量不存在
 
 # 调试配置
 export CLAUDE_DEBUG=0
@@ -348,7 +358,7 @@ op run -- echo $ANTHROPIC_API_KEY
 # 创建 .env 文件
 cat > ~/.claude/.env << 'EOF'
 ANTHROPIC_API_KEY=sk-ant-xxxxx
-CLAUDE_PERMISSION_MODE=ask
+# 注意: CLAUDE_PERMISSION_MODE 环境变量不存在，使用 --permission-mode CLI 参数
 EOF
 
 # 加载
@@ -365,7 +375,7 @@ set +a
 
 ```bash
 # 检查变量是否存在
-echo $CLAUDE_PERMISSION_MODE
+echo $ANTHROPIC_API_KEY
 
 # 检查配置文件
 cat ~/.zshrc | grep CLAUDE

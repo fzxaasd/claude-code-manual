@@ -34,7 +34,13 @@ curl -fsSL https://downloads.anthropic.com/claude-code/install.sh | sh
 npm install -g @anthropic-ai/claude-code
 ```
 
-### 4. 手动安装
+### 4. Windows (winget)
+
+```bash
+winget install Anthropic.ClaudeCode
+```
+
+### 5. 手动安装
 
 从 Anthropic 官网下载对应平台的安装包。
 
@@ -49,6 +55,14 @@ claude auth login
 ```
 
 这会打开浏览器进行 OAuth 认证。
+
+**认证选项**：
+```bash
+claude auth login --sso           # SSO 单点登录
+claude auth login --console       # Anthropic Console 登录
+claude auth login --claudeai      # Claude.ai 登录
+claude auth login --email <email> # 指定邮箱登录
+```
 
 ### 方式 2: API Key
 
