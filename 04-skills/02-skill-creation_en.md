@@ -1,0 +1,341 @@
+# Skill Creation Specification
+
+> In-depth analysis of Claude Code skill creation best practices from source code
+
+## SKILL.md Standard Template
+
+The `/skillify` skill in Claude Code source provides a standard template:
+
+```yaml
+---
+name: {{skill-name}}
+description: {{One-line description}}
+allowed-tools:
+  {{tool permission patterns}}
+when_to_use: |
+  Describe in detail when this skill should be automatically invoked, including trigger phrases and example messages.
+  Use when the user wants to cherry-pick a PR to a release branch.
+  Examples: 'cherry-pick to release', 'CP this PR', 'hotfix.'
+argument-hint: "{{Parameter placeholder hint}}"
+arguments:
+  - name
+  - description
+context: {{inline or fork}}
+model: "{{Optional: specify model}}"
+effort: "{{Optional: low/medium/high}}"
+---
+
+# Skill Title
+
+Detailed skill description...
+
+## Inputs
+- `$arg_name`: Input description
+
+## Objective
+Clearly state the objective of this workflow.
+
+## Steps
+
+### 1. Step Name
+The specific action to perform.
+
+**Success Criteria**: Define when the step is considered complete.
+
+**Execution**: `Direct` (default), `Task agent`, `Teammate`, `[human]`
+**Outputs**: Data/IDs produced by this step for subsequent steps
+**Human Checkpoint**: When to pause and ask user
+```
+
+---
+
+## Frontmatter Field Details
+
+### 1. Core Metadata
+
+```yaml
+---
+name: skill-name                    # Skill identifier (optional, defaults to directory name)
+description: Short description      # Required, shown in /skills list
+when_to_use: |                     # Critical! Tells model when to auto-invoke
+  Use when the user wants to...
+  Example messages: '...', '...'
+---
+```
+
+### 2. Parameter Definitions
+
+```yaml
+---
+argument-hint: "\"param1\" \"param2\""  # Parameter example format
+arguments:                            # Parameter list
+  - param1: Parameter 1 description
+  - param2: Parameter 2 description
+---
+```
+
+### 3. Tool Permissions
+
+```yaml
+---
+allowed-tools: |                    # Principle of least privilege
+  Bash(gh:*)
+  Read
+  Edit
+  Write
+  Grep
+---
+```
+
+### 4. Execution Mode
+
+```yaml
+---
+context: fork                       # Sub-agent execution (independent context)
+# Or omit context: inline         # Inline execution (current session)
+model: "sonnet"                    # Optional: specify model
+effort: "high"                    # Optional: effort level
+---
+```
+
+### 5. Conditional Activation
+
+```yaml
+---
+paths:                              # Activate after path pattern match
+  - "*.sql"
+  - "migrations/*.sql"
+  - "**/database/**/*.sql"
+---
+```
+
+---
+
+## Execution Mode Comparison
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `inline` (default) | Execute in current session | Requires user involvement in decisions |
+| `fork` | Sub-agent execution | Self-contained tasks, no mid-process interaction |
+
+### Fork Mode Characteristics
+
+```yaml
+context: fork
+```
+
+- Runs in an independent sub-agent
+- Has its own token budget
+- Tool outputs not in main context
+- Suitable for long-running background tasks
+
+---
+
+## Skill Content Structure
+
+### 1. Basic Information
+
+```markdown
+# Skill Name
+
+## Overview
+Brief description of skill functionality.
+
+## Use Cases
+When this skill should be used.
+```
+
+### 2. Input Parameters
+
+```markdown
+## Inputs
+- `$target`: Target file or directory
+- `$options`: Optional parameters
+```
+
+### 3. Steps
+
+```markdown
+## Steps
+
+### 1. Initialization
+Check environment and dependencies.
+
+**Success Criteria**:
+- Environment is ready
+- Dependencies are installed
+
+### 2. Execute Core Logic
+Perform the main task.
+
+**Execution**: `Task agent` (optional: parallel execution)
+**Outputs**: Key data for subsequent use
+```
+
+### 4. Error Handling
+
+```markdown
+## Error Handling
+
+If failed:
+1. Log error
+2. Clean up temporary files
+3. Return error message
+```
+
+---
+
+## Complete Example
+
+```yaml
+---
+name: sql-migration
+description: Database migration execution and verification
+when_to_use: |
+  Use when you need to create or execute database migrations.
+  Examples: 'run migration', 'create users table migration', 'migrate users'
+argument-hint: "\"up\" or \"down\" [migration_name]"
+arguments:
+  - direction: "up or down"
+  - name: "Migration name (optional)"
+allowed-tools:
+  Bash(psql:*)
+  Bash(psql -h *)
+  Read
+  Grep
+context: inline
+---
+# SQL Migration Assistant
+
+Execute database migrations and verify results.
+
+## Inputs
+- `$direction`: `up` or `down`
+- `$name`: Optional migration name
+
+## Steps
+
+### 1. Prepare Migration
+Check migration file status.
+
+**Success Criteria**:
+- Migration file exists
+- Database connection is healthy
+
+### 2. Execute Migration
+```bash
+alembic upgrade head
+```
+
+**Success Criteria**:
+- No error output
+- Version number updated
+
+### 3. Verify Results
+Confirm migration was successfully applied.
+
+**Success Criteria**:
+- Table structure is correct
+- Data is intact
+```
+
+---
+
+## Best Practices
+
+### 1. when_to_use is Critical
+
+```yaml
+# ❌ Vague description
+when_to_use: "Process data"
+
+# ✅ Specific description
+when_to_use: |
+  Use when the user needs to create new database tables.
+  Examples: 'create users table', 'add table', 'new table users'
+```
+
+### 2. Principle of Least Privilege
+
+```yaml
+# ❌ Too permissive
+allowed-tools: "Bash|Read|Write|Edit"
+
+# ✅ Precisely specify
+allowed-tools:
+  Bash(npm:*)
+  Bash(node:*)
+  Read
+```
+
+### 3. Clear Success Criteria
+
+Each step must have `**Success Criteria:**` to tell the model when to proceed.
+
+### 4. Fork vs Inline Selection
+
+```yaml
+# ✅ Fork: Self-contained tasks
+context: fork
+# Example: code formatting, dependency checks, static analysis
+
+# ✅ Inline: Requires interaction
+# (omit context or explicitly inline)
+# Example: refactoring requires review, debugging needs feedback
+```
+
+### 5. Output Chain
+
+If steps have data dependencies, use `**Outputs:**` annotation:
+
+```markdown
+### 1. Generate Code
+Generate code files.
+
+**Outputs**: `{file_path}` - Generated file path
+
+### 2. Verify Code
+Verify generated files.
+
+**Success Criteria**: File exists and is executable
+```
+
+---
+
+## Skill Format Reference
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| `name` | Skill identifier | Yes |
+| `description` | One-line description | Yes |
+| `when_to_use` | When to auto-invoke | Recommended |
+| `allowed-tools` | Tool permission whitelist | Optional |
+| `arguments` | Parameter definitions | Optional |
+| `argument-hint` | Parameter example format | Optional |
+| `context` | `inline` or `fork` | Optional |
+| `model` | Specify model | Optional |
+| `effort` | `low`/`medium`/`high` | Optional |
+| `agent` | Agent type for fork mode | Optional |
+| `shell` | Shell type for execution | Optional |
+| `hide-from-slash-command-tool` | Hide from /skills list | Optional |
+| `disableModelInvocation` | Disable model invocation | Optional |
+| `paths` | Path pattern activation | Optional |
+| `files` | Related files | Optional |
+
+### Complete Example
+
+Use the following format when creating skills:
+
+```yaml
+---
+name: my-skill
+description: Skill description
+when_to_use: |
+  Use when processing SQL files
+paths:
+  - "*.sql"
+  - "migrations/*.sql"
+allowed-tools: "Read|Edit|Bash(psql *)"
+context: inline
+---
+```
