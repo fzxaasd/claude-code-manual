@@ -402,10 +402,246 @@ export async function getBridgeDisabledReason(): Promise<string | null>
 |-------------|------|------|
 | `tengu_ccr_bridge` | gate | Remote Control 总开关 |
 | `tengu_bridge_repl_v2` | value | 启用 v2 env-less bridge |
-| `tengu_bridge_repl_v2_config` | config | v2 bridge 详细配置 |
+| `tengu_bridge_repl_v2_config` | config | v2 bridge 详细配置 (EnvLessBridgeConfig) |
+| `tengu_bridge_repl_v2_cse_shim_enabled` | config | cse_* → session_* 兼容 shim |
 | `tengu_bridge_min_version` | config | v1 最低版本要求 |
+| `tengu_bridge_poll_interval_config` | config | PollIntervalConfig 轮询参数 |
+| `tengu_sessions_elevated_auth_enforcement` | gate | Trusted Device Token 功能开关 |
 | `tengu_ccr_mirror` | value | CCR 镜像模式 |
-| `tengu_bridge_repl_v2_cse_shim_enabled` | value | cse_* → session_* 兼容 shim |
+
+---
+
+## Trusted Device Token
+
+基于 `src/bridge/trustedDevice.ts` 的可信设备令牌机制：
+
+### 机制概述
+
+- **GrowthBook Gate**: `tengu_sessions_elevated_auth_enforcement`
+- **用途**: 设备注册认证，token 有效期 90 天（服务端滚动过期）
+
+### 核心 API
+
+```typescript
+// 获取 token（用于请求头 X-Trusted-Device-Token）
+export function getTrustedDeviceToken(): string | undefined
+
+// 清除缓存
+export function clearTrustedDeviceTokenCache(): void
+
+// 注册设备到服务端
+export async function enrollTrustedDevice(): Promise<void>
+```
+
+### Token 获取优先级
+
+```typescript
+const readStoredToken = memoize((): string | undefined => {
+  // 1. 环境变量优先
+  const envToken = process.env.CLAUDE_TRUSTED_DEVICE_TOKEN
+  if (envToken) {
+    return envToken
+  }
+  // 2. macOS Keychain 回退
+  return getSecureStorage().read()?.trustedDeviceToken
+})
+```
+
+### Enrollment 流程
+
+```typescript
+async function enrollTrustedDevice(): Promise<void> {
+  // POST /api/auth/trusted_devices
+  // 请求体: { display_name: "Claude Code on {hostname} · {platform}" }
+  // 响应: { device_token, device_id }
+  // Token 存储到 Keychain
+}
+```
+
+### 使用示例
+
+```typescript
+// in codeSessionApi.ts
+export async function fetchRemoteCredentials(
+  sessionId: string,
+  baseUrl: string,
+  accessToken: string,
+  timeoutMs: number,
+  trustedDeviceToken?: string,  // 可选参数
+): Promise<RemoteCredentials | null> {
+  const headers = oauthHeaders(accessToken)
+  if (trustedDeviceToken) {
+    headers['X-Trusted-Device-Token'] = trustedDeviceToken
+  }
+  // ... POST /v1/code/sessions/{id}/bridge
+}
+```
+
+---
+
+## PollIntervalConfig
+
+基于 `src/bridge/pollConfig.ts` 和 `src/bridge/pollConfigDefaults.ts` 的轮询配置：
+
+### 类型定义
+
+```typescript
+export type PollIntervalConfig = {
+  poll_interval_ms_not_at_capacity: number           // 活跃轮询间隔
+  poll_interval_ms_at_capacity: number               // 容量满时轮询间隔
+  non_exclusive_heartbeat_interval_ms: number         // 非独占心跳间隔
+  multisession_poll_interval_ms_not_at_capacity: number  // 多会话：非满负荷
+  multisession_poll_interval_ms_partial_capacity: number  // 多会话：部分容量
+  multisession_poll_interval_ms_at_capacity: number     // 多会话：满容量
+  reclaim_older_than_ms: number                       // 拾取超时阈值
+  session_keepalive_interval_v2_ms: number            // Session-ingress keep-alive 间隔
+}
+```
+
+### 默认值
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `poll_interval_ms_not_at_capacity` | `2000` | 活跃轮询间隔(毫秒) |
+| `poll_interval_ms_at_capacity` | `600000` (10分钟) | 容量满时轮询，0=禁用 |
+| `non_exclusive_heartbeat_interval_ms` | `0` | 非独占心跳间隔 |
+| `multisession_poll_interval_ms_not_at_capacity` | `2000` | 多会话：非满负荷 |
+| `multisession_poll_interval_ms_partial_capacity` | `2000` | 多会话：部分容量 |
+| `multisession_poll_interval_ms_at_capacity` | `600000` | 多会话：满容量 |
+| `reclaim_older_than_ms` | `5000` | 拾取超时工作的阈值 |
+| `session_keepalive_interval_v2_ms` | `120000` (2分钟) | Session-ingress keep-alive 帧间隔 |
+
+### 配置来源
+
+- **GrowthBook feature**: `tengu_bridge_poll_interval_config`
+- **刷新间隔**: 5 分钟 (`5 * 60 * 1000`)
+- **回退机制**: Zod schema 验证失败时回退到 `DEFAULT_POLL_CONFIG`
+
+```typescript
+export function getPollIntervalConfig(): PollIntervalConfig {
+  const raw = getFeatureValue_CACHED_WITH_REFRESH<unknown>(
+    'tengu_bridge_poll_interval_config',
+    DEFAULT_POLL_CONFIG,
+    5 * 60 * 1000,
+  )
+  const parsed = pollIntervalConfigSchema().safeParse(raw)
+  return parsed.success ? parsed.data : DEFAULT_POLL_CONFIG
+}
+```
+
+---
+
+## Transport Layer
+
+基于 `src/bridge/replBridgeTransport.ts` 和 `src/cli/transports/` 的传输层实现：
+
+### 架构概览
+
+```
+Bridge Sessions
+    │
+    ├── v1: HybridTransport (WS读取 + HTTP POST写入)
+    │       └── WebSocketTransport (reconnect, ping/pong)
+    │
+    └── v2: SSETransport (SSE读取) + CCRClient (HTTP写入/心跳)
+```
+
+### v1 HybridTransport
+
+```typescript
+export class HybridTransport extends WebSocketTransport {
+  // 写入: WebSocket → SerialBatchEventUploader → HTTP POST
+  // stream_event: 100ms 缓冲批量发送
+  // 其他消息: 直接入队
+  
+  // URL 转换
+  // wss://api.example.com/v2/session_ingress/ws/<session_id>
+  // → https://api.example.com/v2/session_ingress/session/<session_id>/events
+}
+```
+
+### v2 SSETransport (读取)
+
+```typescript
+export class SSETransport implements Transport {
+  // SSE → parseSSEFrames → onData callback
+  // 自动重连: 指数退避 + 抖动
+  // 重连预算: 10分钟 (RECONNECT_GIVE_UP_MS = 600000)
+  // 存活检测: 45秒无活动视为断开 (LIVENESS_TIMEOUT_MS)
+  // 序列号: Last-Event-ID 用于断点续传
+}
+```
+
+### v2 CCRClient (写入 + 心跳)
+
+```typescript
+export class CCRClient {
+  // PUT /worker - worker 状态报告
+  // POST /worker/events - 客户端事件
+  // POST /worker/heartbeat - 心跳 (默认 20s，server TTL 60s)
+  // POST /worker/events/delivery - 投递状态
+  
+  // Epoch 管理: 409 = epoch 不匹配 → 重建传输
+  // 流事件: 100ms 缓冲 + text_delta 合并
+}
+```
+
+### ReplBridgeTransport 接口
+
+```typescript
+export type ReplBridgeTransport = {
+  write(message: StdoutMessage): Promise<void>
+  writeBatch(messages: StdoutMessage[]): Promise<void>
+  close(): void
+  isConnectedStatus(): boolean
+  getStateLabel(): string
+  setOnData(callback: (data: string) => void): void
+  setOnClose(callback: (closeCode?: number) => void): void
+  setOnConnect(callback: () => void): void
+  connect(): void
+  getLastSequenceNum(): number  // v2 SSE 序列号
+  reportState(state: SessionState): void
+  reportDelivery(eventId: string, status: 'processing' | 'processed'): void
+  flush(): Promise<void>
+}
+```
+
+### 适配器工厂函数
+
+```typescript
+// v1 适配器
+export function createV1ReplTransport(hybrid: HybridTransport): ReplBridgeTransport
+
+// v2 适配器
+export async function createV2ReplTransport(opts: {
+  sessionUrl: string
+  ingressToken: string
+  sessionId: string
+  initialSequenceNum?: number
+  epoch?: number
+  heartbeatIntervalMs?: number
+  heartbeatJitterFraction?: number
+  outboundOnly?: boolean
+  getAuthToken?: () => string | undefined
+}): Promise<ReplBridgeTransport>
+```
+
+### 心跳与重连配置
+
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `DEFAULT_HEARTBEAT_INTERVAL_MS` | `20000` | CCRClient 默认心跳间隔 |
+| `MAX_CONSECUTIVE_AUTH_FAILURES` | `10` | 认证失败后放弃重连次数 |
+| `RECONNECT_BASE_DELAY_MS` | `1000` | WebSocket 重连基础延迟 |
+| `RECONNECT_MAX_DELAY_MS` | `30000` | WebSocket 重连最大延迟 |
+| `RECONNECT_GIVE_UP_MS` | `600000` | 重连放弃阈值 (10分钟) |
+| `LIVENESS_TIMEOUT_MS` | `45000` | SSE 无活动断开阈值 (45秒) |
+
+### Epoch 管理
+
+- Epoch 由服务端在 `/sessions/{id}/bridge` 响应中返回
+- `409 Conflict` = Epoch 不匹配 → 重建传输层
+- 客户端传入 epoch 用于服务端校验
 
 ---
 

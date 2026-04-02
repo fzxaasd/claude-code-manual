@@ -402,10 +402,246 @@ Possible return values:
 |-------------|------|------|
 | `tengu_ccr_bridge` | gate | Remote Control main switch |
 | `tengu_bridge_repl_v2` | value | Enable v2 env-less bridge |
-| `tengu_bridge_repl_v2_config` | config | v2 bridge detailed configuration |
+| `tengu_bridge_repl_v2_config` | config | v2 bridge detailed configuration (EnvLessBridgeConfig) |
+| `tengu_bridge_repl_v2_cse_shim_enabled` | config | cse_* → session_* compatibility shim |
 | `tengu_bridge_min_version` | config | v1 minimum version requirement |
+| `tengu_bridge_poll_interval_config` | config | PollIntervalConfig polling parameters |
+| `tengu_sessions_elevated_auth_enforcement` | gate | Trusted Device Token feature gate |
 | `tengu_ccr_mirror` | value | CCR mirror mode |
-| `tengu_bridge_repl_v2_cse_shim_enabled` | value | cse_* → session_* compatibility shim |
+
+---
+
+## Trusted Device Token
+
+Based on `src/bridge/trustedDevice.ts` - trusted device token mechanism:
+
+### Overview
+
+- **GrowthBook Gate**: `tengu_sessions_elevated_auth_enforcement`
+- **Purpose**: Device registration authentication, token validity 90 days (server-side rolling expiration)
+
+### Core API
+
+```typescript
+// Get token (for X-Trusted-Device-Token header)
+export function getTrustedDeviceToken(): string | undefined
+
+// Clear cache
+export function clearTrustedDeviceTokenCache(): void
+
+// Register device to server
+export async function enrollTrustedDevice(): Promise<void>
+```
+
+### Token Acquisition Priority
+
+```typescript
+const readStoredToken = memoize((): string | undefined => {
+  // 1. Environment variable takes priority
+  const envToken = process.env.CLAUDE_TRUSTED_DEVICE_TOKEN
+  if (envToken) {
+    return envToken
+  }
+  // 2. macOS Keychain fallback
+  return getSecureStorage().read()?.trustedDeviceToken
+})
+```
+
+### Enrollment Flow
+
+```typescript
+async function enrollTrustedDevice(): Promise<void> {
+  // POST /api/auth/trusted_devices
+  // Request body: { display_name: "Claude Code on {hostname} · {platform}" }
+  // Response: { device_token, device_id }
+  // Token stored in Keychain
+}
+```
+
+### Usage Example
+
+```typescript
+// in codeSessionApi.ts
+export async function fetchRemoteCredentials(
+  sessionId: string,
+  baseUrl: string,
+  accessToken: string,
+  timeoutMs: number,
+  trustedDeviceToken?: string,  // Optional parameter
+): Promise<RemoteCredentials | null> {
+  const headers = oauthHeaders(accessToken)
+  if (trustedDeviceToken) {
+    headers['X-Trusted-Device-Token'] = trustedDeviceToken
+  }
+  // ... POST /v1/code/sessions/{id}/bridge
+}
+```
+
+---
+
+## PollIntervalConfig
+
+Based on `src/bridge/pollConfig.ts` and `src/bridge/pollConfigDefaults.ts` - polling configuration:
+
+### Type Definition
+
+```typescript
+export type PollIntervalConfig = {
+  poll_interval_ms_not_at_capacity: number           // Active polling interval
+  poll_interval_ms_at_capacity: number               // Polling interval at capacity
+  non_exclusive_heartbeat_interval_ms: number        // Non-exclusive heartbeat interval
+  multisession_poll_interval_ms_not_at_capacity: number  // Multi-session: non-full
+  multisession_poll_interval_ms_partial_capacity: number  // Multi-session: partial capacity
+  multisession_poll_interval_ms_at_capacity: number     // Multi-session: at capacity
+  reclaim_older_than_ms: number                      // Reclaim timeout threshold
+  session_keepalive_interval_v2_ms: number            // Session-ingress keep-alive interval
+}
+```
+
+### Default Values
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `poll_interval_ms_not_at_capacity` | `2000` | Active polling interval (ms) |
+| `poll_interval_ms_at_capacity` | `600000` (10min) | Polling at capacity, 0=disabled |
+| `non_exclusive_heartbeat_interval_ms` | `0` | Non-exclusive heartbeat interval |
+| `multisession_poll_interval_ms_not_at_capacity` | `2000` | Multi-session: non-full |
+| `multisession_poll_interval_ms_partial_capacity` | `2000` | Multi-session: partial capacity |
+| `multisession_poll_interval_ms_at_capacity` | `600000` | Multi-session: at capacity |
+| `reclaim_older_than_ms` | `5000` | Reclaim timeout threshold |
+| `session_keepalive_interval_v2_ms` | `120000` (2min) | Session-ingress keep-alive frame interval |
+
+### Configuration Source
+
+- **GrowthBook feature**: `tengu_bridge_poll_interval_config`
+- **Refresh interval**: 5 minutes (`5 * 60 * 1000`)
+- **Fallback**: Zod schema validation failure → `DEFAULT_POLL_CONFIG`
+
+```typescript
+export function getPollIntervalConfig(): PollIntervalConfig {
+  const raw = getFeatureValue_CACHED_WITH_REFRESH<unknown>(
+    'tengu_bridge_poll_interval_config',
+    DEFAULT_POLL_CONFIG,
+    5 * 60 * 1000,
+  )
+  const parsed = pollIntervalConfigSchema().safeParse(raw)
+  return parsed.success ? parsed.data : DEFAULT_POLL_CONFIG
+}
+```
+
+---
+
+## Transport Layer
+
+Based on `src/bridge/replBridgeTransport.ts` and `src/cli/transports/` - transport layer implementation:
+
+### Architecture Overview
+
+```
+Bridge Sessions
+    │
+    ├── v1: HybridTransport (WS read + HTTP POST write)
+    │       └── WebSocketTransport (reconnect, ping/pong)
+    │
+    └── v2: SSETransport (SSE read) + CCRClient (HTTP write/heartbeat)
+```
+
+### v1 HybridTransport
+
+```typescript
+export class HybridTransport extends WebSocketTransport {
+  // Write: WebSocket → SerialBatchEventUploader → HTTP POST
+  // stream_event: 100ms buffer batch send
+  // Other messages: direct enqueue
+  
+  // URL conversion
+  // wss://api.example.com/v2/session_ingress/ws/<session_id>
+  // → https://api.example.com/v2/session_ingress/session/<session_id>/events
+}
+```
+
+### v2 SSETransport (Read)
+
+```typescript
+export class SSETransport implements Transport {
+  // SSE → parseSSEFrames → onData callback
+  // Auto reconnect: exponential backoff + jitter
+  // Reconnect budget: 10 minutes (RECONNECT_GIVE_UP_MS = 600000)
+  // Liveness detection: 45s no activity = disconnected (LIVENESS_TIMEOUT_MS)
+  // Sequence number: Last-Event-ID for resume from checkpoint
+}
+```
+
+### v2 CCRClient (Write + Heartbeat)
+
+```typescript
+export class CCRClient {
+  // PUT /worker - worker state report
+  // POST /worker/events - client events
+  // POST /worker/heartbeat - heartbeat (default 20s, server TTL 60s)
+  // POST /worker/events/delivery - delivery status
+  
+  // Epoch management: 409 = epoch mismatch → rebuild transport
+  // Stream events: 100ms buffer + text_delta merge
+}
+```
+
+### ReplBridgeTransport Interface
+
+```typescript
+export type ReplBridgeTransport = {
+  write(message: StdoutMessage): Promise<void>
+  writeBatch(messages: StdoutMessage[]): Promise<void>
+  close(): void
+  isConnectedStatus(): boolean
+  getStateLabel(): string
+  setOnData(callback: (data: string) => void): void
+  setOnClose(callback: (closeCode?: number) => void): void
+  setOnConnect(callback: () => void): void
+  connect(): void
+  getLastSequenceNum(): number  // v2 SSE sequence number
+  reportState(state: SessionState): void
+  reportDelivery(eventId: string, status: 'processing' | 'processed'): void
+  flush(): Promise<void>
+}
+```
+
+### Adapter Factory Functions
+
+```typescript
+// v1 adapter
+export function createV1ReplTransport(hybrid: HybridTransport): ReplBridgeTransport
+
+// v2 adapter
+export async function createV2ReplTransport(opts: {
+  sessionUrl: string
+  ingressToken: string
+  sessionId: string
+  initialSequenceNum?: number
+  epoch?: number
+  heartbeatIntervalMs?: number
+  heartbeatJitterFraction?: number
+  outboundOnly?: boolean
+  getAuthToken?: () => string | undefined
+}): Promise<ReplBridgeTransport>
+```
+
+### Heartbeat and Reconnect Configuration
+
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `DEFAULT_HEARTBEAT_INTERVAL_MS` | `20000` | CCRClient default heartbeat interval |
+| `MAX_CONSECUTIVE_AUTH_FAILURES` | `10` | Auth failure retries before giving up |
+| `RECONNECT_BASE_DELAY_MS` | `1000` | WebSocket reconnect base delay |
+| `RECONNECT_MAX_DELAY_MS` | `30000` | WebSocket reconnect max delay |
+| `RECONNECT_GIVE_UP_MS` | `600000` | Reconnect give-up threshold (10 minutes) |
+| `LIVENESS_TIMEOUT_MS` | `45000` | SSE inactivity disconnect threshold (45 seconds) |
+
+### Epoch Management
+
+- Epoch returned by server in `/sessions/{id}/bridge` response
+- `409 Conflict` = Epoch mismatch → rebuild transport layer
+- Client passes epoch for server-side validation
 
 ---
 
