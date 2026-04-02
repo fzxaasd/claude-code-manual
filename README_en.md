@@ -32,10 +32,10 @@ This is NOT official documentation, but an **independent analysis summary** base
 | Configuration | 3 | Hierarchy, settings.json, project config |
 | Advanced Features | 9 | Agent, Multi-Agent, Plugins, MCP, Team Mode, Sandbox, Plan Mode, Voice Mode, Bridge Remote |
 | Best Practices | 3 | Recommended patterns, things to avoid, team collaboration |
-| Memory System | 3 | Overview, API, best practices |
+| Memory System | 4 | Overview, API, best practices, Agent memory |
 | Task System | 1 | Task management |
 | Plugin Development | 4 | Overview, structure, API, development examples |
-| **Total** | **39** | Covers all core Claude Code systems |
+| **Total** | **40** | Covers all core Claude Code systems |
 
 ### Source Verification
 
@@ -162,6 +162,7 @@ All documents are verified against source code:
 | [Memory Overview](./09-memory/01-memory-overview.md) | Persistent memory | ✅ |
 | [Memory API](./09-memory/02-memory-api.md) | API reference | ✅ |
 | [Memory Best Practices](./09-memory/03-memory-best-practices.md) | Usage suggestions | ✅ |
+| [Agent Memory](./09-memory/04-agent-memory.md) | Agent-specific persistent memory | ✅ |
 
 ### Part 10: Task System
 

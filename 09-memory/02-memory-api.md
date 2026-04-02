@@ -500,11 +500,92 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 
 ### telemetry 事件
 
+总计 45 个 memory 相关 telemetry 事件：
+
+#### 1. Memdir (Auto Memory) 事件
+
 | 事件 | 时机 | 字段 |
 |------|------|------|
-| `tengu_memdir_loaded` | 内存目录加载 | content_length, line_count, was_truncated, memory_type |
-| `tengu_memdir_disabled` | 内存禁用 | disabled_by_env_var, disabled_by_setting |
-| `tengu_team_memdir_disabled` | 团队内存禁用 | - |
+| `tengu_memdir_loaded` | memdir 目录加载 | total_file_count, total_subdir_count, memory_type |
+| `tengu_memdir_disabled` | auto memory 未启用 | disabled_by_env_var, disabled_by_setting |
+| `tengu_memdir_accessed` | memory 文件被访问 | tool, subagent_name |
+| `tengu_memdir_file_read` | memory 文件被读取 | subagent_name |
+| `tengu_memdir_file_edit` | memory 文件被编辑 | subagent_name |
+| `tengu_memdir_file_write` | memory 文件被写入 | subagent_name |
+| `tengu_memdir_prefetch_collected` | memory 预取被收集 | hidden_by_first_iteration, consumed_on_iteration, latency_ms |
+| `tengu_auto_memory_toggled` | auto memory 开关切换 | enabled |
+
+#### 2. Team Memory Sync 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_team_memdir_disabled` | team memory 未启用 | - |
+| `tengu_team_mem_accessed` | team memory 文件访问 | tool, subagent_name |
+| `tengu_team_mem_file_read` | team memory 文件读取 | subagent_name |
+| `tengu_team_mem_file_edit` | team memory 文件编辑 | subagent_name |
+| `tengu_team_mem_file_write` | team memory 文件写入 | subagent_name |
+| `tengu_team_mem_entries_capped` | 条目超服务器上限 | total_entries, dropped_count, max_entries |
+| `tengu_team_mem_secret_skipped` | secret 检测跳过 | file_count, rule_ids |
+| `tengu_team_mem_sync_started` | 同步启动 | initial_pull_success, initial_files_pulled, watcher_started |
+| `tengu_team_mem_sync_pull` | 拉取完成 | success, files_written, duration_ms, errorType |
+| `tengu_team_mem_sync_push` | 推送完成 | success, files_uploaded, conflict, duration_ms, errorType |
+| `tengu_team_mem_push_suppressed` | 推送被抑制 | reason, status |
+
+#### 3. Extract Memories 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_auto_mem_tool_denied` | 工具使用被拒绝 | tool_name |
+| `tengu_extract_memories_gate_disabled` | 功能未启用 | - |
+| `tengu_extract_memories_skipped_direct_write` | 主 agent 已写入 | message_count |
+| `tengu_extract_memories_coalesced` | 请求合并 | - |
+| `tengu_extract_memories_extraction` | 提取完成 | input_tokens, output_tokens, message_count, turn_count, files_written, memories_saved |
+| `tengu_extract_memories_error` | 提取出错 | duration_ms |
+
+#### 4. Session Memory 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_session_memory_accessed` | session memory 访问 | subagent_name |
+| `tengu_session_memory_gate_disabled` | 功能未启用 | - |
+| `tengu_session_memory_loaded` | 内容加载 | content_length |
+| `tengu_session_memory_file_read` | 文件读取 | content_length |
+| `tengu_session_memory_init` | 初始化 | auto_compact_enabled |
+| `tengu_session_memory_extraction` | 提取完成 | input_tokens, output_tokens, cache_creation_input_tokens |
+| `tengu_session_memory_manual_extraction` | 手动提取 | - |
+
+#### 5. Session Memory Compact 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_sm_compact_flag_check` | 功能检查 | tengu_session_memory, tengu_sm_compact, should_use |
+| `tengu_sm_compact_no_session_memory` | 无 session memory | - |
+| `tengu_sm_compact_empty_template` | memory 为空模板 | - |
+| `tengu_sm_compact_summarized_id_not_found` | 找不到已摘要 ID | - |
+| `tengu_sm_compact_resumed_session` | 恢复的会话 | - |
+| `tengu_sm_compact_threshold_exceeded` | 超过 token 阈值 | postCompactTokenCount, autoCompactThreshold |
+| `tengu_sm_compact_error` | compaction 出错 | - |
+
+#### 6. Auto Dream 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_auto_dream_fired` | dream 触发 | hours_since, sessions_since |
+| `tengu_auto_dream_completed` | dream 完成 | cache_read, cache_created, output, sessions_reviewed |
+| `tengu_auto_dream_failed` | dream 失败 | - |
+| `tengu_auto_dream_toggled` | 开关切换 | enabled |
+
+#### 7. Agent Memory 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_agent_memory_loaded` | agent memory 加载 | agent_type, scope, source |
+
+#### 8. Memory Survey 事件
+
+| 事件 | 时机 | 字段 |
+|------|------|------|
+| `tengu_memory_survey_event` | survey 触发 | - |
 
 ### Feature Flags
 

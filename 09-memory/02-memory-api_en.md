@@ -500,11 +500,92 @@ Verification before using memories:
 
 ### telemetry Events
 
+Total 45 memory-related telemetry events:
+
+#### 1. Memdir (Auto Memory) Events
+
 | Event | Timing | Fields |
 |------|--------|--------|
-| `tengu_memdir_loaded` | Memory directory loaded | content_length, line_count, was_truncated, memory_type |
-| `tengu_memdir_disabled` | Memory disabled | disabled_by_env_var, disabled_by_setting |
+| `tengu_memdir_loaded` | Memory dir loaded | total_file_count, total_subdir_count, memory_type |
+| `tengu_memdir_disabled` | Auto memory disabled | disabled_by_env_var, disabled_by_setting |
+| `tengu_memdir_accessed` | Memory file accessed | tool, subagent_name |
+| `tengu_memdir_file_read` | Memory file read | subagent_name |
+| `tengu_memdir_file_edit` | Memory file edited | subagent_name |
+| `tengu_memdir_file_write` | Memory file written | subagent_name |
+| `tengu_memdir_prefetch_collected` | Memory prefetch collected | hidden_by_first_iteration, consumed_on_iteration, latency_ms |
+| `tengu_auto_memory_toggled` | Auto memory toggled | enabled |
+
+#### 2. Team Memory Sync Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
 | `tengu_team_memdir_disabled` | Team memory disabled | - |
+| `tengu_team_mem_accessed` | Team memory accessed | tool, subagent_name |
+| `tengu_team_mem_file_read` | Team memory read | subagent_name |
+| `tengu_team_mem_file_edit` | Team memory edited | subagent_name |
+| `tengu_team_mem_file_write` | Team memory written | subagent_name |
+| `tengu_team_mem_entries_capped` | Entries exceed server limit | total_entries, dropped_count, max_entries |
+| `tengu_team_mem_secret_skipped` | Secret detected, skipped | file_count, rule_ids |
+| `tengu_team_mem_sync_started` | Sync started | initial_pull_success, initial_files_pulled, watcher_started |
+| `tengu_team_mem_sync_pull` | Pull completed | success, files_written, duration_ms, errorType |
+| `tengu_team_mem_sync_push` | Push completed | success, files_uploaded, conflict, duration_ms, errorType |
+| `tengu_team_mem_push_suppressed` | Push suppressed | reason, status |
+
+#### 3. Extract Memories Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_auto_mem_tool_denied` | Tool denied | tool_name |
+| `tengu_extract_memories_gate_disabled` | Feature disabled | - |
+| `tengu_extract_memories_skipped_direct_write` | Main agent wrote | message_count |
+| `tengu_extract_memories_coalesced` | Requests coalesced | - |
+| `tengu_extract_memories_extraction` | Extraction completed | input_tokens, output_tokens, message_count, turn_count, files_written, memories_saved |
+| `tengu_extract_memories_error` | Extraction error | duration_ms |
+
+#### 4. Session Memory Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_session_memory_accessed` | Session memory accessed | subagent_name |
+| `tengu_session_memory_gate_disabled` | Feature disabled | - |
+| `tengu_session_memory_loaded` | Content loaded | content_length |
+| `tengu_session_memory_file_read` | File read | content_length |
+| `tengu_session_memory_init` | Initialized | auto_compact_enabled |
+| `tengu_session_memory_extraction` | Extraction completed | input_tokens, output_tokens, cache_creation_input_tokens |
+| `tengu_session_memory_manual_extraction` | Manual extraction | - |
+
+#### 5. Session Memory Compact Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_sm_compact_flag_check` | Feature check | tengu_session_memory, tengu_sm_compact, should_use |
+| `tengu_sm_compact_no_session_memory` | No session memory | - |
+| `tengu_sm_compact_empty_template` | Memory is empty template | - |
+| `tengu_sm_compact_summarized_id_not_found` | Summarized ID not found | - |
+| `tengu_sm_compact_resumed_session` | Resumed session | - |
+| `tengu_sm_compact_threshold_exceeded` | Token threshold exceeded | postCompactTokenCount, autoCompactThreshold |
+| `tengu_sm_compact_error` | Compact error | - |
+
+#### 6. Auto Dream Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_auto_dream_fired` | Dream triggered | hours_since, sessions_since |
+| `tengu_auto_dream_completed` | Dream completed | cache_read, cache_created, output, sessions_reviewed |
+| `tengu_auto_dream_failed` | Dream failed | - |
+| `tengu_auto_dream_toggled` | Toggled | enabled |
+
+#### 7. Agent Memory Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_agent_memory_loaded` | Agent memory loaded | agent_type, scope, source |
+
+#### 8. Memory Survey Events
+
+| Event | Timing | Fields |
+|------|--------|--------|
+| `tengu_memory_survey_event` | Survey triggered | - |
 
 ### Feature Flags
 
