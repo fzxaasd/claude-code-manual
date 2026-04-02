@@ -373,6 +373,77 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 
 ---
 
+## 未文档化的配置选项
+
+> 以下选项存在于源码中但未在官方文档中记录
+
+### Feature-Gated 配置
+
+| 字段 | 类型 | Feature Gate | 说明 |
+|------|------|--------------|------|
+| `xaaIdp` | object | CLAUDE_CODE_ENABLE_XAA | XAA (SEP-990) IdP 连接配置 |
+| `disableDeepLinkRegistration` | "disable" | LODESTONE | 防止向 OS 注册 claude-cli:// 协议处理器 |
+| `classifierPermissionsEnabled` | boolean | ANT 用户 | 为 Bash(prompt:...) 启用 AI 分类权限 |
+| `minSleepDurationMs` | number | PROACTIVE/KAIROS | Sleep 工具最小睡眠时长(毫秒) |
+| `maxSleepDurationMs` | number | PROACTIVE/KAIROS | Sleep 工具最大睡眠时长(毫秒)，-1=无限 |
+| `voiceEnabled` | boolean | VOICE_MODE | 启用语音模式（按住说话） |
+| `assistant` | boolean | KAIROS | 以助手模式启动 Claude |
+| `assistantName` | string | KAIROS | 助手显示名称 |
+| `defaultView` | "chat" \| "transcript" | KAIROS/KAIROS_BRIEF | 默认转录视图 |
+
+### SSH 配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `sshConfigs` | array | SSH 连接配置数组 |
+
+**sshConfigs 结构**:
+```typescript
+{
+  name: string,           // 配置名称
+  host: string,           // SSH 主机
+  port?: number,          // SSH 端口，默认 22
+  user?: string,          // SSH 用户
+  identityFile?: string,  // SSH 私钥路径
+  jumpHost?: string,     // 跳板机
+  timeout?: number,       // 连接超时(毫秒)
+}
+```
+
+### XAA IdP 配置
+
+```typescript
+{
+  issuer: string,           // IdP issuer URL (必需)
+  clientId: string,         // OAuth client ID (必需)
+  callbackPort?: number,     // 固定回调端口 (可选)
+}
+```
+
+### 渠道插件白名单
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `allowedChannelPlugins` | array | 团队/企业渠道插件白名单 |
+
+```typescript
+{
+  marketplace: string,  // 市场名称
+  plugin: string,      // 插件名称
+}
+```
+
+### PROACTIVE/KAIROS Sleep 配置
+
+```json
+{
+  "minSleepDurationMs": 1000,      // 最小睡眠时长
+  "maxSleepDurationMs": 60000      // 最大睡眠时长，-1=无限等待
+}
+```
+
+---
+
 ## 企业配置示例
 
 ### 最小权限团队

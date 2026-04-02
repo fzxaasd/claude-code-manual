@@ -518,6 +518,119 @@ Verification before using memories:
 | `tengu_passport_quail` | Extract memories background agent activation |
 | `tengu_slate_thimble` | Force activation of extract for non-interactive sessions |
 | `tengu_herring_clock` | Team memory disable telemetry |
+| `tengu_onyx_plover` | autoDream configuration switch |
+
+---
+
+## Background Extract Memories
+
+Based on `src/services/extractMemories/extractMemories.ts` - background memory extraction mechanism.
+
+### Core Mechanism
+
+**Trigger Timing**:
+- Triggered at the end of each complete query cycle (model produces final response with no tool calls)
+- Called via `handleStopHooks` → `executeExtractMemories`
+- Fire-and-forget mode
+
+### Workflow
+
+```
+1. Mutex Protection: Check if main agent has already written to memory files
+   - If already written, skip forked agent, move cursor directly
+
+2. Throttling: Controlled by tengu_bramble_lintel
+   - Default: execute once per 1 eligible turn
+
+3. Forked Agent Execution:
+   runForkedAgent({
+     promptMessages: [createUserMessage({ content: userPrompt })],
+     cacheSafeParams,
+     canUseTool: createAutoMemCanUseTool(),
+     querySource: 'extract_memories',
+     forkLabel: 'extract_memories',
+     skipTranscript: true,
+     maxTurns: 5,  // Hard limit
+   })
+```
+
+### 5 Max Turns Limit
+
+**Location**: `extractMemories.ts:426`
+
+```typescript
+const result = await runForkedAgent({
+  // ...
+  // Well-behaved extractions complete in 2-4 turns (read → write).
+  // A hard cap prevents verification rabbit-holes from burning turns.
+  maxTurns: 5,
+})
+```
+
+**Explanation**: Well-behaved extractions complete in 2-4 turns (read → write). Hard cap prevents verification rabbit-holes from burning turns.
+
+### Forked Agent Implementation
+
+**Core Function**: `runForkedAgent` (`forkedAgent.ts`)
+
+**Key Features**:
+
+1. **Cache Safe Params**: Ensures fork shares same cache-critical params with parent
+2. **State Isolation**: `createSubagentContext` creates fully isolated context
+3. **Prompt Cache Sharing**: Via `cacheSafeParams` ensures API cache hits
+4. **Usage Tracking**: Accumulates all API call usage
+
+**Tool Permission Limits** (`createAutoMemCanUseTool`):
+| Tool Type | Permission |
+|----------|------------|
+| FileRead, Grep, Glob | No restrictions |
+| read-only Bash (ls, find, grep, cat, stat, wc, head, tail) | Allowed |
+| FileEdit, FileWrite | Only within auto-memory directory |
+| All other tools | Denied |
+
+### Prompt Strategy
+
+```
+Turn 1: Issue all FileRead calls in parallel to read potentially updated files
+Turn 2: Issue all FileWrite/FileEdit calls in parallel
+```
+
+### autoDream (Background Memory Consolidation)
+
+**Trigger Conditions**:
+1. **Time Gate**: >= minHours since last consolidation (default 24h)
+2. **Session Gate**: >= minSessions new sessions since last consolidation (default 5)
+3. **Lock**: No other process is consolidating
+
+**Flow**:
+```
+1. Read lastConsolidatedAt timestamp
+2. Scan session files to count new sessions
+3. Acquire distributed lock
+4. Run forked agent to execute consolidation prompt
+5. Register as background task (DreamTask)
+6. Update lastConsolidatedAt
+```
+
+### Related Feature Flags
+
+| Feature Flag | Default | Description |
+|--------------|---------|-------------|
+| `tengu_passport_quail` | false | extractMemories switch |
+| `tengu_bramble_lintel` | 1 | Extraction frequency (per N eligible turns) |
+| `tengu_moth_copse` | false | Skip MEMORY.md index update |
+| `tengu_onyx_plover` | `{ enabled: false, minHours: 24, minSessions: 5 }` | autoDream config |
+| `tengu_slate_thimble` | false | Force extract for non-interactive sessions |
+
+### Graceful Shutdown
+
+```typescript
+// Drain pending extraction before graceful shutdown
+if (feature('EXTRACT_MEMORIES') && isExtractModeActive()) {
+  await extractMemoriesModule!.drainPendingExtraction()
+}
+// Default timeout 60s, ensures forked agent completes before 5s shutdown failsafe
+```
 
 ---
 

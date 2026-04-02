@@ -518,6 +518,119 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 | `tengu_passport_quail` | 提取记忆后台代理激活 |
 | `tengu_slate_thimble` | 非交互会话强制激活提取 |
 | `tengu_herring_clock` | 团队记忆禁用遥测 |
+| `tengu_onyx_plover` | autoDream 配置开关 |
+
+---
+
+## Background Extract Memories
+
+基于 `src/services/extractMemories/extractMemories.ts` 的后台记忆提取机制。
+
+### 核心机制
+
+**触发时机**:
+- 每个完整查询循环结束时触发（模型产生最终响应且无 tool calls 时）
+- 通过 `handleStopHooks` 调用 `executeExtractMemories`
+- Fire-and-forget 模式运行
+
+### 工作流程
+
+```
+1. 互斥保护: 检查主 agent 是否已写入记忆文件
+   - 若已写入，跳过 forked agent，直接移动游标
+
+2. 节流控制: 通过 tengu_bramble_lintel 控制频率
+   - 默认每 1 个 eligible turn 执行一次
+
+3. Forked Agent 执行:
+   runForkedAgent({
+     promptMessages: [createUserMessage({ content: userPrompt })],
+     cacheSafeParams,
+     canUseTool: createAutoMemCanUseTool(),
+     querySource: 'extract_memories',
+     forkLabel: 'extract_memories',
+     skipTranscript: true,
+     maxTurns: 5,  // 硬性限制
+   })
+```
+
+### 5 Max Turns 限制
+
+**位置**: `extractMemories.ts:426`
+
+```typescript
+const result = await runForkedAgent({
+  // ...
+  // Well-behaved extractions complete in 2-4 turns (read → write).
+  // A hard cap prevents verification rabbit-holes from burning turns.
+  maxTurns: 5,
+})
+```
+
+**说明**: 良好的提取在 2-4 个 turn 内完成（read → write）。硬性上限防止验证兔子洞消耗 turn。
+
+### Forked Agent 实现
+
+**核心函数**: `runForkedAgent` (`forkedAgent.ts`)
+
+**关键特性**:
+
+1. **Cache Safe Params**: 确保 fork 与父进程共享相同的 cache-critical 参数
+2. **状态隔离**: `createSubagentContext` 创建完全隔离的上下文
+3. **Prompt Cache 共享**: 通过 `cacheSafeParams` 确保 API cache hits
+4. **使用追踪**: 累积所有 API 调用的使用量
+
+**工具权限限制** (`createAutoMemCanUseTool`):
+| 工具类型 | 权限 |
+|----------|------|
+| FileRead, Grep, Glob | 无限制 |
+| read-only Bash (ls, find, grep, cat, stat, wc, head, tail) | 允许 |
+| FileEdit, FileWrite | 仅限 auto-memory 目录内 |
+| 其他所有工具 | 拒绝 |
+
+### Prompt 策略
+
+```
+Turn 1: 并行发出所有 FileRead 调用读取可能更新的文件
+Turn 2: 并行发出所有 FileWrite/FileEdit 调用
+```
+
+### autoDream (后台记忆整合)
+
+**触发条件**:
+1. **时间门**: 距离上次整合 >= minHours (默认 24h)
+2. **会话门**: 自上次整合以来有新会话 >= minSessions (默认 5)
+3. **锁**: 无其他进程正在整合
+
+**流程**:
+```
+1. 读取 lastConsolidatedAt 时间戳
+2. 扫描 session 文件计算新会话数
+3. 获取分布式锁
+4. 运行 forked agent 执行整合 prompt
+5. 注册为后台任务 (DreamTask)
+6. 更新 lastConsolidatedAt
+```
+
+### 相关 Feature Flags
+
+| Feature Flag | 默认值 | 说明 |
+|--------------|--------|------|
+| `tengu_passport_quail` | false | extractMemories 开关 |
+| `tengu_bramble_lintel` | 1 | 提取频率（每 N 个 eligible turns） |
+| `tengu_moth_copse` | false | 跳过 MEMORY.md index 更新 |
+| `tengu_onyx_plover` | `{ enabled: false, minHours: 24, minSessions: 5 }` | autoDream 配置 |
+| `tengu_slate_thimble` | false | 非交互模式提取 |
+
+### 优雅关闭
+
+```typescript
+// 优雅关闭前 drain pending extraction
+if (feature('EXTRACT_MEMORIES') && isExtractModeActive()) {
+  await extractMemoriesModule!.drainPendingExtraction()
+}
+// 默认超时 60 秒，确保 forked agent 在 5 秒 shutdown failsafe 前完成
+```
 
 ---
 

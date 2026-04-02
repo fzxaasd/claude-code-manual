@@ -373,6 +373,77 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 
 ---
 
+## Undocumented Configuration Options
+
+> The following options exist in source code but are not officially documented
+
+### Feature-Gated Configuration
+
+| Field | Type | Feature Gate | Description |
+|-------|------|--------------|-------------|
+| `xaaIdp` | object | CLAUDE_CODE_ENABLE_XAA | XAA (SEP-990) IdP connection config |
+| `disableDeepLinkRegistration` | "disable" | LODESTONE | Prevent OS from registering claude-cli:// protocol handler |
+| `classifierPermissionsEnabled` | boolean | ANT users | Enable AI classification for Bash(prompt:...) permission rules |
+| `minSleepDurationMs` | number | PROACTIVE/KAIROS | Minimum sleep duration in milliseconds for Sleep tool |
+| `maxSleepDurationMs` | number | PROACTIVE/KAIROS | Maximum sleep duration in milliseconds, -1=indefinite |
+| `voiceEnabled` | boolean | VOICE_MODE | Enable voice mode (hold-to-talk) |
+| `assistant` | boolean | KAIROS | Start Claude in assistant mode |
+| `assistantName` | string | KAIROS | Assistant display name |
+| `defaultView` | "chat" \| "transcript" | KAIROS/KAIROS_BRIEF | Default transcript view |
+
+### SSH Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sshConfigs` | array | SSH connection configuration array |
+
+**sshConfigs structure**:
+```typescript
+{
+  name: string,           // Configuration name
+  host: string,           // SSH host
+  port?: number,          // SSH port, default 22
+  user?: string,          // SSH user
+  identityFile?: string,  // SSH private key path
+  jumpHost?: string,      // Jump host / bastion
+  timeout?: number,       // Connection timeout (ms)
+}
+```
+
+### XAA IdP Configuration
+
+```typescript
+{
+  issuer: string,           // IdP issuer URL (required)
+  clientId: string,         // OAuth client ID (required)
+  callbackPort?: number,     // Fixed callback port (optional)
+}
+```
+
+### Channel Plugin Allowlist
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `allowedChannelPlugins` | array | Teams/Enterprise channel plugin allowlist |
+
+```typescript
+{
+  marketplace: string,  // Marketplace name
+  plugin: string,       // Plugin name
+}
+```
+
+### PROACTIVE/KAIROS Sleep Configuration
+
+```json
+{
+  "minSleepDurationMs": 1000,      // Minimum sleep duration
+  "maxSleepDurationMs": 60000     // Maximum sleep duration, -1=wait indefinitely
+}
+```
+
+---
+
 ## Enterprise Configuration Examples
 
 ### Minimum Permission Team
