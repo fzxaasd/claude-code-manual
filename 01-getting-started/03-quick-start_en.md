@@ -74,7 +74,7 @@ $ claude
 | `Ctrl+D` | Exit session |
 | `Ctrl+L` | Clear screen |
 | `Ctrl+O` | View full output |
-| `Ctrl+S` | Save current session |
+| `Ctrl+S` | Stash current session |
 | `Tab` | Auto-complete |
 
 ### Command Mode
