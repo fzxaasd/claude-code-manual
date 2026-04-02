@@ -207,7 +207,7 @@ All core systems verified via scripts:
 | Document Files | 39 |
 | Test Scripts | 11 |
 | Hook Types | 27 |
-| Skill Frontmatter Fields | 17 |
+| Skill Frontmatter Fields | 16 |
 | Config Layers | 6 |
 | Advanced Feature Modules | 9 |
 

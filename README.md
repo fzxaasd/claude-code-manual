@@ -207,7 +207,7 @@
 | 文档文件 | 39 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
-| Skill frontmatter 字段 | 17 |
+| Skill frontmatter 字段 | 16 |
 | 配置层级 | 6 |
 | 进阶功能模块 | 9 |
 
