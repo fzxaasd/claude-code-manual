@@ -151,11 +151,12 @@ interface SandboxRuntimeConfig {
   enableWeakerNetworkIsolation?: boolean
   ripgrep: {
     command: string
-    args: string[]
-    argv0: string
+    args: string[]  // 可选
   }
 }
 ```
+
+**注意**：`ripgrep` 是可配置的，允许自定义 ripgrep 命令路径和参数。`argv0` 是内部行为而非用户可配置字段。
 
 ### 设置到配置的转换
 
@@ -226,6 +227,12 @@ denyWrite.push(...settingsPaths)
 
 // 包括 managed 设置
 denyWrite.push(getManagedSettingsDropInDir())
+
+// 如果 cwd 与原始终端目录不同，也阻止写入当前目录的 settings
+if (cwd !== originalCwd) {
+  denyWrite.push(resolve(cwd, '.claude', 'settings.json'))
+  denyWrite.push(resolve(cwd, '.claude', 'settings.local.json'))
+}
 ```
 
 ### 2. Skills 保护
@@ -409,6 +416,36 @@ addToExcludedCommands(command: string, permissionUpdates?: PermissionUpdate[]): 
 }
 ```
 
+### failIfUnavailable
+
+沙箱无法启动时的行为控制：
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true  // 沙箱无法启动时退出，默认为 false (仅警告)
+  }
+}
+```
+
+**用途**：企业托管设置中强制沙箱化，作为硬门控。当 `enabled=true` 但沙箱无法启动时，CLI 以错误退出而非仅警告。
+
+### enabledPlatforms
+
+限制沙箱在特定平台上启用：
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "enabledPlatforms": ["macos"]  // 仅在 macOS 上启用沙箱
+  }
+}
+```
+
+**用途**：企业部署时逐步 rollout，例如 NVIDIA 部署先只在 macOS 上启用 `autoAllowBashIfSandboxed`。
+
 ### 排除示例
 
 ```json
@@ -506,6 +543,7 @@ type SandboxAskCallback = (hostPattern: NetworkHostPattern) => boolean
 {
   "sandbox": {
     "enabled": true,
+    "failIfUnavailable": true,
     "network": {
       "allowManagedDomainsOnly": true
     },
@@ -517,6 +555,8 @@ type SandboxAskCallback = (hostPattern: NetworkHostPattern) => boolean
   }
 }
 ```
+
+**安全注意**：`autoAllowBashIfSandboxed` **默认为 `true`**。这意味着启用沙箱时，命令默认会自动放行（由沙箱提供保护），ask 规则会被跳过。
 
 ### macOS 配置
 
@@ -611,6 +651,13 @@ SandboxManager.getLinuxGlobPatternWarnings()
 | 粒度 | 目录级别 | 工具/命令级别 |
 | 技术 | namespace/container | Zod schema |
 | 绕过 | 禁用/排除命令 | 权限规则 |
+
+**permissions.additionalDirectories 集成**：`permissions.additionalDirectories` 的值会同时影响权限验证的路径范围和 sandbox 的 `allowWrite` 路径。
+
+**dangerouslyDisableSandbox 交互**：
+- 当 `allowUnsandboxedCommands: false` 时，`dangerouslyDisableSandbox` 参数被完全忽略
+- 所有命令必须在沙箱中运行或通过 `excludedCommands` 排除
+- `autoAllowBashIfSandboxed: true` 时，沙箱命令跳过 ask 规则自动放行，但非沙箱命令仍需遵守 ask 规则
 
 **推荐**：同时使用 Sandbox 和 Permissions 实现纵深防御。
 

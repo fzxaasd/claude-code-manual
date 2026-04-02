@@ -151,11 +151,12 @@ interface SandboxRuntimeConfig {
   enableWeakerNetworkIsolation?: boolean
   ripgrep: {
     command: string
-    args: string[]
-    argv0: string
+    args: string[]  // optional
   }
 }
 ```
+
+**Note**: `ripgrep` is configurable, allowing custom ripgrep command path and args. `argv0` is internal behavior, not a user-configurable field.
 
 ### Settings to Config Conversion
 
@@ -226,6 +227,12 @@ denyWrite.push(...settingsPaths)
 
 // Including managed settings
 denyWrite.push(getManagedSettingsDropInDir())
+
+// Also deny writing to settings in current working directory if cwd differs from original
+if (cwd !== originalCwd) {
+  denyWrite.push(resolve(cwd, '.claude', 'settings.json'))
+  denyWrite.push(resolve(cwd, '.claude', 'settings.local.json'))
+}
 ```
 
 ### 2. Skills Protection
@@ -409,6 +416,36 @@ addToExcludedCommands(command: string, permissionUpdates?: PermissionUpdate[]): 
 }
 ```
 
+### failIfUnavailable
+
+Controls behavior when sandbox fails to start:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true  // Exit on failure, default is false (warn only)
+  }
+}
+```
+
+**Purpose**: Enforce sandboxing as a hard gate in managed deployments. When `enabled=true` but sandbox can't start, CLI exits with error instead of just warning.
+
+### enabledPlatforms
+
+Restrict sandbox to specific platforms:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "enabledPlatforms": ["macos"]  // Only enable sandbox on macOS
+  }
+}
+```
+
+**Purpose**: Gradual rollout for enterprise deployments, e.g., NVIDIA enabling `autoAllowBashIfSandboxed` only on macOS first.
+
 ### Exclusion Examples
 
 ```json
@@ -506,6 +543,7 @@ type SandboxAskCallback = (hostPattern: NetworkHostPattern) => boolean
 {
   "sandbox": {
     "enabled": true,
+    "failIfUnavailable": true,
     "network": {
       "allowManagedDomainsOnly": true
     },
@@ -517,6 +555,8 @@ type SandboxAskCallback = (hostPattern: NetworkHostPattern) => boolean
   }
 }
 ```
+
+**Security note**: `autoAllowBashIfSandboxed` **defaults to `true`**. When sandbox is enabled, commands are auto-allowed by default (protected by sandbox), and ask rules are skipped.
 
 ### macOS Configuration
 
@@ -611,6 +651,13 @@ SandboxManager.getLinuxGlobPatternWarnings()
 | Granularity | Directory level | Tool/command level |
 | Technology | namespace/container | Zod schema |
 | Bypass | Disable/exclude commands | Permission rules |
+
+**permissions.additionalDirectories integration**: `permissions.additionalDirectories` values affect both the permission verification path scope AND sandbox's `allowWrite` paths.
+
+**dangerouslyDisableSandbox interaction**:
+- When `allowUnsandboxedCommands: false`, `dangerouslyDisableSandbox` parameter is completely ignored
+- All commands must run in sandbox or be excluded via `excludedCommands`
+- When `autoAllowBashIfSandboxed: true`, sandboxed commands skip ask rules automatically, but non-sandboxed commands (like excludedCommands or dangerouslyDisableSandbox) still obey ask rules
 
 **Recommendation**: Use both Sandbox and Permissions together for defense in depth.
 

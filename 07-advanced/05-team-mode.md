@@ -188,6 +188,24 @@ type BackendType = 'tmux' | 'iterm2' | 'in-process'
 ~/.claude/teams/{team-name}/inboxes/    # 消息收件箱
 ```
 
+**邮箱路径 sanitization**：路径中的非字母数字字符会被替换为 `-`，例如 `team@name` → `team-name`。
+
+### Teammate 系统提示补充
+
+源码 `src/utils/swarm/teammatePromptAddendum.ts` 会在队友启动时自动注入：
+
+```
+# Agent Teammate Communication
+
+IMPORTANT: You are running as an agent in a team. To communicate with anyone on your team:
+- Use the SendMessage tool with `to: "<name>"` to send messages to specific teammates
+- Use the SendMessage tool with `to: "*"` sparingly for team-wide broadcasts
+
+Just writing a response in text is not visible to others on your team - you MUST use the SendMessage tool.
+```
+
+**注意**：文本回复对团队其他成员不可见，必须使用 SendMessage 工具。
+
 ---
 
 ## 团队生命周期
@@ -272,14 +290,34 @@ interface SendMessageTool {
 // 关闭请求
 { type: 'shutdown_request', reason?: string }
 
-// 关闭批准 (不是 shutdown_response)
-{ type: 'shutdown_approved', request_id: string, reason?: string }
+// 关闭响应 (SendMessageTool 工具层)
+{ type: 'shutdown_response', request_id: string, approve: boolean, reason?: string }
 
-// 关闭拒绝 (不是 shutdown_response)
-{ type: 'shutdown_rejected', request_id: string, reason?: string }
+// Mailbox 层的关闭消息
+{ type: 'shutdown_approved', requestId: string, from: string, timestamp: string }
+{ type: 'shutdown_rejected', requestId: string, from: string, reason: string, timestamp: string }
 
 // 计划审批响应
 { type: 'plan_approval_response', requestId: string, approved: boolean, feedback?: string, timestamp?: string, permissionMode?: PermissionMode }
+// permissionMode 从 leader 继承，plan 模式会转为 default
+
+// 空闲通知 (源码遗漏)
+{ type: 'idle_notification', from: string, timestamp: string, idleReason?: 'available' | 'interrupted' | 'failed', summary?: string, completedTaskId?: string, completedStatus?: 'resolved' | 'blocked' | 'failed', failureReason?: string }
+
+// 权限模式请求 (源码遗漏)
+{ type: 'mode_set_request', mode: PermissionMode, from: string }
+
+// 团队权限更新 (源码遗漏)
+{ type: 'team_permission_update', permissionUpdate: { type: 'addRules', rules: Array<{ toolName: string; ruleContent?: string }>, behavior: 'allow' | 'deny' | 'ask', destination: 'session' }, directoryPath: string, toolName: string }
+
+// 任务分配 (源码遗漏)
+{ type: 'task_assignment', taskId: string, subject: string, description: string, assignedBy: string, timestamp: string }
+```
+
+**权限响应结构** (Mailbox 协议使用 snake_case)：
+```typescript
+// Mailbox 层
+{ type: 'permission_response', request_id: string, subtype: 'success' | 'error', response?: { updated_input?: Record<string, unknown> }, error?: string }
 ```
 
 **输出类型**：
@@ -323,6 +361,7 @@ type BackendType = 'in-process'
 // - 无独立 tmux/iTerm2 窗格
 // - 通过 AbortController 信号终止
 // - 适合轻量级任务
+// - 不通过 mailbox 接收初始 prompt，直接通过 startInProcessTeammate() 传递
 
 // 关闭流程：
 // 1. 发送 shutdown_request 到目标
@@ -330,6 +369,17 @@ type BackendType = 'in-process'
 // 3. leader 调用 AbortController.abort()
 // 4. 目标进程检查 abort 信号并退出
 ```
+
+### CLI Flags 继承机制
+
+源码 `src/tools/shared/spawnMultiAgent.ts`：leader 的 CLI 配置自动传递给 teammates：
+
+```typescript
+buildInheritedCliFlags(): string
+// 继承: --dangerously-skip-permissions, --permission-mode, --model, --settings, --plugin-dir, --chrome/--no-chrome
+```
+
+**planModeRequired** 也通过此机制传递给队友。
 
 ### Swarm Permission Sync
 

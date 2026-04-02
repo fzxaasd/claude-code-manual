@@ -14,21 +14,20 @@
 # List MCP servers
 claude mcp list
 
-# Add a server
-claude mcp add <name> --command <command>
-claude mcp add <name> --command <command> [--scope <scope>] [--transport <type>] [--env <env>] [--header <header>] [--client-id <id>] [--client-secret] [--callback-port <port>]
+# Add server (stdio)
+claude mcp add <name> <command> [args...]
 
-# Add SSE transport server
-claude mcp add <name> --transport sse --url <url>
+# Add server (HTTP/SSE/WS)
+claude mcp add <name> <url>
 
-# Add HTTP server
-claude mcp add <name> --transport http --url <url>
+# Add server with OAuth/XAA
+claude mcp add <name> <url> --xaa --client-id <id> --client-secret <secret>
 
 # Import from Claude Desktop
 claude mcp add-from-claude-desktop [--scope <scope>]
 
 # JSON add
-claude mcp add-json <name> <json> [--scope <scope>] [--client-secret] [--env]
+claude mcp add-json
 
 # Get server details
 claude mcp get <name>
@@ -39,7 +38,7 @@ claude mcp reset-project-choices
 # Remove server
 claude mcp remove <name> [--scope <scope>]
 
-# XAA IdP management (Enterprise feature)
+# XAA IdP management
 claude mcp xaa setup --issuer <url> --client-id <id> [--client-secret] [--callback-port <port>]
 claude mcp xaa login
 claude mcp xaa show
@@ -49,14 +48,11 @@ claude mcp xaa clear
 claude mcp serve [--debug] [--verbose]
 ```
 
-**mcp options**:
-- `--scope, -s`: Config scope (local/user/project), defaults to local
-- `--transport, -t`: Transport type (stdio/sse/http/ws)
-- `--env, -e`: Environment variables
-- `--header, -H`: Custom HTTP headers
-- `--client-id`: OAuth client ID
-- `--client-secret`: Read from MCP_XAA_IDP_CLIENT_SECRET env var
-- `--callback-port`: OAuth callback port
+**Note**:
+- `claude mcp add`'s `<command>` is a **positional argument**, not `--command` option
+- `--client-id`, `--client-secret`, `--callback-port`, `--xaa` only work for HTTP/SSE transports, ignored for stdio
+- `--issuer` and `--client-id` are **required** for `mcp xaa setup`
+- XAA is enabled via `CLAUDE_CODE_ENABLE_XAA=1` env var, not enterprise-only
 
 **mcp xaa subcommands**:
 - `xaa setup`: Configure XAA (SEP-990) IdP connection

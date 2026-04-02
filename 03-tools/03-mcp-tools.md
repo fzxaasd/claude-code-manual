@@ -36,6 +36,207 @@ Claude Code ←→ MCP Server ←→ External Service
 }
 ```
 
+**注意**: MCP 服务器配置支持 **6 种传输类型**，不仅仅是 stdio。
+
+---
+
+### 传输类型 (Transport Types)
+
+源码: `src/services/mcp/types.ts`
+
+```typescript
+export const TransportSchema = z.enum(['stdio', 'sse', 'sse-ide', 'http', 'ws', 'sdk'])
+```
+
+#### 1. stdio (本地进程)
+
+本地进程通信，通过 stdin/stdout：
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+**字段**:
+- `command` (必填): 可执行命令
+- `args` (可选): 命令参数数组
+- `env` (可选): 环境变量
+- `type` (可选): 默认 `stdio`，可省略
+
+#### 2. sse (Server-Sent Events)
+
+通过 HTTP SSE 连接到远程 MCP 服务器：
+
+```json
+{
+  "mcpServers": {
+    "remote-server": {
+      "type": "sse",
+      "url": "https://mcp.example.com/sse",
+      "headers": {
+        "Authorization": "Bearer ${MCP_TOKEN}"
+      },
+      "oauth": {
+        "clientId": "your-client-id",
+        "clientSecret": "${MCP_CLIENT_SECRET}",
+        "authServerMetadataUrl": "https://auth.example.com/.well-known/openid-configuration",
+        "callbackPort": 3000
+      }
+    }
+  }
+}
+```
+
+**字段**:
+- `url` (必填): SSE 端点 URL
+- `headers` (可选): HTTP 请求头
+- `headersHelper` (可选): 辅助请求头文件路径
+- `oauth` (可选): OAuth 2.0 配置
+  - `clientId`: OAuth 客户端 ID
+  - `clientSecret`: OAuth 客户端密钥
+  - `authServerMetadataUrl`: OIDC 发现 URL
+  - `callbackPort`: 回调端口
+  - `xaa` (可选): 启用 XAA (SEP-990) 跨应用访问
+
+#### 3. sse-ide (IDE 专用)
+
+IDE extension 专用 SSE 连接：
+
+```json
+{
+  "mcpServers": {
+    "ide-connection": {
+      "type": "sse-ide",
+      "url": "http://localhost:3100/sse",
+      "ideName": "Cursor",
+      "ideRunningInWindows": false
+    }
+  }
+}
+```
+
+**字段**:
+- `url` (必填): IDE SSE 端点
+- `ideName` (必填): IDE 名称
+- `ideRunningInWindows` (可选): Windows 标识
+
+#### 4. http (HTTP POST)
+
+通过 HTTP POST 轮询连接：
+
+```json
+{
+  "mcpServers": {
+    "http-server": {
+      "type": "http",
+      "url": "https://mcp.example.com/mcp",
+      "headers": {
+        "X-API-Key": "${MCP_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+#### 5. ws (WebSocket)
+
+通过 WebSocket 连接：
+
+```json
+{
+  "mcpServers": {
+    "ws-server": {
+      "type": "ws",
+      "url": "wss://mcp.example.com/ws",
+      "headers": {
+        "Authorization": "Bearer ${WS_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+#### 6. sdk (SDK 模式)
+
+使用 Claude Code SDK 实现的 MCP 服务器：
+
+```json
+{
+  "mcpServers": {
+    "my-sdk-server": {
+      "type": "sdk",
+      "name": "my-sdk-server"
+    }
+  }
+}
+```
+
+### MCP CLI 命令
+
+```bash
+# 添加服务器
+claude mcp add <name> <commandOrUrl> [args...]
+
+# 添加服务器 (OAuth/XAA)
+claude mcp add <name> <url> --xaa --client-id <id> --client-secret <secret>
+
+# JSON 方式添加
+claude mcp add-json
+
+# 从 Claude Desktop 导入
+claude mcp add-from-claude-desktop
+
+# 列出服务器
+claude mcp list
+
+# 获取服务器详情
+claude mcp get <name>
+
+# 删除服务器
+claude mcp remove <name> [--scope <scope>]
+
+# 启动 MCP 服务器模式
+claude mcp serve [--debug] [--verbose]
+
+# 重置项目选择
+claude mcp reset-project-choices
+```
+
+**注意**:
+- `--client-id`, `--client-secret`, `--callback-port`, `--xaa` 仅对 HTTP/SSE 传输有效，对 stdio 会忽略
+- `--xaa` 需要先运行 `claude mcp xaa setup` 配置 XAA (SEP-990) 认证
+- XAA 由 `CLAUDE_CODE_ENABLE_XAA=1` 环境变量启用，非企业独占
+
+### 项目级配置 (.mcp.json)
+
+MCP 服务器也可以通过项目根目录的 `.mcp.json` 文件配置：
+
+```json
+{
+  "mcpServers": {
+    "local-tool": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./mcp-server.js"]
+    }
+  }
+}
+```
+
+**作用域优先级**: `--scope local` (项目) > `--scope project` > `--scope user`
+
+---
+
 ### 本地服务器
 
 ```json
@@ -267,7 +468,64 @@ python my_mcp_server.py
 
 ## MCP 工具权限
 
-MCP 工具权限通过 Claude Code 的 `permissions` 配置控制，不在 server config 中设置。
+### 基础权限控制
+
+MCP 工具通过 `permissions.allow`/`permissions.deny` 配置控制：
+
+```json
+{
+  "permissions": {
+    "allow": ["mcp__github__*"],
+    "deny": ["mcp__*__admin_*"]
+  }
+}
+```
+
+### 企业白名单/黑名单
+
+源码: `src/settings/types.ts`
+
+```json
+{
+  // 允许的 MCP 服务器列表
+  "allowedMcpServers": [
+    { "serverName": "github" },
+    { "serverName": "filesystem" }
+  ],
+
+  // 拒绝的 MCP 服务器列表 (优先于 allowlist)
+  "deniedMcpServers": [
+    { "serverName": "dangerous-server" },
+    { "serverCommand": ["python", "/path/to/script.py"] },
+    { "serverUrl": "https://*.blocked-domain.com/*" }
+  ]
+}
+```
+
+**匹配方式**:
+- `serverName`: 按服务器名称
+- `serverCommand`: 按命令数组 (stdio 服务器精确匹配)
+- `serverUrl`: 按 URL 模式 (支持通配符如 `https://*.example.com/*`)
+
+**注意**: Denylist 优先于 allowlist。
+
+### 企业策略控制
+
+```json
+{
+  // 仅允许托管 MCP 服务器
+  "allowManagedMcpServersOnly": true,
+
+  // 项目级服务器管理
+  "enabledMcpjsonServers": ["server-a", "server-b"],
+  "disabledMcpjsonServers": ["server-c"],
+  "enableAllProjectMcpServers": false
+}
+```
+
+### 工具限制
+
+MCP server 的路径限制由各个 server 自己实现（如 filesystem server），不是 Claude Code 配置的一部分。
 
 **McpStdioServerConfig 实际支持的字段**：
 ```json
@@ -279,10 +537,6 @@ MCP 工具权限通过 Claude Code 的 `permissions` 配置控制，不在 serve
 ```
 
 **注意**: `allowedTools`/`deniedTools`/`allowedPaths`/`deniedPaths` 等字段 **不存在**于 MCP server config schema 中。这些是各 MCP server 自身实现的限制，不是 Claude Code 层面的配置。
-
-### 工具限制
-
-MCP server 的路径限制由各个 server 自己实现（如 filesystem server），不是 Claude Code 配置的一部分。
 
 ---
 
@@ -309,10 +563,11 @@ claude mcp list
 # 获取特定 server 详情
 claude mcp get <server-name>
 
-# 重连 server
-claude mcp reconnect <server-name>
+# 删除并重新添加服务器
+claude mcp remove <server-name>
+claude mcp add <server-name> <command>
 
-# 注意: claude mcp status 和 claude mcp debug 命令不存在
+# 注意: claude mcp status、mcp debug、mcp reconnect 命令不存在
 ```
 
 ### 工具不可用

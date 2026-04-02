@@ -188,6 +188,24 @@ type BackendType = 'tmux' | 'iterm2' | 'in-process'
 ~/.claude/teams/{team-name}/inboxes/    # Message inboxes
 ```
 
+**Mailbox path sanitization**: Non-alphanumeric characters are replaced with `-`, e.g., `team@name` → `team-name`.
+
+### Teammate System Prompt Addendum
+
+Source `src/utils/swarm/teammatePromptAddendum.ts` is auto-injected at teammate startup:
+
+```
+# Agent Teammate Communication
+
+IMPORTANT: You are running as an agent in a team. To communicate with anyone on your team:
+- Use the SendMessage tool with `to: "<name>"` to send messages to specific teammates
+- Use the SendMessage tool with `to: "*"` sparingly for team-wide broadcasts
+
+Just writing a response in text is not visible to others on your team - you MUST use the SendMessage tool.
+```
+
+**Note**: Text responses are not visible to other team members, must use SendMessage tool.
+
 ---
 
 ## Team Lifecycle
@@ -272,14 +290,34 @@ interface SendMessageTool {
 // Close request
 { type: 'shutdown_request', reason?: string }
 
-// Close approved (not shutdown_response)
-{ type: 'shutdown_approved', request_id: string, reason?: string }
+// Close response (SendMessageTool tool layer)
+{ type: 'shutdown_response', request_id: string, approve: boolean, reason?: string }
 
-// Close rejected (not shutdown_response)
-{ type: 'shutdown_rejected', request_id: string, reason?: string }
+// Mailbox layer close messages
+{ type: 'shutdown_approved', requestId: string, from: string, timestamp: string }
+{ type: 'shutdown_rejected', requestId: string, from: string, reason: string, timestamp: string }
 
 // Plan approval response
 { type: 'plan_approval_response', requestId: string, approved: boolean, feedback?: string, timestamp?: string, permissionMode?: PermissionMode }
+// permissionMode is inherited from leader, plan mode converts to default
+
+// Idle notification (missing from original doc)
+{ type: 'idle_notification', from: string, timestamp: string, idleReason?: 'available' | 'interrupted' | 'failed', summary?: string, completedTaskId?: string, completedStatus?: 'resolved' | 'blocked' | 'failed', failureReason?: string }
+
+// Mode set request (missing from original doc)
+{ type: 'mode_set_request', mode: PermissionMode, from: string }
+
+// Team permission update (missing from original doc)
+{ type: 'team_permission_update', permissionUpdate: { type: 'addRules', rules: Array<{ toolName: string; ruleContent?: string }>, behavior: 'allow' | 'deny' | 'ask', destination: 'session' }, directoryPath: string, toolName: string }
+
+// Task assignment (missing from original doc)
+{ type: 'task_assignment', taskId: string, subject: string, description: string, assignedBy: string, timestamp: string }
+```
+
+**Permission Response Structure** (Mailbox protocol uses snake_case):
+```typescript
+// Mailbox layer
+{ type: 'permission_response', request_id: string, subtype: 'success' | 'error', response?: { updated_input?: Record<string, unknown> }, error?: string }
 ```
 
 **Output Types**:
@@ -323,6 +361,7 @@ type BackendType = 'in-process'
 // - No independent tmux/iTerm2 pane
 // - Terminated via AbortController signal
 // - Suitable for lightweight tasks
+// - Does NOT receive initial prompt via mailbox, passed directly via startInProcessTeammate()
 
 // Shutdown flow:
 // 1. Send shutdown_request to target
@@ -330,6 +369,17 @@ type BackendType = 'in-process'
 // 3. Leader calls AbortController.abort()
 // 4. Target process checks abort signal and exits
 ```
+
+### CLI Flags Inheritance
+
+Source `src/tools/shared/spawnMultiAgent.ts`: Leader's CLI config is auto-passed to teammates:
+
+```typescript
+buildInheritedCliFlags(): string
+// Inherits: --dangerously-skip-permissions, --permission-mode, --model, --settings, --plugin-dir, --chrome/--no-chrome
+```
+
+**planModeRequired** is also passed to teammates via this mechanism.
 
 ### Swarm Permission Sync
 

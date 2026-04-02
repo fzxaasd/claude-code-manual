@@ -14,21 +14,20 @@
 # 列出 MCP 服务器
 claude mcp list
 
-# 添加服务器
-claude mcp add <name> --command <command>
-claude mcp add <name> --command <command> [--scope <scope>] [--transport <type>] [--env <env>] [--header <header>] [--client-id <id>] [--client-secret] [--callback-port <port>]
+# 添加服务器 (stdio)
+claude mcp add <name> <command> [args...]
 
-# 添加 SSE 传输服务器
-claude mcp add <name> --transport sse --url <url>
+# 添加服务器 (HTTP/SSE/WS)
+claude mcp add <name> <url>
 
-# 添加 HTTP 服务器
-claude mcp add <name> --transport http --url <url>
+# 添加服务器 (OAuth/XAA)
+claude mcp add <name> <url> --xaa --client-id <id> --client-secret <secret>
 
 # 从 Claude Desktop 导入
 claude mcp add-from-claude-desktop [--scope <scope>]
 
 # JSON 添加
-claude mcp add-json <name> <json> [--scope <scope>] [--client-secret] [--env]
+claude mcp add-json
 
 # 获取服务器详情
 claude mcp get <name>
@@ -39,7 +38,7 @@ claude mcp reset-project-choices
 # 移除服务器
 claude mcp remove <name> [--scope <scope>]
 
-# XAA IdP 管理 (企业功能)
+# XAA IdP 管理
 claude mcp xaa setup --issuer <url> --client-id <id> [--client-secret] [--callback-port <port>]
 claude mcp xaa login
 claude mcp xaa show
@@ -49,14 +48,11 @@ claude mcp xaa clear
 claude mcp serve [--debug] [--verbose]
 ```
 
-**mcp 选项说明**:
-- `--scope, -s`: 配置文件作用域 (local/user/project)，默认为 local
-- `--transport, -t`: 传输类型 (stdio/sse/http/ws)
-- `--env, -e`: 环境变量
-- `--header, -H`: 自定义 HTTP 头
-- `--client-id`: OAuth 客户端 ID
-- `--client-secret`: 从 MCP_XAA_IDP_CLIENT_SECRET 环境变量读取密钥
-- `--callback-port`: OAuth 回调端口
+**注意**:
+- `claude mcp add` 的 `<command>` 是**位置参数**，不是 `--command` 选项
+- `--client-id`, `--client-secret`, `--callback-port`, `--xaa` 仅对 HTTP/SSE 传输有效，stdio 会忽略
+- `--issuer` 和 `--client-id` 是 `mcp xaa setup` 的**必选参数**
+- XAA 由 `CLAUDE_CODE_ENABLE_XAA=1` 环境变量启用，非企业独占
 
 **mcp xaa 子命令说明**:
 - `xaa setup`: 配置 XAA (SEP-990) IdP 连接，一次配置供所有 XAA 服务器使用
