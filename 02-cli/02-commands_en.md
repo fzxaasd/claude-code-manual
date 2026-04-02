@@ -277,6 +277,73 @@ claude auto-mode critique [--model <model>]
 
 ---
 
+## Undocumented Subcommand Options
+
+> The following options exist in source code but are not documented officially
+
+### `claude server` - Direct Connect Options
+
+| Option | Type | Description |
+|------|------|------|
+| `--port <number>` | string | HTTP port, default '0' |
+| `--host <string>` | string | Bind address, default '0.0.0.0' |
+| `--auth-token <token>` | string | Bearer token for authentication |
+| `--unix <path>` | string | Listen on Unix domain socket |
+| `--workspace <dir>` | string | Default working directory for sessions without cwd |
+| `--idle-timeout <ms>` | string | Idle timeout in ms for detached sessions, default '600000' |
+| `--max-sessions <n>` | string | Max concurrent sessions, default '32' |
+
+### `claude ssh` - SSH Remote Options
+
+| Option | Type | Description |
+|------|------|------|
+| `--permission-mode <mode>` | string | Permission mode for remote session |
+| `--dangerously-skip-permissions` | boolean | Skip all remote permission prompts (dangerous) |
+| `--local` | boolean | e2e test mode - spawn sub-CLI locally (skip ssh/deploy) |
+
+### `claude rollback` - Rollback Options
+
+| Option | Type | Description |
+|------|------|------|
+| `-l, --list` | boolean | List recent releases with timestamps |
+| `--dry-run` | boolean | Show what would be installed without installing |
+| `--safe` | boolean | Roll back to server-pinned safe version |
+
+### `claude completion` - Completion Options
+
+| Option | Type | Description |
+|------|------|------|
+| `--output <file>` | string | Write directly to file instead of stdout |
+
+### `claude mcp` - MCP Options
+
+| Command | Option | Type | Description |
+|------|------|------|------|
+| `mcp serve` | `--verbose` | boolean | Override config verbose mode setting |
+| `mcp add` | `--xaa` | boolean | Enable XAA (SEP-990) for this server, requires `claude mcp xaa setup` first |
+| `mcp xaa login` | `--force` | boolean | Ignore cached id_token and re-login |
+| `mcp xaa login` | `--id-token <jwt>` | string | Write prefetched id_token directly, skip OIDC browser login |
+
+### Cowork Options (Hidden)
+
+All plugin and marketplace subcommands support `--cowork` parameter to use `cowork_plugins` directory:
+
+| Command | Description |
+|------|------|
+| `plugin validate --cowork` | Validate using cowork_plugins directory |
+| `plugin list --cowork` | List using cowork_plugins directory |
+| `plugin install --cowork` | Install using cowork_plugins directory |
+| `plugin uninstall --cowork` | Uninstall using cowork_plugins directory |
+| `plugin enable --cowork` | Enable using cowork_plugins directory |
+| `plugin disable --cowork` | Disable using cowork_plugins directory |
+| `plugin update --cowork` | Update using cowork_plugins directory |
+| `marketplace add --cowork` | Add using cowork_plugins directory |
+| `marketplace list --cowork` | List using cowork_plugins directory |
+| `marketplace remove --cowork` | Remove using cowork_plugins directory |
+| `marketplace update --cowork` | Update using cowork_plugins directory |
+
+---
+
 ## Important Notes
 
 ### CLI vs REPL Command Differences

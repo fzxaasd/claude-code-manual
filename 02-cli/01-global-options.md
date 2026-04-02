@@ -132,7 +132,70 @@ claude [options] [command] [prompt]
 | `--remote-control [name]` | 远程控制（可选命名） | |
 | `--rc [name]` | `--remote-control` 的别名 | |
 
-### 13. 其他
+### 13. 隐藏/未文档化选项
+
+> 以下选项存在于源码中但未在官方文档中记录
+
+#### Agent & Team 选项
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--agent-id <id>` | string | Teammate agent ID (leader 生成) |
+| `--agent-name <name>` | string | Teammate 显示名称 |
+| `--agent-color <color>` | string | Teammate UI 颜色 |
+| `--agent-type <type>` | string | 此 teammate 的自定义 agent 类型 |
+| `--agent-teams` | boolean | 强制 Claude 使用多 agent 模式解决问题 |
+| `--team-name <name>` | string | Swarm 协调的团队名称 |
+| `--teammate-mode <mode>` | string | Teammate spawn 模式: "tmux", "in-process", 或 "auto" |
+| `--plan-mode-required` | boolean | 要求计划模式后才能实现 |
+| `--parent-session-id <id>` | string | 用于分析关联的父会话 ID |
+
+#### Feature-Gated 选项
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--advisor <model>` | string | 启用服务端 advisor 工具 |
+| `--enable-auto-mode` | boolean | 选择加入 auto mode |
+| `--proactive` | boolean | 启动主动自主模式 |
+| `--brief` | boolean | 启用 SendUserMessage 工具用于 agent 间通信 |
+| `--tasks [id]` | string | 任务模式: 监听任务并自动处理。可选 id 作为任务列表和 agent ID |
+| `--channels <servers...>` | string[] | MCP 服务器，其通道通知应注册此会话 |
+| `--dangerously-load-development-channels <servers...>` | string[] | 加载不在白名单上的通道服务器 (仅本地开发) |
+
+#### SDK & Remote 选项
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--sdk-url <url>` | string | 使用远程 WebSocket 端点进行 SDK I/O 流传输 (仅与 -p 和 stream-json 一起使用) |
+| `--assistant` | boolean | 强制助手模式 (Agent SDK daemon 使用) |
+| `--teleport [session]` | string | 恢复 teleport 会话，可选指定 session ID |
+| `--messaging-socket-path <path>` | string | UDS 消息服务器的 Unix 域套接字路径 |
+| `--hard-fail` | boolean | 在 logError 调用时崩溃而非静默记录 |
+
+#### Deep Link 选项
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--deep-link-repo <slug>` | string | 深层链接 ?repo= 参数解析到的仓库 slug |
+| `--deep-link-last-fetch <ms>` | number | FETCH_HEAD mtime (毫秒) |
+
+#### 已废弃选项
+
+| 参数 | 说明 |
+|------|------|
+| `--mcp-debug` | 已废弃，请使用 `--debug` |
+| `--dangerously-skip-permissions-with-classifiers` | 已废弃的 `--permission-mode auto` 别名 |
+| `--afk` | 已废弃的 `--permission-mode auto` 别名 |
+
+#### Cowork 选项 (隐藏)
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `--cowork` | boolean | 使用 cowork_plugins 目录 (隐藏) |
+| `--enable-auth-status` | boolean | SDK 模式中启用 auth status 消息 |
+| `--permission-prompt-tool <tool>` | string | MCP 工具用于权限提示 |
+
+### 14. 其他
 
 | 参数 | 说明 | 示例 |
 |------|------|------|

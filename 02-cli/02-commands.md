@@ -277,6 +277,73 @@ claude auto-mode critique [--model <model>]
 
 ---
 
+## 未文档化的子命令选项
+
+> 以下选项存在于源码中但未在官方文档中记录
+
+### `claude server` - 直接连接选项
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `--port <number>` | string | HTTP 端口，默认 '0' |
+| `--host <string>` | string | 绑定地址，默认 '0.0.0.0' |
+| `--auth-token <token>` | string | Bearer 令牌用于认证 |
+| `--unix <path>` | string | 监听 Unix 域套接字 |
+| `--workspace <dir>` | string | 不指定 cwd 的会话的默认工作目录 |
+| `--idle-timeout <ms>` | string | 分离会话的空闲超时(毫秒)，默认 '600000' |
+| `--max-sessions <n>` | string | 最大并发会话数，默认 '32' |
+
+### `claude ssh` - SSH 远程选项
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `--permission-mode <mode>` | string | 远程会话的权限模式 |
+| `--dangerously-skip-permissions` | boolean | 跳过所有远程权限提示 (危险) |
+| `--local` | boolean | e2e 测试模式 - 本地生成子 CLI (跳过 ssh/deploy) |
+
+### `claude rollback` - 回滚选项
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `-l, --list` | boolean | 列出最近的发布版本及时间 |
+| `--dry-run` | boolean | 显示将要安装的内容而不安装 |
+| `--safe` | boolean | 回滚到服务器固定的安全版本 |
+
+### `claude completion` - 补全选项
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `--output <file>` | string | 直接写入文件而非 stdout |
+
+### `claude mcp` - MCP 选项
+
+| 命令 | 选项 | 类型 | 说明 |
+|------|------|------|------|
+| `mcp serve` | `--verbose` | boolean | 覆盖配置中的 verbose 模式设置 |
+| `mcp add` | `--xaa` | boolean | 为此服务器启用 XAA (SEP-990)，需要先运行 `claude mcp xaa setup` |
+| `mcp xaa login` | `--force` | boolean | 忽略缓存的 id_token 并重新登录 |
+| `mcp xaa login` | `--id-token <jwt>` | string | 直接写入预获取的 id_token，跳过 OIDC 浏览器登录 |
+
+### Cowork 选项 (隐藏)
+
+所有 plugin 和 marketplace 子命令支持 `--cowork` 参数，使用 `cowork_plugins` 目录：
+
+| 命令 | 说明 |
+|------|------|
+| `plugin validate --cowork` | 使用 cowork_plugins 目录验证 |
+| `plugin list --cowork` | 使用 cowork_plugins 目录列出 |
+| `plugin install --cowork` | 使用 cowork_plugins 目录安装 |
+| `plugin uninstall --cowork` | 使用 cowork_plugins 目录卸载 |
+| `plugin enable --cowork` | 使用 cowork_plugins 目录启用 |
+| `plugin disable --cowork` | 使用 cowork_plugins 目录禁用 |
+| `plugin update --cowork` | 使用 cowork_plugins 目录更新 |
+| `marketplace add --cowork` | 使用 cowork_plugins 目录添加 |
+| `marketplace list --cowork` | 使用 cowork_plugins 目录列出 |
+| `marketplace remove --cowork` | 使用 cowork_plugins 目录移除 |
+| `marketplace update --cowork` | 使用 cowork_plugins 目录更新 |
+
+---
+
 ## 重要说明
 
 ### CLI vs REPL 命令区别
