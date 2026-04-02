@@ -198,7 +198,11 @@ Return a list of filenames for the memories that will clearly be useful (up to 5
 - If you are unsure if a memory will be useful, do not include it.
 - If there are no useful memories, return an empty list.
 - Do not select memories that are usage reference or API documentation for recently used tools.
+  BUT: Still select memories containing warnings, gotchas, or known issues about those tools.
+  Active use is exactly when those matter.
 ```
+
+**输出格式**: JSON schema `{selected_memories: string[]}`
 
 ---
 
@@ -252,10 +256,11 @@ function isAutoMemoryEnabled(): boolean
 
 **启用优先级** (第一个匹配生效):
 1. `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1/true` → 禁用
-2. `CLAUDE_CODE_SIMPLE` (--bare) → 禁用
-3. CCR 无持久存储 → 禁用
-4. `settings.autoMemoryEnabled` → 显式设置
-5. 默认 → 启用
+2. `CLAUDE_CODE_DISABLE_AUTO_MEMORY=0/false` → 强制启用
+3. `CLAUDE_CODE_SIMPLE` (--bare) → 禁用
+4. CCR 无持久存储 → 禁用
+5. `settings.autoMemoryEnabled` → 显式设置
+6. 默认 → 启用
 
 ### getAutoMemPath()
 
@@ -265,7 +270,7 @@ const getAutoMemPath = memoize((): string => { ... }, () => getProjectRoot())
 
 **路径解析**:
 1. `CLAUDE_COWORK_MEMORY_PATH_OVERRIDE` 环境变量
-2. `settings.autoMemoryDirectory`
+2. `settings.autoMemoryDirectory` (优先级: policySettings > flagSettings > localSettings > userSettings)
 3. `{memoryBase}/projects/{sanitized-git-root}/memory/`
 
 **注意**: 内部缓存，按 `getProjectRoot()` 失效
@@ -420,8 +425,9 @@ function buildCombinedMemoryPrompt(
 **功能**: 构建同时启用个人内存和团队记忆时的组合提示词
 
 **团队内存结构**:
-- 个人内存: `~/.claude/memory/projects/{project}/memory/`
-- 团队内存: `~/.claude/memory/projects/{project}/memory/team/`
+- 个人内存: `<autoMemPath>/` 即 `~/.claude/projects/{project}/memory/`
+- 团队内存: `<autoMemPath>/team/` 即 `~/.claude/projects/{project}/memory/team/`
+- 团队内存是个人内存的**子目录**，而非独立顶层目录
 
 **返回内容**:
 - 双目录内存系统介绍

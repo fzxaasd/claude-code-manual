@@ -124,7 +124,12 @@ export type BridgeApiClient = {
     environmentId: string,
     workId: string,
     sessionToken: string,
-  ): Promise<{ lease_extended: boolean; state: string }>
+  ): Promise<{
+    lease_extended: boolean
+    state: string
+    last_heartbeat: string    // ISO timestamp
+    ttl_seconds: number       // remaining TTL
+  }>
 }
 ```
 
@@ -342,7 +347,9 @@ src/bridge/
 ```
 1. 获取 WorkSecret (环境变量)
 2. 启动 Claude Code 子进程
-3. 通过 stdio 通信
+3. 通信方式:
+   - 独立 bridge 子进程模式: 通过 stdio 通信
+   - REPL bridge 模式: 当 CLAUDE_BRIDGE_USE_CCR_V2 设置时，通过 CCR v2 transport (SSE + WS) 通信
 4. 会话结束 → archive
 ```
 
@@ -367,7 +374,8 @@ src/bridge/
 1. **必须使用 claude.ai 登录** - 需要 OAuth token
    - 排除: Bedrock/Vertex/Foundry, apiKey, Console API
 2. **需要 user:profile scope** - setup-token 和 CLAUDE_CODE_OAUTH_TOKEN 不够
-3. **GrowthBook gate** - `tengu_ccr_bridge` 必须为 true
+3. **组织策略检查** - `isPolicyAllowed('allow_remote_control')` 必须允许
+4. **GrowthBook gate** - `tengu_ccr_bridge` 必须为 true
 
 ### getBridgeDisabledReason()
 
@@ -377,10 +385,12 @@ src/bridge/
 export async function getBridgeDisabledReason(): Promise<string | null>
 ```
 
+检测顺序: `BRIDGE_MODE` 构建标志 → `isClaudeAISubscriber()` → `hasProfileScope()` → `organizationUuid` → GrowthBook gate
+
 可能返回值:
 - `"Remote Control requires a claude.ai subscription..."`
 - `"Remote Control requires a full-scope login token..."`
-- `"Unable to determine your organization..."`
+- `"Unable to determine your organization..."` + 后缀 `Run \`claude auth login\` to refresh your account information`
 - `"Remote Control is not yet enabled for your account."`
 - `"Remote Control is not available in this build."`
 
@@ -434,8 +444,13 @@ export const REMOTE_CONTROL_DISCONNECTED_MSG = 'Remote Control disconnected.'
 ```bash
 claude remote-control [options]
 
+# 完整帮助信息
+# Remote Control lets you access this CLI session from the web (claude.ai/code)
+# or the Claude app, so you can pick up where you left off on any device.
+
 Options:
-  --session-id <id>    恢复指定会话
+  --session-id <id>    恢复指定会话 (别名: --continue)
+  --name <name>        指定会话名称
   --debug-file <path>  调试日志文件路径
 ```
 

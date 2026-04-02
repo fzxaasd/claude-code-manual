@@ -198,7 +198,11 @@ Return a list of filenames for the memories that will clearly be useful (up to 5
 - If you are unsure if a memory will be useful, do not include it.
 - If there are no useful memories, return an empty list.
 - Do not select memories that are usage reference or API documentation for recently used tools.
+  BUT: Still select memories containing warnings, gotchas, or known issues about those tools.
+  Active use is exactly when those matter.
 ```
+
+**Output Format**: JSON schema `{selected_memories: string[]}`
 
 ---
 
@@ -252,10 +256,11 @@ function isAutoMemoryEnabled(): boolean
 
 **Enable Priority** (first match wins):
 1. `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1/true` → Disabled
-2. `CLAUDE_CODE_SIMPLE` (`--bare`) → Disabled
-3. CCR without persistent storage → Disabled
-4. `settings.autoMemoryEnabled` → Explicit setting
-5. Default → Enabled
+2. `CLAUDE_CODE_DISABLE_AUTO_MEMORY=0/false` → Force enabled
+3. `CLAUDE_CODE_SIMPLE` (`--bare`) → Disabled
+4. CCR without persistent storage → Disabled
+5. `settings.autoMemoryEnabled` → Explicit setting
+6. Default → Enabled
 
 ### getAutoMemPath()
 
@@ -265,7 +270,7 @@ const getAutoMemPath = memoize((): string => { ... }, () => getProjectRoot())
 
 **Path Resolution**:
 1. `CLAUDE_COWORK_MEMORY_PATH_OVERRIDE` environment variable
-2. `settings.autoMemoryDirectory`
+2. `settings.autoMemoryDirectory` (priority: policySettings > flagSettings > localSettings > userSettings)
 3. `{memoryBase}/projects/{sanitized-git-root}/memory/`
 
 **Note**: Internally cached, invalidated by `getProjectRoot()`
@@ -420,8 +425,9 @@ function buildCombinedMemoryPrompt(
 **Function**: Build combined prompt when both personal and team memories are enabled
 
 **Team Memory Structure**:
-- Personal memory: `~/.claude/memory/projects/{project}/memory/`
-- Team memory: `~/.claude/memory/projects/{project}/memory/team/`
+- Personal memory: `<autoMemPath>/` i.e. `~/.claude/projects/{project}/memory/`
+- Team memory: `<autoMemPath>/team/` i.e. `~/.claude/projects/{project}/memory/team/`
+- Team memory is a **subdirectory** of personal memory, not a separate top-level directory
 
 **Return Content**:
 - Dual-directory memory system introduction

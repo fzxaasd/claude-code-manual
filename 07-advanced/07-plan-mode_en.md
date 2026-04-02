@@ -57,6 +57,13 @@ interface EnterPlanModeTool {
 - Disabled when `KAIROS` or `KAIROS_CHANNELS` feature is enabled and has active channel
 - Not available in sub-agent context
 
+### Tool Properties
+
+| Property | EnterPlanModeTool | ExitPlanModeV2Tool |
+|------|------------------|-------------------|
+| `isReadOnly` | `true` | `false` (writes files) |
+| `isConcurrencySafe` | `true` | `true` |
+
 ### ExitPlanModeV2Tool requiresUserInteraction()
 
 Teammate (isTeammate()) returns false — no local user interaction required
@@ -86,11 +93,12 @@ interface ExitPlanModeV2Tool {
 }
 ```
 
-**New parameter `allowedPrompts`**:
+**`allowedPrompts` parameter**:
 - Used to request specific Bash permissions when exiting plan mode
 - The `tool` field is restricted to `'Bash'` only (enum constraint)
 - Example: `{ tool: 'Bash', prompt: 'run tests' }` requests permission to run tests
-- Only automatically bypasses permission UI in Teammate mode
+- Teammate mode: directly allow, skip permission UI
+- Non-teammate mode: `checkPermissions` returns `behavior: 'ask'`, asks "Exit plan mode?"
 
 **Permission Verification**:
 - Only available when `mode === 'plan'`
@@ -136,15 +144,16 @@ Based on `src/utils/plans.ts`:
 
 ```typescript
 // Configuration: settings.json
-settings.plansDirectory: string  // Relative path, default ~/.claude/plans/
+settings.plansDirectory: string  // Relative or absolute path
 
 // Default location
 ~/.claude/plans/
 ```
 
 **Path Validation**:
-- Must be under project root
-- Prevents path traversal attacks
+- **Default**: Uses `~/.claude/plans/` (user home directory)
+- **Custom `plansDirectory`**: Must be under project root, prevents path traversal
+- Source logic: If custom path is outside `cwd`, falls back to `~/.claude/plans/`
 
 ### Plan Filename
 
@@ -213,13 +222,17 @@ isPlanModeInterviewPhaseEnabled(): boolean
 // Enable conditions (any one):
 // 1. USER_TYPE === 'ant' (internal users) - Always enabled
 // 2. CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=true environment variable
-// 3. tengu_plan_mode_interview_phase feature flag
+// 3. GrowthBook feature flag: tengu_plan_mode_interview_phase
 
 // Features:
 // - Add interview phase before 5-stage plan process
 // - Claude clarifies requirements through questions
 // - As control group, not affected by Pewter Ledger experiment
 ```
+
+**`mapToolResultToToolResultBlockParam` difference**:
+- Interview Phase enabled: Returns simplified "DO NOT write or edit any files except the plan file. Detailed workflow instructions will follow."
+- Interview Phase disabled: Returns detailed 6-step operation guide
 
 ### Pewter Ledger (Plan Size Control Experiment)
 
@@ -295,7 +308,20 @@ Continue execution / Re-plan
 |------|---------|
 | Teammate calls ExitPlanMode | Auto-allow, send approval request |
 | Non-teammate calls | Show confirmation dialog |
-| plan_mode_required teammate | Must have plan to exit |
+| `plan_mode_required=true` teammate | Must have plan to exit (forced plan mode) |
+
+### Forced Plan Mode (Plan Mode Required)
+
+```typescript
+isPlanModeRequired(): boolean
+
+// Triggers (any one):
+// 1. TeammateContext.planModeRequired = true
+// 2. DynamicTeamContext.planModeRequired = true
+// 3. Environment variable CLAUDE_CODE_PLAN_MODE_REQUIRED=true
+```
+
+**Source**: `src/utils/teammate.ts:149-156`
 
 ---
 
@@ -326,6 +352,7 @@ Continue execution / Re-plan
 | `CLAUDE_CODE_PLAN_V2_AGENT_COUNT` | Parallel exploration agent count | 1-10 |
 | `CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT` | Exploration agent count | 1-10 |
 | `CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE` | Enable interview phase | true/false |
+| `CLAUDE_CODE_PLAN_MODE_REQUIRED` | Force plan mode for teammates | true/false |
 
 ---
 

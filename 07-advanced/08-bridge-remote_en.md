@@ -124,7 +124,12 @@ export type BridgeApiClient = {
     environmentId: string,
     workId: string,
     sessionToken: string,
-  ): Promise<{ lease_extended: boolean; state: string }>
+  ): Promise<{
+    lease_extended: boolean
+    state: string
+    last_heartbeat: string    // ISO timestamp
+    ttl_seconds: number       // remaining TTL
+  }>
 }
 ```
 
@@ -342,7 +347,9 @@ src/bridge/
 ```
 1. Get WorkSecret (environment variable)
 2. Start Claude Code subprocess
-3. Communicate via stdio
+3. Communication:
+   - Standalone bridge subprocess mode: via stdio
+   - REPL bridge mode: when CLAUDE_BRIDGE_USE_CCR_V2 set, via CCR v2 transport (SSE + WS)
 4. Session ends → archive
 ```
 
@@ -367,7 +374,8 @@ src/bridge/
 1. **Must use claude.ai login** - Requires OAuth token
    - Excludes: Bedrock/Vertex/Foundry, apiKey, Console API
 2. **Requires user:profile scope** - setup-token and CLAUDE_CODE_OAUTH_TOKEN are not enough
-3. **GrowthBook gate** - `tengu_ccr_bridge` must be true
+3. **Organization policy check** - `isPolicyAllowed('allow_remote_control')` must allow
+4. **GrowthBook gate** - `tengu_ccr_bridge` must be true
 
 ### getBridgeDisabledReason()
 
@@ -377,10 +385,12 @@ Get detailed disabled reason:
 export async function getBridgeDisabledReason(): Promise<string | null>
 ```
 
+Check order: `BRIDGE_MODE` build flag → `isClaudeAISubscriber()` → `hasProfileScope()` → `organizationUuid` → GrowthBook gate
+
 Possible return values:
 - `"Remote Control requires a claude.ai subscription..."`
 - `"Remote Control requires a full-scope login token..."`
-- `"Unable to determine your organization..."`
+- `"Unable to determine your organization..."` + suffix `Run \`claude auth login\` to refresh your account information`
 - `"Remote Control is not yet enabled for your account."`
 - `"Remote Control is not available in this build."`
 
@@ -434,8 +444,13 @@ Main entry command, defined in `bridgeMain.ts`:
 ```bash
 claude remote-control [options]
 
+# Full help description
+# Remote Control lets you access this CLI session from the web (claude.ai/code)
+# or the Claude app, so you can pick up where you left off on any device.
+
 Options:
-  --session-id <id>    Resume specified session
+  --session-id <id>    Resume specified session (alias: --continue)
+  --name <name>        Specify session name
   --debug-file <path>  Debug log file path
 ```
 

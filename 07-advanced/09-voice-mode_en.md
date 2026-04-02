@@ -88,6 +88,31 @@ Supports 20 language codes: en, es, fr, ja, de, pt, it, ko, hi, id, ru, pl, tr, 
 
 **Note**: If the configured language is unsupported, it silently falls back to English (en) and shows a notification.
 
+### Pre-flight Checks
+
+When enabling voice mode, the following checks are executed:
+
+1. **Recording availability** (`checkRecordingAvailability`) — Check microphone access
+2. **Voice stream availability** (`isVoiceStreamAvailable`) — Check OAuth auth and account status
+3. **Dependencies check** (`checkVoiceDependencies`) — Check SoX/cpal/audio-tool availability
+4. **Microphone permission** (`requestMicrophonePermission`) — Trigger system permission dialog
+
+**Note**: `isVoiceStreamAvailable` itself includes OAuth auth check, not a separate 5th step.
+
+### Focus Mode
+
+Automatically starts recording when terminal gains focus, stops when focus is lost. Supports "multi-window voice-following" workflow.
+
+**Key behaviors**:
+- Auto-disconnect WebSocket after 5s silence (`FOCUS_SILENCE_TIMEOUT_MS = 5_000`)
+- Event tracking: `focusTriggered`, `silenceTimedOut`, `focusFlushedChars`
+
+**Hold-to-talk detection details**:
+- Requires 5 quick key presses to activate (`HOLD_THRESHOLD = 5`)
+- First 2 quick presses show "warmup" UI (`WARMUP_THRESHOLD = 2`)
+- Release timeout 200ms (`RELEASE_TIMEOUT_MS = 200`)
+- Modifier combos activate directly, no key-count detection needed
+
 ### Key Configuration
 
 ```json
@@ -102,8 +127,6 @@ Hold the specified key to start recording, release to stop.
 - `space` — Space key (default)
 - Modifier combos — e.g., `meta+k`, `ctrl+shift+v`
 - Letter keys — produce a warning because they print into input during warmup
-
-**Note**: Focus Mode is hardcoded to `false` in the implementation and not exposed as a user setting.
 
 ---
 

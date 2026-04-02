@@ -57,6 +57,13 @@ interface EnterPlanModeTool {
 - `KAIROS` 或 `KAIROS_CHANNELS` feature 开启且有活跃 channel 时禁用
 - 子 Agent 上下文中不可用
 
+### 工具属性
+
+| 属性 | EnterPlanModeTool | ExitPlanModeV2Tool |
+|------|------------------|-------------------|
+| `isReadOnly` | `true` | `false`（会写文件） |
+| `isConcurrencySafe` | `true` | `true` |
+
 ### ExitPlanModeV2Tool requiresUserInteraction()
 
 队友 (isTeammate()) 返回 false — 无需本地用户交互
@@ -86,11 +93,12 @@ interface ExitPlanModeV2Tool {
 }
 ```
 
-**新增参数 `allowedPrompts`**：
+**`allowedPrompts` 参数**：
 - 用于在退出计划模式时请求特定的 Bash 权限
 - `tool` 字段仅支持 `'Bash'`（源码限制为 `z.enum(['Bash'])`）
 - 例如：`{ tool: 'Bash', prompt: 'run tests' }` 请求运行测试的权限
-- 仅在 Teammate 模式下自动绕过权限 UI
+- Teammate 模式下：直接 allow，跳过权限 UI
+- 非 Teammate 模式下：`checkPermissions` 返回 `behavior: 'ask'`，询问"是否退出计划模式"
 
 **KAIROS 禁用门**：
 - `ExitPlanModeV2Tool` 在 `KAIROS` 或 `KAIROS_CHANNELS` 功能开启且存在允许的频道时会被禁用
@@ -140,15 +148,16 @@ interface ExitPlanModeV2Tool {
 
 ```typescript
 // 配置：settings.json
-settings.plansDirectory: string  // 相对路径，默认 ~/.claude/plans/
+settings.plansDirectory: string  // 相对路径或绝对路径
 
 // 默认位置
 ~/.claude/plans/
 ```
 
 **路径验证**：
-- 必须位于项目根目录下
-- 防止路径遍历攻击
+- **默认**：使用 `~/.claude/plans/`（用户主目录）
+- **自定义 `plansDirectory`**：验证必须在项目根目录下，防止路径遍历攻击
+- 源码逻辑：若设置路径不在 `cwd` 内，则回退到 `~/.claude/plans/`
 
 ### 计划文件名
 
@@ -217,13 +226,17 @@ isPlanModeInterviewPhaseEnabled(): boolean
 // 启用条件（满足任一即可）：
 // 1. USER_TYPE === 'ant' (内部用户) - 始终启用
 // 2. CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=true 环境变量
-// 3. tengu_plan_mode_interview_phase feature flag
+// 3. GrowthBook feature flag: tengu_plan_mode_interview_phase
 
 // 功能：
 // - 在 5 阶段计划流程前增加采访阶段
 // - Claude 通过提问澄清需求
 // - 作为参考群体，不受 Pewter Ledger 实验影响
 ```
+
+**`mapToolResultToToolResultBlockParam` 差异**：
+- Interview Phase 启用时：返回简化版 "DO NOT write or edit any files except the plan file. Detailed workflow instructions will follow."
+- Interview Phase 禁用时：返回详细的 6 步操作指南
 
 ### Pewter Ledger (计划大小控制实验)
 
@@ -297,9 +310,22 @@ Agent 请求退出计划模式
 
 | 场景 | 权限行为 |
 |------|---------|
-| Teammate 调用 ExitPlanMode | 自动允许，发送审批请求 |
+| Teammate 调用 ExitPlanMode | 自动 allow，发送审批请求 |
 | 非 Teammate 调用 | 显示确认对话框 |
-| plan_mode_required teammate | 必须有计划才能退出 |
+| `plan_mode_required=true` teammate | 必须有计划才能退出（强制计划模式） |
+
+### 强制计划模式 (Plan Mode Required)
+
+```typescript
+isPlanModeRequired(): boolean
+
+// 触发条件（满足任一）：
+// 1. TeammateContext 中 planModeRequired = true
+// 2. DynamicTeamContext 中 planModeRequired = true
+// 3. 环境变量 CLAUDE_CODE_PLAN_MODE_REQUIRED=true
+```
+
+**源码位置**: `src/utils/teammate.ts:149-156`
 
 ---
 
@@ -330,6 +356,7 @@ Agent 请求退出计划模式
 | `CLAUDE_CODE_PLAN_V2_AGENT_COUNT` | 并行探索 Agent 数 | 1-10 |
 | `CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT` | 探索 Agent 数 | 1-10 |
 | `CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE` | 启用采访阶段 | true/false |
+| `CLAUDE_CODE_PLAN_MODE_REQUIRED` | Teammate 强制计划模式 | true/false |
 
 ---
 

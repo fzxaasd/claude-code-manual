@@ -93,10 +93,25 @@ function isVoiceGrowthBookEnabled(): boolean {
 启用语音模式时，会执行以下检查：
 
 1. **录音可用性检查** (`checkRecordingAvailability`) — 检查麦克风访问权限
-2. **语音流可用性检查** (`isVoiceStreamAvailable`) — 检查 OAuth/账户状态
+2. **语音流可用性检查** (`isVoiceStreamAvailable`) — 检查 OAuth 认证和账户状态
 3. **依赖检查** (`checkVoiceDependencies`) — 检查 SoX/cpal/audio-tool 可用性
 4. **麦克风权限请求** (`requestMicrophonePermission`) — 触发系统权限对话框
-5. **认证和功能检查** — 检查语音功能授权状态
+
+**注意**：`isVoiceStreamAvailable` 本身已包含 OAuth 认证检查，不是独立的第 5 步。
+
+### Focus Mode (焦点模式)
+
+终端获得焦点时自动开始录音，失去焦点时停止录音。支持"多窗口语音跟随"工作流。
+
+**关键行为**：
+- 静默 5 秒后自动断开 WebSocket (`FOCUS_SILENCE_TIMEOUT_MS = 5_000`)
+- 事件追踪：`focusTriggered`、`silenceTimedOut`、`focusFlushedChars`
+
+**Hold-to-talk 检测细节**：
+- 需快速按键 5 次才激活 (`HOLD_THRESHOLD = 5`)
+- 前 2 次快速按键开始显示"预热"UI (`WARMUP_THRESHOLD = 2`)
+- 释放超时 200ms (`RELEASE_TIMEOUT_MS = 200`)
+- 修饰键组合直接激活，无需按键次数检测
 
 ### 按键配置
 
@@ -112,8 +127,6 @@ function isVoiceGrowthBookEnabled(): boolean {
 - `space` — 空格键（默认）
 - 修饰键组合 — 如 `meta+k`, `ctrl+shift+v`
 - 字母键 — 产生输入热键警告（因为热键期间会打印到输入）
-
-**注意**：Focus Mode 在代码中是硬编码的 `false`，不作为用户设置暴露。
 
 ---
 
