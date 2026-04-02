@@ -726,6 +726,8 @@ HTTP Hook 不支持以下事件：
 | `asyncRewake` | boolean | 异步钩子出错时唤醒模型 (隐含 async) |
 | `if` | string | permission rule 语法条件 |
 | `timeout` | number | 超时秒数 |
+| `shell` | string | 执行 shell 类型: `bash` 或 `powershell` |
+| `statusMessage` | string | 异步钩子执行时显示的状态消息 |
 
 ---
 

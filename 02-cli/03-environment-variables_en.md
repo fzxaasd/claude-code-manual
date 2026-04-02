@@ -162,6 +162,66 @@ Enable Plan Mode interview phase.
 export CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=1
 ```
 
+### `CLAUDE_CODE_ENABLE_XAA`
+
+Enable XAA (Cross-App Access / SEP-990) for MCP server enterprise managed authorization.
+
+```bash
+export CLAUDE_CODE_ENABLE_XAA=1
+```
+
+### `CLAUDE_CODE_CCR_MIRROR`
+
+Enable CCR (Claude Code Remote) mirror mode.
+
+```bash
+export CLAUDE_CODE_CCR_MIRROR=1
+```
+
+### `CLAUDE_CODE_REMOTE`
+
+Remote session mode.
+
+```bash
+export CLAUDE_CODE_REMOTE=1
+```
+
+### `CLAUDE_CODE_REMOTE_MEMORY_DIR`
+
+Override memory directory for remote sessions.
+
+```bash
+export CLAUDE_CODE_REMOTE_MEMORY_DIR=/path/to/memory
+```
+
+### `CLAUDE_CODE_DISABLE_AUTO_MEMORY`
+
+Disable auto memory feature.
+
+```bash
+# Disable
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
+
+# Force enable (overrides default enable)
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=0
+```
+
+### `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS`
+
+Disable background tasks.
+
+```bash
+export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
+```
+
+### `CLAUDE_CODE_DISABLE_THINKING`
+
+Disable thinking feature.
+
+```bash
+export CLAUDE_CODE_DISABLE_THINKING=1
+```
+
 ---
 
 ## CLI Feature Flags
@@ -185,7 +245,7 @@ The following environment variables do **NOT exist** in Claude Code source code:
 | `CLAUDE_SESSION_DIR` | Not exist |
 | `CLAUDE_SESSION_TIMEOUT` | Not exist |
 | `CLAUDE_SETTINGS_FILE` | Not exist |
-| `CLAUDE_DEBUG` | Not a formal environment variable |
+| `CLAUDE_DEBUG` | ✅ Exists, used to display warning context in debug mode |
 | `CLAUDE_LOG_LEVEL` | Not exist |
 | `CLAUDE_LOG_FILE` | Not exist |
 | `CLAUDE_TOOL_TIMEOUT` | Not exist |

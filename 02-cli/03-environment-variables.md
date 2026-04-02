@@ -162,6 +162,66 @@ export CLAUDE_CODE_PLAN_V2_EXPLORE_AGENT_COUNT=5
 export CLAUDE_CODE_PLAN_MODE_INTERVIEW_PHASE=1
 ```
 
+### `CLAUDE_CODE_ENABLE_XAA`
+
+启用 XAA (Cross-App Access / SEP-990) 功能，用于 MCP 服务器的企业托管授权。
+
+```bash
+export CLAUDE_CODE_ENABLE_XAA=1
+```
+
+### `CLAUDE_CODE_CCR_MIRROR`
+
+启用 CCR (Claude Code Remote) 镜像模式。
+
+```bash
+export CLAUDE_CODE_CCR_MIRROR=1
+```
+
+### `CLAUDE_CODE_REMOTE`
+
+远程会话模式。
+
+```bash
+export CLAUDE_CODE_REMOTE=1
+```
+
+### `CLAUDE_CODE_REMOTE_MEMORY_DIR`
+
+远程会话的内存目录覆盖。
+
+```bash
+export CLAUDE_CODE_REMOTE_MEMORY_DIR=/path/to/memory
+```
+
+### `CLAUDE_CODE_DISABLE_AUTO_MEMORY`
+
+禁用自动内存功能。
+
+```bash
+# 禁用
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1
+
+# 强制启用 (覆盖默认启用)
+export CLAUDE_CODE_DISABLE_AUTO_MEMORY=0
+```
+
+### `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS`
+
+禁用后台任务。
+
+```bash
+export CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
+```
+
+### `CLAUDE_CODE_DISABLE_THINKING`
+
+禁用思考 (thinking) 功能。
+
+```bash
+export CLAUDE_CODE_DISABLE_THINKING=1
+```
+
 ---
 
 ## CLI 功能标志
@@ -185,7 +245,7 @@ export CLAUDE_CODE_CLI=1
 | `CLAUDE_SESSION_DIR` | ❌ 不存在 |
 | `CLAUDE_SESSION_TIMEOUT` | ❌ 不存在 |
 | `CLAUDE_SETTINGS_FILE` | ❌ 不存在 |
-| `CLAUDE_DEBUG` | ❌ 不是正式环境变量 |
+| `CLAUDE_DEBUG` | ✅ 存在，用于调试模式下显示警告上下文 |
 | `CLAUDE_LOG_LEVEL` | ❌ 不存在 |
 | `CLAUDE_LOG_FILE` | ❌ 不存在 |
 | `CLAUDE_TOOL_TIMEOUT` | ❌ 不存在 |
