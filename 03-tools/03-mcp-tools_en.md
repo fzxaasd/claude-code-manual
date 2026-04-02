@@ -184,8 +184,14 @@ MCP server implemented using Claude Code SDK:
 ### MCP CLI Commands
 
 ```bash
-# Add server
-claude mcp add <name> <commandOrUrl> [args...]
+# Add server (stdio)
+claude mcp add <name> <command> [args...]
+
+# Add server (HTTP/WebSocket)
+claude mcp add <name> <url>
+
+# Add server with env vars and headers
+claude mcp add <name> <command> --env KEY=value --header "Authorization: Bearer xxx"
 
 # Add server with OAuth/XAA
 claude mcp add <name> <url> --xaa --client-id <id> --client-secret <secret>
@@ -211,6 +217,19 @@ claude mcp serve [--debug] [--verbose]
 # Reset project choices
 claude mcp reset-project-choices
 ```
+
+**mcp add options**:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `--scope/-s` | string | Scope (user/project/local) |
+| `--transport/-t` | string | Transport type (stdio/sse/http/ws) |
+| `--env/-e` | string | Environment variable (KEY=value format) |
+| `--header/-H` | string | HTTP request header |
+| `--client-id` | string | OAuth client ID |
+| `--client-secret` | string | OAuth client secret |
+| `--callback-port` | number | OAuth callback port |
+| `--xaa` | boolean | Enable XAA (SEP-990) authentication |
 
 **Note**:
 - `--client-id`, `--client-secret`, `--callback-port`, `--xaa` only work for HTTP/SSE transports, ignored for stdio

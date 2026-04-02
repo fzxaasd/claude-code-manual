@@ -26,6 +26,8 @@ Claude Code 有三种 Agent 来源：
 | `planAgent.ts` | PLAN_AGENT | 任务规划 |
 | `claudeCodeGuideAgent.ts` | CLAUDE_CODE_GUIDE_AGENT | Claude Code 使用指南 |
 | `verificationAgent.ts` | VERIFICATION_AGENT | 验证 Agent |
+| `forkSubagent.ts` | FORK_AGENT | Fork 子 Agent |
+| `coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator 工作节点 |
 
 ```typescript
 export function getBuiltInAgents(): AgentDefinition[] {
@@ -55,6 +57,13 @@ export function getBuiltInAgents(): AgentDefinition[] {
     agents.push(VERIFICATION_AGENT)
   }
 
+  // COORDINATOR_MODE: 多 worker 协调模式
+  if (feature('COORDINATOR_MODE')) {
+    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+      agents.push(getCoordinatorAgents())
+    }
+  }
+
   return agents
 }
 ```
@@ -68,10 +77,23 @@ export function getBuiltInAgents(): AgentDefinition[] {
 | PLAN_AGENT | 关闭 | 同上 |
 | CLAUDE_CODE_GUIDE_AGENT | 启用（非 SDK） | 仅 `sdk-ts/py/cli` 入口时禁用 |
 | VERIFICATION_AGENT | 关闭 | `VERIFICATION_AGENT` feature + `tengu_hive_evidence` |
+| FORK_AGENT | 启用 | `FORK_SUBAGENT` feature |
+| COORDINATOR_WORKER_AGENT | 关闭 | `COORDINATOR_MODE` feature |
+
+**One-Shot Agent**:
+```typescript
+// Explore 和 Plan 是 one-shot agent，不会被 SendMessage 继续
+export const ONE_SHOT_BUILTIN_AGENT_TYPES = new Set(['Explore', 'Plan'])
+```
 
 **Explore/Plan Agent Model 配置**：
 - Explore/Plan agents 读取 `omitClaudeMd` 字段，省略 CLAUDE.md 上下文以节省 token
 - 模型配置: `explore: haiku (非ANT) / inherit (ANT) | plan: inherit`
+
+**Fork Agent 特性**:
+- `maxTurns`: 200
+- `permissionMode`: 'bubble'
+- 继承父级的完整对话上下文
 
 ### Agent 与 Skill 的区别
 

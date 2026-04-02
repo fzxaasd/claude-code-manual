@@ -56,7 +56,13 @@ claude mcp serve [--debug] [--verbose]
 
 **mcp xaa 子命令说明**:
 - `xaa setup`: 配置 XAA (SEP-990) IdP 连接，一次配置供所有 XAA 服务器使用
+  - `--issuer` (必填): IdP issuer URL
+  - `--client-id` (必填): OAuth client ID
+  - `--client-secret` (可选): OAuth 客户端密钥，不提供时从环境变量读取
+  - `--callback-port` (可选): 固定回调端口
 - `xaa login`: 登录 IdP 获取令牌
+  - `--force`: 忽略缓存的 id_token 并重新登录
+  - `--id-token <jwt>`: 直接写入预获取的 id_token，跳过 OIDC 浏览器登录
 - `xaa show`: 显示当前 IdP 配置
 - `xaa clear`: 清除 IdP 配置和令牌
 

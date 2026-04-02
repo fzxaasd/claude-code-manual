@@ -184,8 +184,14 @@ IDE extension 专用 SSE 连接：
 ### MCP CLI 命令
 
 ```bash
-# 添加服务器
-claude mcp add <name> <commandOrUrl> [args...]
+# 添加服务器 (stdio)
+claude mcp add <name> <command> [args...]
+
+# 添加服务器 (HTTP/WebSocket)
+claude mcp add <name> <url>
+
+# 添加服务器 (带环境变量和请求头)
+claude mcp add <name> <command> --env KEY=value --header "Authorization: Bearer xxx"
 
 # 添加服务器 (OAuth/XAA)
 claude mcp add <name> <url> --xaa --client-id <id> --client-secret <secret>
@@ -211,6 +217,19 @@ claude mcp serve [--debug] [--verbose]
 # 重置项目选择
 claude mcp reset-project-choices
 ```
+
+**mcp add 选项**:
+
+| 选项 | 类型 | 说明 |
+|------|------|------|
+| `--scope/-s` | string | 作用域 (user/project/local) |
+| `--transport/-t` | string | 传输类型 (stdio/sse/http/ws) |
+| `--env/-e` | string | 环境变量 (KEY=value 格式) |
+| `--header/-H` | string | HTTP 请求头 |
+| `--client-id` | string | OAuth 客户端 ID |
+| `--client-secret` | string | OAuth 客户端密钥 |
+| `--callback-port` | number | OAuth 回调端口 |
+| `--xaa` | boolean | 启用 XAA (SEP-990) 认证 |
 
 **注意**:
 - `--client-id`, `--client-secret`, `--callback-port`, `--xaa` 仅对 HTTP/SSE 传输有效，对 stdio 会忽略

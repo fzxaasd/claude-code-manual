@@ -26,6 +26,8 @@ Based on standalone files under `src/tools/AgentTool/built-in/`:
 | `planAgent.ts` | PLAN_AGENT | Task planning |
 | `claudeCodeGuideAgent.ts` | CLAUDE_CODE_GUIDE_AGENT | Claude Code usage guide |
 | `verificationAgent.ts` | VERIFICATION_AGENT | Verification agent |
+| `forkSubagent.ts` | FORK_AGENT | Fork sub-agent |
+| `coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator worker node |
 
 ```typescript
 export function getBuiltInAgents(): AgentDefinition[] {
@@ -55,6 +57,13 @@ export function getBuiltInAgents(): AgentDefinition[] {
     agents.push(VERIFICATION_AGENT)
   }
 
+  // COORDINATOR_MODE: multi-worker coordination mode
+  if (feature('COORDINATOR_MODE')) {
+    if (isEnvTruthy(process.env.CLAUDE_CODE_COORDINATOR_MODE)) {
+      agents.push(getCoordinatorAgents())
+    }
+  }
+
   return agents
 }
 ```
@@ -68,10 +77,23 @@ export function getBuiltInAgents(): AgentDefinition[] {
 | PLAN_AGENT | Disabled | Same as above |
 | CLAUDE_CODE_GUIDE_AGENT | Enabled (non-SDK) | Only disabled for `sdk-ts/py/cli` entrypoints |
 | VERIFICATION_AGENT | Disabled | `VERIFICATION_AGENT` feature + `tengu_hive_evidence` |
+| FORK_AGENT | Enabled | `FORK_SUBAGENT` feature |
+| COORDINATOR_WORKER_AGENT | Disabled | `COORDINATOR_MODE` feature |
+
+**One-Shot Agent**:
+```typescript
+// Explore and Plan are one-shot agents, not continued by SendMessage
+export const ONE_SHOT_BUILTIN_AGENT_TYPES = new Set(['Explore', 'Plan'])
+```
 
 **Explore/Plan Agent Model Configuration**:
 - Explore/Plan agents read the `omitClaudeMd` field to skip CLAUDE.md context for token savings
 - Model configuration: `explore: haiku (non-ANT) / inherit (ANT) | plan: inherit`
+
+**Fork Agent Characteristics**:
+- `maxTurns`: 200
+- `permissionMode`: 'bubble'
+- Inherits full conversation context from parent
 
 ### Difference Between Agent and Skill
 
