@@ -27,17 +27,26 @@
 
 ### Define Sub-agent
 
-```json
-{
-  "agents": {
-    "reviewer": {
-      "description": "Code review agent",
-      "tools": ["Read", "Glob", "Grep", "Bash"],
-      "model": "sonnet"
-    }
-  }
-}
+Agents must be defined via Markdown files in the `.claude/agents/` directory:
+
+```markdown
+---
+name: reviewer
+description: Code review agent
+whenToUse: When code review is needed
+tools:
+  - Read
+  - Glob
+  - Grep
+model: sonnet
+---
+
+# Code Review Agent
+
+You are a professional code reviewer...
 ```
+
+**Note**: Agents cannot be defined in `settings.json`. They must use Markdown files.
 
 ### Data Transfer Between Agents
 
@@ -146,35 +155,36 @@ Main Agent (Integrator)
 
 ### Implementation Configuration
 
-```json
-{
-  "agents": {
-    "architect": {
-      "description": "Architecture design agent",
-      "model": "opus"
-    },
-    "db-expert": {
-      "description": "Database expert",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob"]
-    },
-    "api-expert": {
-      "description": "API expert",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob", "Bash"]
-    },
-    "frontend-expert": {
-      "description": "Frontend expert",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob"]
-    },
-    "test-expert": {
-      "description": "Test expert",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Bash"]
-    }
-  }
-}
+Create multiple Markdown files in `.claude/agents/`:
+
+```markdown
+---
+name: architect
+description: Architecture design agent
+whenToUse: When architecture design is needed
+model: opus
+---
+
+# Architecture Design Agent
+
+You focus on system architecture and design patterns...
+```
+
+```markdown
+---
+name: db-expert
+description: Database expert
+whenToUse: When database design or optimization is needed
+tools:
+  - Read
+  - Write
+  - Glob
+model: sonnet
+---
+
+# Database Expert Agent
+
+You specialize in database design, SQL optimization...
 ```
 
 ---
@@ -316,32 +326,50 @@ Triggers when a teammate is idle:
 
 ### 1. Clear Responsibility Boundaries
 
-```json
-{
-  "agents": {
-    "frontend": {
-      "description": "Handle only frontend code",
-      "tools": ["Read", "Write", "Glob(src/**/*.tsx)"]
-    },
-    "backend": {
-      "description": "Handle only backend code",
-      "tools": ["Read", "Write", "Glob(server/**/*.ts)"]
-    }
-  }
-}
+Create separate agent files in `.claude/agents/`:
+
+```markdown
+---
+name: frontend
+description: Handle only frontend code
+whenToUse: When frontend development is needed
+tools:
+  - Read
+  - Write
+  - Glob(src/**/*.tsx)
+---
+
+# Frontend Expert Agent
+```
+
+```markdown
+---
+name: backend
+description: Handle only backend code
+whenToUse: When backend development is needed
+tools:
+  - Read
+  - Write
+  - Glob(server/**/*.ts)
+---
+
+# Backend Expert Agent
 ```
 
 ### 2. Limit Tool Scope
 
-```json
-{
-  "agents": {
-    "safe-agent": {
-      "description": "Safe mode agent",
-      "tools": ["Read", "Glob", "Grep"]
-    }
-  }
-}
+```markdown
+---
+name: safe-agent
+description: Safe mode agent, read-only operations
+whenToUse: When security review is needed
+tools:
+  - Read
+  - Glob
+  - Grep
+---
+
+# Security Review Agent
 ```
 
 ### 3. Use Skill Layering
@@ -395,23 +423,38 @@ claude agents history <agent-id>
 
 ### Quick Start Template
 
-```json
-{
-  "agents": {
-    "main": {
-      "description": "Main coordination agent",
-      "model": "opus"
-    },
-    "worker": {
-      "description": "Worker agent",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob", "Grep", "Bash"]
-    }
-  },
-  "skills": {
-    "coordinator": {
-      "description": "Task coordination skill"
-    }
-  }
-}
+Create agent files in `.claude/agents/`:
+
+```markdown
+---
+name: main
+description: Main coordination agent
+whenToUse: As main coordinator managing task flow
+model: opus
+---
+
+# Main Coordination Agent
+
+You are responsible for coordinating multiple sub-agents...
 ```
+
+```markdown
+---
+name: worker
+description: Worker agent
+whenToUse: Execute specific development tasks
+tools:
+  - Read
+  - Write
+  - Glob
+  - Grep
+  - Bash
+model: sonnet
+---
+
+# Worker Agent
+
+You execute specific development tasks...
+```
+
+**Note**: Agents must be defined via Markdown files. They cannot be configured in `settings.json`.

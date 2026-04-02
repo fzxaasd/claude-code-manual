@@ -113,7 +113,8 @@ plugin-name/
 
 ```
 my-plugin/
-├── plugin.json
+├── .claude-plugin/
+│   └── plugin.json
 └── skills/
     └── custom-skill/
         └── SKILL.md

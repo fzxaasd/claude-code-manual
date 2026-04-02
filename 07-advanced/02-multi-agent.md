@@ -27,17 +27,26 @@
 
 ### 定义子 Agent
 
-```json
-{
-  "agents": {
-    "reviewer": {
-      "description": "代码审查 Agent",
-      "tools": ["Read", "Glob", "Grep", "Bash"],
-      "model": "sonnet"
-    }
-  }
-}
+Agent 必须通过 Markdown 文件定义，存放在 `.claude/agents/` 目录：
+
+```markdown
+---
+name: reviewer
+description: 代码审查 Agent
+whenToUse: 当需要进行代码审查时使用
+tools:
+  - Read
+  - Glob
+  - Grep
+model: sonnet
+---
+
+# 代码审查 Agent
+
+你是一个专业的代码审查专家...
 ```
+
+不支持在 `settings.json` 中定义 agents。
 
 ### Agent 间数据传递
 
@@ -146,35 +155,36 @@ description: 自动修复审查问题
 
 ### 实现配置
 
-```json
-{
-  "agents": {
-    "architect": {
-      "description": "架构设计 Agent",
-      "model": "opus"
-    },
-    "db-expert": {
-      "description": "数据库专家",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob"]
-    },
-    "api-expert": {
-      "description": "API 专家",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob", "Bash"]
-    },
-    "frontend-expert": {
-      "description": "前端专家",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob"]
-    },
-    "test-expert": {
-      "description": "测试专家",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Bash"]
-    }
-  }
-}
+在 `.claude/agents/` 目录创建多个 Markdown 文件：
+
+```markdown
+---
+name: architect
+description: 架构设计 Agent
+whenToUse: 需要架构设计时使用
+model: opus
+---
+
+# 架构设计 Agent
+
+你专注于系统架构和设计模式...
+```
+
+```markdown
+---
+name: db-expert
+description: 数据库专家
+whenToUse: 需要数据库设计或优化时使用
+tools:
+  - Read
+  - Write
+  - Glob
+model: sonnet
+---
+
+# 数据库专家 Agent
+
+你专注于数据库设计、SQL 优化...
 ```
 
 ---
@@ -316,32 +326,50 @@ fi
 
 ### 1. 明确职责边界
 
-```json
-{
-  "agents": {
-    "frontend": {
-      "description": "只处理前端代码",
-      "tools": ["Read", "Write", "Glob(src/**/*.tsx)"]
-    },
-    "backend": {
-      "description": "只处理后端代码",
-      "tools": ["Read", "Write", "Glob(server/**/*.ts)"]
-    }
-  }
-}
+在 `.claude/agents/` 中创建独立的 agent 文件：
+
+```markdown
+---
+name: frontend
+description: 只处理前端代码
+whenToUse: 需要前端开发时使用
+tools:
+  - Read
+  - Write
+  - Glob(src/**/*.tsx)
+---
+
+# 前端专家 Agent
+```
+
+```markdown
+---
+name: backend
+description: 只处理后端代码
+whenToUse: 需要后端开发时使用
+tools:
+  - Read
+  - Write
+  - Glob(server/**/*.ts)
+---
+
+# 后端专家 Agent
 ```
 
 ### 2. 限制工具范围
 
-```json
-{
-  "agents": {
-    "safe-agent": {
-      "description": "安全模式 Agent",
-      "tools": ["Read", "Glob", "Grep"]
-    }
-  }
-}
+```markdown
+---
+name: safe-agent
+description: 安全模式 Agent，只读操作
+whenToUse: 需要安全审查时使用
+tools:
+  - Read
+  - Glob
+  - Grep
+---
+
+# 安全审查 Agent
 ```
 
 ### 3. 使用 Skill 分层
@@ -395,23 +423,38 @@ claude agents history <agent-id>
 
 ### 快速启动模板
 
-```json
-{
-  "agents": {
-    "main": {
-      "description": "主协调 Agent",
-      "model": "opus"
-    },
-    "worker": {
-      "description": "工作 Agent",
-      "model": "sonnet",
-      "tools": ["Read", "Write", "Glob", "Grep", "Bash"]
-    }
-  },
-  "skills": {
-    "coordinator": {
-      "description": "任务协调技能"
-    }
-  }
-}
+在 `.claude/agents/` 目录创建 agent 文件：
+
+```markdown
+---
+name: main
+description: 主协调 Agent
+whenToUse: 作为主协调器管理任务流程
+model: opus
+---
+
+# 主协调 Agent
+
+你负责协调多个子 Agent 完成复杂任务...
 ```
+
+```markdown
+---
+name: worker
+description: 工作 Agent
+whenToUse: 执行具体开发任务
+tools:
+  - Read
+  - Write
+  - Glob
+  - Grep
+  - Bash
+model: sonnet
+---
+
+# 工作 Agent
+
+你负责执行具体的开发任务...
+```
+
+**注意**: agents 必须通过 Markdown 文件定义，不支持在 `settings.json` 中配置。

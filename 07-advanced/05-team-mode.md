@@ -534,8 +534,7 @@ async function cleanupOldResolutions(
 │   └── resolved/            # 已解决请求
 │       └── perm-{timestamp}-{random}.json
 └── inboxes/                 # 消息收件箱
-    └── {teammate-name}/
-        └── messages.json
+    └── {teammate-name}.json # 每个 teammate 一个 JSON 文件
 ```
 
 #### 使用示例

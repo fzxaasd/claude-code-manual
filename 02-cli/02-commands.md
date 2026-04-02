@@ -15,13 +15,20 @@
 claude mcp list
 
 # 添加服务器
-claude mcp add github --command "npx @modelcontextprotocol/server-github"
+claude mcp add <name> --command <command>
+claude mcp add <name> --command <command> [--scope <scope>] [--transport <type>] [--env <env>] [--header <header>] [--client-id <id>] [--client-secret] [--callback-port <port>]
+
+# 添加 SSE 传输服务器
+claude mcp add <name> --transport sse --url <url>
+
+# 添加 HTTP 服务器
+claude mcp add <name> --transport http --url <url>
 
 # 从 Claude Desktop 导入
-claude mcp add-from-claude-desktop
+claude mcp add-from-claude-desktop [--scope <scope>]
 
 # JSON 添加
-claude mcp add-json <name> <json>
+claude mcp add-json <name> <json> [--scope <scope>] [--client-secret] [--env]
 
 # 获取服务器详情
 claude mcp get <name>
@@ -30,11 +37,32 @@ claude mcp get <name>
 claude mcp reset-project-choices
 
 # 移除服务器
-claude mcp remove <name>
+claude mcp remove <name> [--scope <scope>]
+
+# XAA IdP 管理 (企业功能)
+claude mcp xaa setup --issuer <url> --client-id <id> [--client-secret] [--callback-port <port>]
+claude mcp xaa login
+claude mcp xaa show
+claude mcp xaa clear
 
 # 启动 Claude Code 作为 MCP 服务器
-claude mcp serve
+claude mcp serve [--debug] [--verbose]
 ```
+
+**mcp 选项说明**:
+- `--scope, -s`: 配置文件作用域 (local/user/project)，默认为 local
+- `--transport, -t`: 传输类型 (stdio/sse/http/ws)
+- `--env, -e`: 环境变量
+- `--header, -H`: 自定义 HTTP 头
+- `--client-id`: OAuth 客户端 ID
+- `--client-secret`: 从 MCP_XAA_IDP_CLIENT_SECRET 环境变量读取密钥
+- `--callback-port`: OAuth 回调端口
+
+**mcp xaa 子命令说明**:
+- `xaa setup`: 配置 XAA (SEP-990) IdP 连接，一次配置供所有 XAA 服务器使用
+- `xaa login`: 登录 IdP 获取令牌
+- `xaa show`: 显示当前 IdP 配置
+- `xaa clear`: 清除 IdP 配置和令牌
 
 ### `claude auth` - 认证管理
 
@@ -65,23 +93,36 @@ claude plugins list
 # 验证插件
 claude plugin validate <path>
 
-# 查看市场
-claude plugin marketplace
+# 市场管理
+claude plugin marketplace add <source> [--sparse <paths...>] [--scope <scope>]
+claude plugin marketplace list [--json]
+claude plugin marketplace remove <name>
+claude plugin marketplace remove <name>  # 别名: rm
+claude plugin marketplace update [name]
 
 # 安装插件
 claude plugin install <plugin>
+claude plugin install <plugin> --scope <scope>
 
 # 卸载插件
 claude plugin uninstall <plugin>
+claude plugin uninstall <plugin> --scope <scope> [--keep-data]
 
 # 更新插件
 claude plugin update <plugin>
+claude plugin update <plugin> --scope <scope>
 
 # 启用/禁用插件
 claude plugin enable <plugin>
 claude plugin disable <plugin>
 claude plugin disable --all
 ```
+
+**marketplace 子命令说明**:
+- `marketplace add <source>`: 从 URL、路径或 GitHub 仓库添奸市场。`--sparse` 用于 monorepo 限制目录，`--scope` 指定作用域 (user/project/local)
+- `marketplace list`: 列出所有已配置的市场
+- `marketplace remove <name>`: 移除配置的市场
+- `marketplace update [name]`: 更新市场，不指定名称则更新所有
 
 ### `claude agents` - Agent 管理
 
@@ -158,8 +199,20 @@ claude error
 ### `claude task` - 任务管理
 
 ```bash
-# 任务管理
-claude task
+# 创建任务
+claude task create <subject> [--description <text>] [--list <id>]
+
+# 列出任务
+claude task list [--list <id>] [--pending] [--json]
+
+# 获取任务详情
+claude task get <id> [--list <id>]
+
+# 更新任务
+claude task update <id> [--status <status>] [--subject <text>] [--description <text>] [--owner <agentId>] [--clear-owner]
+
+# 显示任务目录
+claude task dir [--list <id>]
 ```
 
 ### `claude completion` - Shell 补全
@@ -216,8 +269,14 @@ claude assistant [sessionId]
 ### `claude auto-mode` - 自动模式配置 (TRANSCRIPT_CLASSIFIER)
 
 ```bash
-# 配置自动模式
+# 显示有效配置
 claude auto-mode config
+
+# 显示默认规则 (JSON 格式)
+claude auto-mode defaults
+
+# AI 反馈你的自定义规则
+claude auto-mode critique [--model <model>]
 ```
 
 ---

@@ -104,9 +104,7 @@ interface BaseAgentDefinition {
   // Model and performance
   model?: string             // Specified model
   effort?: EffortValue       // Effort level
-
-  // Note: permissionMode is not a valid agent frontmatter field
-  // Permission mode is configured via settings.json's permissions.defaultMode
+  permissionMode?: PermissionMode  // Permission mode (optional)
 
   // MCP configuration
   mcpServers?: AgentMcpServerSpec[]  // MCP servers
@@ -310,12 +308,19 @@ You are a professional code review expert, responsible for reviewing code qualit
 
 ### 4. Permission Mode
 
-Agent permission mode is controlled by the session context, not a direct configuration field in agent definition.
+Agents can set permission mode via `permissionMode` field in frontmatter:
 
-**Note**: `permissionMode` does not exist in agent markdown frontmatter or settings.json top level. The correct field is `permissions.defaultMode`.
+```yaml
+---
+name: reviewer
+permissionMode: acceptEdits
+---
+```
+
+Or configure globally via settings.json:
 
 ```json
-// Correct configuration in settings.json
+// settings.json
 {
   "permissions": {
     "defaultMode": "default"
@@ -323,14 +328,17 @@ Agent permission mode is controlled by the session context, not a direct configu
 }
 ```
 
+**permissionMode vs permissions.defaultMode**:
+- `permissionMode` (agent level): Set in agent frontmatter or settings.json agents.*.permissionMode, only affects that agent
+- `permissions.defaultMode` (global level): Set in settings.json top level, affects the entire session's default permission mode
+
 **Complete PermissionMode List** (`src/types/permissions.ts`):
 - `default` - Ask user every time
 - `plan` - Plan Mode, read-only, disallow file writing
 - `acceptEdits` - Auto-accept all edits
 - `dontAsk` - Silently allow/deny without prompts
 - `bypassPermissions` - Bypass all permission checks
-- `auto` - Auto mode (TRANSCRIPT_CLASSIFIER feature-gated)
-- `auto` - Auto mode (requires feature `TRANSCRIPT_CLASSIFIER`, ant-only)
+- `auto` - Auto mode (requires TRANSCRIPT_CLASSIFIER feature, ant-only)
 
 ### 5. MCP Servers
 

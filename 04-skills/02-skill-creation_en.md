@@ -109,6 +109,31 @@ paths:                              # Activate after path pattern match
 ---
 ```
 
+**Path matching rules**:
+- The `/**` suffix in patterns is automatically removed (`src/**` → `src/`)
+- If all patterns are `**` (match all), the skill is treated as unconditional
+- Conditional skills are initially stored in `conditionalSkills`, only activated when matching files are accessed
+- Once activated, they move to `dynamicSkills` and cannot be deactivated
+
+**Path pattern examples**:
+| Pattern | Matches |
+|---------|---------|
+| `*.sql` | SQL files in root directory |
+| `src/**/*.ts` | TypeScript files in src and subdirectories |
+| `tests/` | All files in tests directory |
+
+### 6. Model Control
+
+```yaml
+---
+model: "sonnet"                    # Specify model (optional)
+effort: "high"                    # Effort level (optional)
+disable-model-invocation: true     # Disable model auto-invocation (optional)
+---
+```
+
+**disable-model-invocation**: When set to `true`, disables the model's auto-invocation feature. This field is for advanced scenarios and must be explicitly declared in the frontmatter.
+
 ---
 
 ## Execution Mode Comparison

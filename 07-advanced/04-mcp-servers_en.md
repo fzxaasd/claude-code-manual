@@ -37,16 +37,16 @@ Based on `src/services/mcp/types.ts`:
 
 ```typescript
 const TransportSchema = z.enum([
-  'stdio',     // Standard input/output (local process)
-  'sse',      // Server-Sent Events
-  'sse-ide',  // IDE extension-specific SSE
-  'http',     // HTTP requests
-  'ws',       // WebSocket
-  'sdk',      // SDK internal transport (IDE integration)
+  'stdio',           // Standard input/output (local process)
+  'sse',             // Server-Sent Events
+  'sse-ide',         // IDE extension-specific SSE
+  'http',            // HTTP requests
+  'ws',              // WebSocket
+  'ws-ide',          // IDE extension-specific WebSocket
+  'sdk',             // SDK internal transport (IDE integration)
+  'claudeai-proxy'   // Claude.ai Proxy server
 ])
 ```
-
-**Note**: `ws-ide` Transport no longer exists in `TransportSchema`. IDE extensions should use `sdk` type.
 
 ### 1. stdio Server
 

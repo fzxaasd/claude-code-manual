@@ -109,6 +109,31 @@ paths:                              # 路径模式匹配后激活
 ---
 ```
 
+**路径匹配规则**:
+- 模式中的 `/**` 后缀会被自动移除（`src/**` → `src/`）
+- 如果所有模式都是 `**`（匹配全部），技能被视为无条件的
+- 条件技能初始存储在 `conditionalSkills`，只有当匹配的文件被访问时才激活
+- 激活后移至 `dynamicSkills`，之后无法停用
+
+**路径模式示例**:
+| 模式 | 匹配文件 |
+|------|----------|
+| `*.sql` | 根目录的 SQL 文件 |
+| `src/**/*.ts` | src 目录及子目录的 TypeScript 文件 |
+| `tests/` | tests 目录下的所有文件 |
+
+### 6. 模型控制
+
+```yaml
+---
+model: "sonnet"                    # 指定模型（可选）
+effort: "high"                    # effort 级别（可选）
+disable-model-invocation: true     # 禁用模型自动调用（可选）
+---
+```
+
+**disable-model-invocation**: 设置为 `true` 时，禁用模型的自动调用功能。此字段用于高级场景，需要在 frontmatter 中显式声明。
+
 ---
 
 ## 执行模式对比

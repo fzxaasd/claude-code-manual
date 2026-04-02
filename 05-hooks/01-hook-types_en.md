@@ -162,9 +162,20 @@ The Claude Code Hook system provides 27 lifecycle hooks, allowing custom logic t
   hook_event_name: "SessionEnd",
   session_id: string,
   transcript_path: string,
-  cwd: string
+  cwd: string,
+  reason: "clear" | "resume" | "logout" | "prompt_input_exit" | "other" | "bypass_permissions_disabled"
 }
 ```
+
+**reason values**:
+| Value | Description |
+|-------|-------------|
+| `clear` | Session was cleared by user |
+| `resume` | Session replaced after resume |
+| `logout` | User logged out |
+| `prompt_input_exit` | User exited via input exit |
+| `other` | Other reason |
+| `bypass_permissions_disabled` | bypassPermissions mode was disabled |
 
 **Use Cases**: Cleanup, state saving, final reporting
 
