@@ -470,6 +470,127 @@ Solution B, with progressive migration
 
 ---
 
+## Undocumented Functionality
+
+### Feature-Gated Configuration
+
+The following settings require `TRANSCRIPT_CLASSIFIER` feature:
+
+| Setting | Feature Gate | Description |
+|---------|--------------|-------------|
+| `useAutoModeDuringPlan` | TRANSCRIPT_CLASSIFIER | Use auto mode during plan phase |
+| `skipAutoPermissionPrompt` | TRANSCRIPT_CLASSIFIER | Skip auto mode confirmation |
+
+### EnterPlanModeTool Error Behavior
+
+Throws error when used in agent context:
+
+```typescript
+if (context.agentId) {
+  throw new Error('EnterPlanMode tool cannot be used in agent contexts')
+}
+```
+
+### ExitPlanModeV2Tool Validation Logic
+
+Validation when exiting plan mode:
+
+```typescript
+// Only called in plan mode, otherwise log telemetry
+if (!isInPlanMode()) {
+  logEvent('tengu_exit_plan_mode_called_outside_plan')
+  return { error: 'You are not in plan mode...' }
+}
+```
+
+### Auto Mode State Restoration
+
+Auto Mode state handling on plan exit:
+
+```typescript
+// Capture whether auto mode was used during plan
+const wasAutoModeActive = autoModeStateModule?.isAutoModeActive()
+
+// Restore state or add notification
+if (finalRestoringAuto) {
+  autoModeStateModule?.setAutoModeActive(true)
+} else if (wasAutoModeActive) {
+  setNeedsAutoModeExitAttachment(true)
+}
+
+// Permission lifecycle management
+permissionSetupModule?.stripDangerousPermissionsForAutoMode()
+// ... after execution ...
+restoreDangerousPermissions()
+```
+
+### Tool Properties
+
+| Property | Value | Description |
+|----------|-------|-------------|
+| `shouldDefer` | `true` | Deferred execution |
+| `maxResultSizeChars` | `100000` | Max result size |
+| `searchHint` | "switch to plan mode to design an approach before coding" | ToolSearch hint |
+
+### CCR Web UI Plan Editing
+
+CCR Web UI can edit and re-persist plans:
+
+```typescript
+if (updatedInput?.plan) {
+  // Write edited plan
+  await writeFile(filePath, updatedInput.plan, 'utf-8')
+  // Update remote snapshot
+  await persistFileSnapshotIfRemote()
+}
+```
+
+### Session Forking Plan Copy
+
+```typescript
+// Unlike copyPlanForResume which reuses slug
+// copyPlanForFork generates new slug
+const newSlug = generateSlug()
+copyPlanToForkedPath(originalPath, newSlug)
+```
+
+### Plan Slug Clearing
+
+`/clear` command clears plan slug cache:
+
+```typescript
+clearPlanSlug()      // Clear single slug
+clearAllPlanSlugs()  // Clear all slugs
+```
+
+### Rejection Display
+
+When user rejects plan mode exit:
+
+```typescript
+// Shows RejectedPlanMessage component with current plan
+return { message: renderToolUseRejectedMessage(planContent) }
+```
+
+### TeamCreate Hint
+
+Hint for parallelization after plan approval:
+
+```typescript
+if (hasTaskTool) {
+  hint += '\n\nIf this plan can be broken down into multiple independent tasks, consider using the TeamCreate tool to create a team and parallelize the work.'
+}
+```
+
+### Interview Phase Unaffected Reason
+
+Interview Phase (ants users) unaffected by Pewter Ledger because:
+- ants use interview-phase workflow
+- Pewter Ledger only applied to 5-phase workflow
+- Interview Phase remains unchanged as reference group
+
+---
+
 ## Testing Verification
 
 Verify Plan Mode configuration:

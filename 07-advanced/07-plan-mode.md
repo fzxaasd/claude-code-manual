@@ -474,6 +474,127 @@ Write .claude/plans/xxx.md
 
 ---
 
+## 未记录的功能细节
+
+### Feature-Gated 配置
+
+以下配置项需要 `TRANSCRIPT_CLASSIFIER` feature 才能生效：
+
+| 配置项 | Feature Gate | 说明 |
+|--------|--------------|------|
+| `useAutoModeDuringPlan` | TRANSCRIPT_CLASSIFIER | 计划阶段使用自动模式 |
+| `skipAutoPermissionPrompt` | TRANSCRIPT_CLASSIFIER | 跳过自动模式确认 |
+
+### EnterPlanModeTool 错误行为
+
+子 Agent 上下文中使用会抛出错误：
+
+```typescript
+if (context.agentId) {
+  throw new Error('EnterPlanMode tool cannot be used in agent contexts')
+}
+```
+
+### ExitPlanModeV2Tool 验证逻辑
+
+退出计划模式时的验证：
+
+```typescript
+// 仅在计划模式中调用，否则记录遥测事件
+if (!isInPlanMode()) {
+  logEvent('tengu_exit_plan_mode_called_outside_plan')
+  return { error: 'You are not in plan mode...' }
+}
+```
+
+### Auto Mode 状态恢复
+
+退出计划模式时自动处理 Auto Mode 状态：
+
+```typescript
+// 捕获计划期间是否使用了 auto mode
+const wasAutoModeActive = autoModeStateModule?.isAutoModeActive()
+
+// 恢复状态或添加通知
+if (finalRestoringAuto) {
+  autoModeStateModule?.setAutoModeActive(true)
+} else if (wasAutoModeActive) {
+  setNeedsAutoModeExitAttachment(true)
+}
+
+// 权限生命周期管理
+permissionSetupModule?.stripDangerousPermissionsForAutoMode()
+// ... 执行完成后 ...
+restoreDangerousPermissions()
+```
+
+### 工具属性
+
+| 属性 | 值 | 说明 |
+|------|-----|------|
+| `shouldDefer` | `true` | 延迟执行 |
+| `maxResultSizeChars` | `100000` | 最大结果大小 |
+| `searchHint` | "switch to plan mode to design an approach before coding" | ToolSearch 提示 |
+
+### CCR Web UI 计划编辑
+
+CCR Web UI 可以编辑计划并重新持久化：
+
+```typescript
+if (updatedInput?.plan) {
+  // 写入编辑后的计划
+  await writeFile(filePath, updatedInput.plan, 'utf-8')
+  // 更新远程快照
+  await persistFileSnapshotIfRemote()
+}
+```
+
+### Session Forking 计划复制
+
+```typescript
+// 不同于 copyPlanForResume 复用 slug
+// copyPlanForFork 生成新 slug
+const newSlug = generateSlug()
+copyPlanToForkedPath(originalPath, newSlug)
+```
+
+### Plan Slug 清理
+
+`/clear` 命令清理计划 slug 缓存：
+
+```typescript
+clearPlanSlug()      // 清理单个 slug
+clearAllPlanSlugs()  // 清理所有 slugs
+```
+
+### 拒绝审批显示
+
+用户拒绝退出计划模式时显示当前计划内容：
+
+```typescript
+// 拒绝时显示 RejectedPlanMessage 组件
+return { message: renderToolUseRejectedMessage(planContent) }
+```
+
+### TeamCreate 提示
+
+计划审批通过后提示并行化：
+
+```typescript
+if (hasTaskTool) {
+  hint += '\n\nIf this plan can be broken down into multiple independent tasks, consider using the TeamCreate tool to create a team and parallelize the work.'
+}
+```
+
+### Interview Phase 不受影响原因
+
+Interview Phase（ants 用户）不受 Pewter Ledger 实验影响，因为：
+- ants 使用 interview-phase 工作流
+- Pewter Ledger 只应用于 5-phase 工作流
+- Interview Phase 作为参考组保持不变
+
+---
+
 ## 测试验证
 
 验证 Plan Mode 配置：
