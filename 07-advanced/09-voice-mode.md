@@ -108,8 +108,8 @@ function isVoiceGrowthBookEnabled(): boolean {
 - 事件追踪：`focusTriggered`、`silenceTimedOut`、`focusFlushedChars`
 
 **Hold-to-talk 检测细节**：
-- 需快速按键 5 次才激活 (`HOLD_THRESHOLD = 5`)
-- 前 2 次快速按键开始显示"预热"UI (`WARMUP_THRESHOLD = 2`)
+- 第一次按键即开始录音（无延迟）
+- 使用 auto-repeat 检测控制释放计时器
 - 释放超时 200ms (`RELEASE_TIMEOUT_MS = 200`)
 - 修饰键组合直接激活，无需按键次数检测
 
@@ -175,6 +175,48 @@ type VoiceState = 'idle' | 'recording' | 'processing'
 # 检查音频依赖
 # 确保 SoX (Linux) 或 CoreAudio (macOS) 可用
 ```
+
+---
+
+## 未文档化的功能
+
+### Silent-drop Replay
+
+当服务端接受音频但返回零转录时（~1% session-sticky CE pod bug），自动在新连接上重放缓冲音频。
+
+### Audio Waveform Visualizer
+
+16 条 RMS 振幅波形可视化 (`AUDIO_LEVEL_BARS = 16`)。
+
+### Early-error Retry
+
+连接错误且无转录时，250ms 后自动重试一次。
+
+### Audio Buffering
+
+WebSocket 连接期间缓冲音频 (~32KB/秒)。
+
+### Focus Mode Transcript Flushing
+
+Focus 模式下每个 final transcript 立即注入（非累积）。
+
+### Remote Session 检测
+
+检测 `CLAUDE_CODE_REMOTE` 环境变量，自动禁用语音。
+
+### Linux 音频实现
+
+- **ALSA cards 检测**: 读取 `/proc/asound/cards`
+- **arecord fallback**: Linux 上 SoX 之外的备选方案
+- **WSL 特定处理**: WSL1/Win10-WSL2 无音频设备时的错误提示
+
+### Analytics Events
+
+| 事件 | 说明 |
+|------|------|
+| `tengu_voice_recording_started` | 开始录音 |
+| `tengu_voice_recording_completed` | 录音完成 |
+| `tengu_voice_silent_drop_replay` | Silent-drop replay 触发 |
 
 ---
 

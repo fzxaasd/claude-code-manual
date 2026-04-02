@@ -108,8 +108,8 @@ Automatically starts recording when terminal gains focus, stops when focus is lo
 - Event tracking: `focusTriggered`, `silenceTimedOut`, `focusFlushedChars`
 
 **Hold-to-talk detection details**:
-- Requires 5 quick key presses to activate (`HOLD_THRESHOLD = 5`)
-- First 2 quick presses show "warmup" UI (`WARMUP_THRESHOLD = 2`)
+- Recording starts immediately on first keypress (no delay)
+- Uses auto-repeat detection to control release timer
 - Release timeout 200ms (`RELEASE_TIMEOUT_MS = 200`)
 - Modifier combos activate directly, no key-count detection needed
 
@@ -175,6 +175,48 @@ type VoiceState = 'idle' | 'recording' | 'processing'
 # Check audio dependencies
 # Ensure SoX (Linux) or CoreAudio (macOS) is available
 ```
+
+---
+
+## Undocumented Features
+
+### Silent-drop Replay
+
+When server accepts audio but returns zero transcription (~1% session-sticky CE pod bug), automatically replays buffered audio on fresh connection.
+
+### Audio Waveform Visualizer
+
+16 RMS amplitude waveform visualization (`AUDIO_LEVEL_BARS = 16`).
+
+### Early-error Retry
+
+On connection error with no transcription, automatically retries once after 250ms.
+
+### Audio Buffering
+
+Buffers audio during WebSocket connection (~32KB/sec).
+
+### Focus Mode Transcript Flushing
+
+In Focus mode, each final transcript is injected immediately (not accumulated).
+
+### Remote Session Detection
+
+Detects `CLAUDE_CODE_REMOTE` environment variable, automatically disables voice.
+
+### Linux Audio Implementation
+
+- **ALSA cards detection**: Reads `/proc/asound/cards`
+- **arecord fallback**: Alternative to SoX on Linux
+- **WSL specific handling**: Error message for WSL1/Win10-WSL2 without audio device
+
+### Analytics Events
+
+| Event | Description |
+|-------|-------------|
+| `tengu_voice_recording_started` | Recording started |
+| `tengu_voice_recording_completed` | Recording completed |
+| `tengu_voice_silent_drop_replay` | Silent-drop replay triggered |
 
 ---
 
