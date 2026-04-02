@@ -11,7 +11,7 @@
 All content in this manual is based on source code analysis of the [instructkr/claude-code](https://github.com/instructkr/claude-code) open source project.
 
 Special thanks:
-- This manual covers 39 documents through deep source code reading
+- This manual covers 40 documents through deep source code reading
 - All technical details are verified against source code for accuracy
 
 ---
@@ -205,7 +205,7 @@ All core systems verified via scripts:
 
 | Metric | Count |
 |--------|-------|
-| Document Files | 39 |
+| Document Files | 40 |
 | Test Scripts | 11 |
 | Hook Types | 27 |
 | Skill Frontmatter Fields | 16 |
