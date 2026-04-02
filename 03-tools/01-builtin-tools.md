@@ -531,6 +531,98 @@ const TOOL_DEFAULTS = {
 
 ---
 
+## 未文档化的工具功能
+
+以下功能在源码中存在，但主要文档未覆盖：
+
+### Read Tool (FileReadTool)
+
+| 功能 | 说明 |
+|------|------|
+| `pages` | PDF 页码范围 (如 `"1-5"`, `"3"`, `"10-20"`) |
+| 文件去重 | 相同文件范围无变化时返回 `file_unchanged` |
+| 设备路径阻塞 | `/dev/zero`, `/dev/random` 等会被阻塞 |
+| 图片维度元数据 | 返回 `dimensions` 用于坐标映射 |
+
+### Write Tool (FileWriteTool)
+
+| 功能 | 说明 |
+|------|------|
+| `structuredPatch` | 返回 diff patch |
+| `originalFile` | 返回写入前的原始内容 |
+| `gitDiff` | `tengu_quartz_lantern` 特性启用时返回 git diff |
+| LSP 通知 | 文件变更时通知 LSP 服务器 |
+
+### Edit Tool (FileEditTool)
+
+| 功能 | 说明 |
+|------|------|
+| `replace_all` | 布尔参数，替换所有匹配 |
+| 引号保留 | 自动保留文件中的弯引号 |
+| 1GB 文件限制 | 超过 1GB 的文件无法编辑 |
+
+### Glob Tool
+
+| 功能 | 说明 |
+|------|------|
+| 100 文件限制 | 默认最多返回 100 个结果 |
+| `truncated` | 指示结果是否被截断 |
+| `durationMs` | 返回执行时间 |
+
+### Grep Tool
+
+| 功能 | 说明 |
+|------|------|
+| `-C` 别名 | 与 `context` 参数相同 |
+| `offset` | 跳过前 N 个结果 |
+| `multiline` | `.` 匹配换行符 |
+| `type` | 按文件类型过滤 (js, py, rust) |
+| VCS 目录排除 | 自动排除 `.git`, `.svn`, `.hg` 等 |
+
+### Bash Tool
+
+| 功能 | 说明 |
+|------|------|
+| `run_in_background` | 后台运行命令 |
+| `dangerouslyDisableSandbox` | 覆盖沙箱模式 |
+| 自动后台化 | 助手模式下 15 秒后自动后台化 |
+| 大输出持久化 | `persistedOutputPath` |
+
+### NotebookEdit Tool
+
+| 功能 | 说明 |
+|------|------|
+| `cell_id` | 支持数值索引 (cell-N 格式) |
+| `edit_mode` | `replace`, `insert`, `delete` |
+| `cell_type` | `code` 或 `markdown` (insert 模式需要) |
+
+### LSP Tool
+
+| 功能 | 说明 |
+|------|------|
+| 8 种操作 | goToDefinition, findReferences, hover 等 |
+| 10MB 文件限制 | LSP 分析的最大文件大小 |
+| Gitignore 过滤 | 过滤 gitignore 中的结果 |
+
+### Task V2
+
+| 功能 | 说明 |
+|------|------|
+| `addBlocks` | 添加阻塞任务 |
+| `blockedBy` | 任务依赖关系 |
+| `metadata` | 元数据支持 null 删除 |
+| `activeForm` | 旋转器文本 |
+
+### SendMessage Tool
+
+| 功能 | 说明 |
+|------|------|
+| 结构化消息 | `shutdown_request`, `shutdown_response` |
+| 跨会话通信 | UDS/bridge 消息传递 |
+| 自动恢复 | 停止的 agent 自动恢复 |
+
+---
+
 ## 测试验证
 
 运行测试脚本验证工具配置：

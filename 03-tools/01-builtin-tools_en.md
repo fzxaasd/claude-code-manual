@@ -531,6 +531,98 @@ const TOOL_DEFAULTS = {
 
 ---
 
+## Undocumented Tool Features
+
+The following features exist in source code but are not covered in the main documentation:
+
+### Read Tool (FileReadTool)
+
+| Feature | Description |
+|---------|-------------|
+| `pages` | PDF page range (e.g., `"1-5"`, `"3"`, `"10-20"`) |
+| File de-duplication | Returns `file_unchanged` for unchanged files |
+| Device path blocking | `/dev/zero`, `/dev/random` would block |
+| Image dimension metadata | Returns `dimensions` for coordinate mapping |
+
+### Write Tool (FileWriteTool)
+
+| Feature | Description |
+|---------|-------------|
+| `structuredPatch` | Returns diff patch |
+| `originalFile` | Returns content before write |
+| `gitDiff` | Available when `tengu_quartz_lantern` feature enabled |
+| LSP notification | Notifies LSP servers of file changes |
+
+### Edit Tool (FileEditTool)
+
+| Feature | Description |
+|---------|-------------|
+| `replace_all` | Boolean to replace all matches |
+| Quote preservation | Automatically preserves curly quotes |
+| 1GB file limit | Files over 1GB cannot be edited |
+
+### Glob Tool
+
+| Feature | Description |
+|---------|-------------|
+| 100 file limit | Maximum 100 results by default |
+| `truncated` | Indicates if results were truncated |
+| `durationMs` | Returns execution time |
+
+### Grep Tool
+
+| Feature | Description |
+|---------|-------------|
+| `-C` alias | Same as `context` parameter |
+| `offset` | Skip first N results |
+| `multiline` | `.` matches newlines |
+| `type` | Filter by file type (js, py, rust) |
+| VCS exclusion | Auto-excludes `.git`, `.svn`, `.hg` |
+
+### Bash Tool
+
+| Feature | Description |
+|---------|-------------|
+| `run_in_background` | Run command in background |
+| `dangerouslyDisableSandbox` | Override sandbox mode |
+| Auto-backgrounding | 15s auto-background in assistant mode |
+| Large output persistence | `persistedOutputPath` |
+
+### NotebookEdit Tool
+
+| Feature | Description |
+|---------|-------------|
+| `cell_id` | Supports numeric indices (cell-N format) |
+| `edit_mode` | `replace`, `insert`, `delete` |
+| `cell_type` | `code` or `markdown` (required for insert) |
+
+### LSP Tool
+
+| Feature | Description |
+|---------|-------------|
+| 8 operations | goToDefinition, findReferences, hover, etc. |
+| 10MB file limit | Maximum file size for LSP analysis |
+| Gitignore filtering | Filters gitignored results |
+
+### Task V2
+
+| Feature | Description |
+|---------|-------------|
+| `addBlocks` | Add blocking tasks |
+| `blockedBy` | Task dependencies |
+| `metadata` | Supports null deletion |
+| `activeForm` | Spinner text |
+
+### SendMessage Tool
+
+| Feature | Description |
+|---------|-------------|
+| Structured messages | `shutdown_request`, `shutdown_response` |
+| Cross-session | UDS/bridge messaging |
+| Auto-resume | Stopped agents auto-resume |
+
+---
+
 ## Testing
 
 Run the test script to verify tool configuration:
