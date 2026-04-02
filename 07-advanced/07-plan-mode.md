@@ -88,8 +88,13 @@ interface ExitPlanModeV2Tool {
 
 **新增参数 `allowedPrompts`**：
 - 用于在退出计划模式时请求特定的 Bash 权限
+- `tool` 字段仅支持 `'Bash'`（源码限制为 `z.enum(['Bash'])`）
 - 例如：`{ tool: 'Bash', prompt: 'run tests' }` 请求运行测试的权限
 - 仅在 Teammate 模式下自动绕过权限 UI
+
+**KAIROS 禁用门**：
+- `ExitPlanModeV2Tool` 在 `KAIROS` 或 `KAIROS_CHANNELS` 功能开启且存在允许的频道时会被禁用
+- 与 `EnterPlanModeTool` 使用相同的禁用逻辑
 
 **权限验证**：
 - 仅在 `mode === 'plan'` 时可用

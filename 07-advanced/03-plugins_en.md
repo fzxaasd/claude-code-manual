@@ -87,23 +87,47 @@ plugin-name/
   "description": "Plugin description",
   "author": "Author Name",
   "homepage": "https://github.com/author/plugin",
-  "skills": [
-    {
-      "name": "my-skill",
-      "path": "skills/my-skill"
-    }
-  ],
-  "agents": [
-    {
-      "name": "my-agent",
-      "path": "agents/my-agent.md"
-    }
-  ],
-  "hooks": {
-    "path": "hooks/hooks.json"
-  }
+  "repository": "https://github.com/author/plugin",
+  "license": "MIT",
+  "keywords": ["testing", "mcp"],
+  "skills": [{ "name": "my-skill", "path": "skills/my-skill" }],
+  "agents": [{ "name": "my-agent", "path": "agents/my-agent.md" }],
+  "commands": {
+    "build": { "source": "commands/build.md", "description": "Build project" },
+    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet", "allowedTools": ["Read", "Bash(npm *)", "Write"] }
+  },
+  "hooks": { "path": "hooks/hooks.json" },
+  "dependencies": ["formatter@marketplace", "linter"],
+  "mcpServers": {
+    "github-server": { "type": "stdio", "command": "npx", "args": ["@modelcontextprotocol/server-github"] }
+  },
+  "userConfig": {
+    "api_key": { "type": "string", "description": "API Key", "sensitive": true, "required": true },
+    "project_dir": { "type": "directory", "description": "Project directory" },
+    "config_file": { "type": "file", "description": "Config file path" }
+  },
+  "outputStyles": [{ "name": "concise", "path": "output-styles/concise.md" }],
+  "channels": [
+    { "name": "telegram", "displayName": "Telegram", "mcpServer": "telegram-bot" }
+  ]
 }
 ```
+
+**Field Reference**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `dependencies` | string[] | Plugin dependencies, auto-resolved at install |
+| `mcpServers` | object | MCP server configs, supports .mcpb/.dxt files |
+| `commands` | object | Command mapping, supports object format `{source, description, argumentHint, model, allowedTools}` |
+| `userConfig` | object | User-configurable options, supports string/number/boolean/directory/file types, `sensitive` stored in keychain |
+| `outputStyles` | array | Custom output styles |
+| `channels` | array | MCP message channels (Telegram/Slack/Discord), inject via `notifications/claude/channel` |
+| `lspServers` | array | LSP server configurations |
+| `settings` | object | Settings to merge into settings cascade |
+| `repository` | string | Source repository URL (metadata) |
+| `license` | string | SPDX license identifier (metadata) |
+| `keywords` | string[] | Discovery and categorization tags |
 
 ---
 

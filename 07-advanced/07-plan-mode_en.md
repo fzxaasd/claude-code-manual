@@ -88,6 +88,7 @@ interface ExitPlanModeV2Tool {
 
 **New parameter `allowedPrompts`**:
 - Used to request specific Bash permissions when exiting plan mode
+- The `tool` field is restricted to `'Bash'` only (enum constraint)
 - Example: `{ tool: 'Bash', prompt: 'run tests' }` requests permission to run tests
 - Only automatically bypasses permission UI in Teammate mode
 

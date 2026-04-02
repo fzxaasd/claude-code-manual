@@ -84,7 +84,19 @@ function isVoiceGrowthBookEnabled(): boolean {
 }
 ```
 
-支持 21 种语言代码。
+支持 20 种语言代码：en, es, fr, ja, de, pt, it, ko, hi, id, ru, pl, tr, nl, uk, el, cs, da, sv, no。
+
+**注意**：如果设置的语言不支持，会自动回退到英语（en）并显示提示。
+
+### 预检检查
+
+启用语音模式时，会执行以下检查：
+
+1. **录音可用性检查** (`checkRecordingAvailability`) — 检查麦克风访问权限
+2. **语音流可用性检查** (`isVoiceStreamAvailable`) — 检查 OAuth/账户状态
+3. **依赖检查** (`checkVoiceDependencies`) — 检查 SoX/cpal/audio-tool 可用性
+4. **麦克风权限请求** (`requestMicrophonePermission`) — 触发系统权限对话框
+5. **认证和功能检查** — 检查语音功能授权状态
 
 ### 按键配置
 
@@ -96,9 +108,12 @@ function isVoiceGrowthBookEnabled(): boolean {
 
 按住指定按键开始录音，松开停止。
 
-### Focus Mode
+**绑定类型**：
+- `space` — 空格键（默认）
+- 修饰键组合 — 如 `meta+k`, `ctrl+shift+v`
+- 字母键 — 产生输入热键警告（因为热键期间会打印到输入）
 
-当终端获得焦点时自动开始录音，失焦后停止（5秒静默超时）。
+**注意**：Focus Mode 在代码中是硬编码的 `false`，不作为用户设置暴露。
 
 ---
 

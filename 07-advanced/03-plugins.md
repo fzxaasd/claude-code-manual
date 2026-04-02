@@ -87,23 +87,47 @@ plugin-name/
   "description": "插件描述",
   "author": "Author Name",
   "homepage": "https://github.com/author/plugin",
-  "skills": [
-    {
-      "name": "my-skill",
-      "path": "skills/my-skill"
-    }
-  ],
-  "agents": [
-    {
-      "name": "my-agent",
-      "path": "agents/my-agent.md"
-    }
-  ],
-  "hooks": {
-    "path": "hooks/hooks.json"
-  }
+  "repository": "https://github.com/author/plugin",
+  "license": "MIT",
+  "keywords": ["testing", "mcp"],
+  "skills": [{ "name": "my-skill", "path": "skills/my-skill" }],
+  "agents": [{ "name": "my-agent", "path": "agents/my-agent.md" }],
+  "commands": {
+    "build": { "source": "commands/build.md", "description": "Build project" },
+    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet", "allowedTools": ["Bash(npm *)", "Read"] }
+  },
+  "hooks": { "path": "hooks/hooks.json" },
+  "mcpServers": {
+    "github": { "type": "stdio", "command": "npx", "args": ["@modelcontextprotocol/server-github"] }
+  },
+  "dependencies": ["formatter@marketplace"],
+  "userConfig": {
+    "api_key": { "type": "string", "description": "API Key", "sensitive": true, "required": true },
+    "project_dir": { "type": "directory", "description": "Project directory" },
+    "config_file": { "type": "file", "description": "Config file path" }
+  },
+  "outputStyles": [{ "name": "concise", "path": "output-styles/concise.md" }],
+  "channels": [
+    { "name": "telegram", "displayName": "Telegram", "mcpServer": "telegram-bot" }
+  ]
 }
 ```
+
+**字段说明**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `dependencies` | string[] | 插件依赖，安装时自动解析 |
+| `mcpServers` | object | MCP 服务器配置，支持 .mcpb/.dxt 文件 |
+| `commands` | object | 命令映射，支持对象格式 `{source, description, argumentHint, model, allowedTools}` |
+| `userConfig` | object | 用户可配置选项，支持 string/number/boolean/directory/file 类型，`sensitive` 存入 keychain |
+| `outputStyles` | array | 自定义输出样式 |
+| `channels` | array | MCP 消息通道 (Telegram/Slack/Discord)，通过 `notifications/claude/channel` 注入 |
+| `lspServers` | array | LSP 服务器配置 |
+| `settings` | object | 合并到 settings cascade 的配置 |
+| `repository` | string | 源码仓库 URL (元数据) |
+| `license` | string | SPDX 许可证标识 (元数据) |
+| `keywords` | string[] | 发现和分类标签 |
 
 ---
 

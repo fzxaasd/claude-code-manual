@@ -84,7 +84,9 @@ Toggles voice mode on/off.
 }
 ```
 
-Supports 21 language codes.
+Supports 20 language codes: en, es, fr, ja, de, pt, it, ko, hi, id, ru, pl, tr, nl, uk, el, cs, da, sv, no.
+
+**Note**: If the configured language is unsupported, it silently falls back to English (en) and shows a notification.
 
 ### Key Configuration
 
@@ -96,9 +98,12 @@ Supports 21 language codes.
 
 Hold the specified key to start recording, release to stop.
 
-### Focus Mode
+**Binding types**:
+- `space` — Space key (default)
+- Modifier combos — e.g., `meta+k`, `ctrl+shift+v`
+- Letter keys — produce a warning because they print into input during warmup
 
-Automatically start recording when terminal gains focus, stop when focus is lost (5-second silence timeout).
+**Note**: Focus Mode is hardcoded to `false` in the implementation and not exposed as a user setting.
 
 ---
 
