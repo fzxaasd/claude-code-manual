@@ -320,6 +320,175 @@ If user asks about "recent" or "current" state, prefer `git log` or reading code
 
 ---
 
+## Team Memory Sync Service
+
+Based on `src/services/teamMemorySync/` - team memory synchronization service.
+
+### Core Files
+
+| File | Function |
+|------|----------|
+| `index.ts` | Main service entry - Pull/Push/Sync core logic |
+| `watcher.ts` | File watcher - monitors local changes and triggers sync |
+| `types.ts` | Type definitions and Zod Schema |
+| `secretScanner.ts` | Secret scanner - detects sensitive info before upload |
+| `teamMemSecretGuard.ts` | Secret guard - blocks writes with secrets |
+
+---
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/claude_code/team_memory?repo={owner/repo}` | Get full data |
+| GET | `/api/claude_code/team_memory?repo={owner/repo}&view=hashes` | Get metadata+checksums only |
+| PUT | `/api/claude_code/team_memory?repo={owner/repo}` | Upload entries (upsert semantics) |
+
+### Return Types
+
+```typescript
+// Fetch result
+type TeamMemorySyncFetchResult = {
+  success: boolean
+  data?: TeamMemoryData
+  isEmpty?: boolean      // true if 404
+  notModified?: boolean  // true if 304
+  checksum?: string      // ETag
+  error?: string
+  errorType?: 'auth' | 'timeout' | 'network' | 'parse' | 'unknown'
+}
+
+// Push result
+type TeamMemorySyncPushResult = {
+  success: boolean
+  filesUploaded: number
+  checksum?: string
+  conflict?: boolean     // true if 412
+  skippedSecrets?: SkippedSecretFile[]
+  error?: string
+  errorType?: 'auth' | 'timeout' | 'network' | 'conflict' | 'unknown' | 'no_oauth' | 'no_repo'
+}
+```
+
+---
+
+### Delta Upload Mechanism
+
+**Core Flow**:
+```
+Read local files → Calculate SHA256 → Compare with serverChecksums → Upload delta only → Batch upload
+```
+
+**Key Implementation**:
+```typescript
+// Delta calculation
+const delta: Record<string, string> = {}
+for (const [key, localHash] of localHashes) {
+  if (state.serverChecksums.get(key) !== localHash) {
+    delta[key] = entries[key]!
+  }
+}
+
+// Batch upload (prevent gateway limit)
+const batches = batchDeltaByBytes(delta)  // ≤ 200KB per batch
+```
+
+**Batch Parameters**:
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `MAX_PUT_BODY_BYTES` | 200,000 (200KB) | Single PUT request body limit |
+| `MAX_FILE_SIZE_BYTES` | 250,000 (250KB) | Single file limit |
+
+**Conflict Handling (412 Precondition Failed)**:
+1. Detect 412 → Probe server latest checksums
+2. Recalculate delta and retry
+3. Max 2 retries (`MAX_CONFLICT_RETRIES = 2`)
+
+---
+
+### Secret Scanning
+
+**Scan Timing**:
+| Location | When |
+|----------|------|
+| `readLocalTeamMemory()` | Before reading local files for upload |
+| `checkTeamMemSecrets()` | Before FileWriteTool/FileEditTool writes |
+
+**Detection Rules (from Gitleaks)**:
+| Type | Rule Prefix/Suffix |
+|------|-------------------|
+| Cloud Provider | `aws-access-token` (AKIA/ASIA/ABIA/ACCA), `gcp-api-key` (AIza) |
+| AI API | `anthropic-api-key` (sk-ant-api), `openai-api-key` (sk-proj) |
+| Version Control | `github-pat` (ghp_), `github-fine-grained-pat` (github_pat_) |
+| Communication | `slack-bot-token` (xoxb-), `slack-user-token` (xoxp-) |
+| Dev Tools | `npm-access-token` (npm_), `pypi-upload-token` |
+| Observability | `grafana-api-key`, `sentry-user-token` (sntryu_) |
+| Private Key | `private-key` (-----BEGIN.*PRIVATE KEY-----) |
+
+**Processing Logic**:
+```typescript
+// On secret detection, only record rule ID, not actual secret
+skippedSecrets.push({
+  path: relPath,
+  ruleId: firstMatch.ruleId,
+  label: firstMatch.label,
+})
+return  // Skip file, don't upload
+```
+
+---
+
+### Path Structure
+
+```
+<memoryBase>/projects/<project>/memory/team/
+└── MEMORY.md  (entrypoint)
+└── patterns.md
+└── <subdir>/
+    └── ...
+```
+
+**Note**: Team memory is a **subdirectory** of personal memory, not an independent top-level directory.
+
+---
+
+### Constants and Configuration
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `TEAM_MEMORY_SYNC_TIMEOUT_MS` | 30,000 | API request timeout |
+| `MAX_RETRIES` | 3 | Fetch retry count |
+| `MAX_CONFLICT_RETRIES` | 2 | Conflict retry count |
+| `DEBOUNCE_MS` | 2,000 | File change debounce delay |
+
+**Feature Flags**:
+```typescript
+feature('TEAMMEM')              // Build flag, disables entire feature
+isAutoMemoryEnabled()          // Requires auto memory enabled
+isTeamMemoryEnabled()           // 'tengu_herring_clock' feature flag
+isUsingOAuth()                  // Requires first-party OAuth
+```
+
+---
+
+### Security Features
+
+1. **Path Traversal Protection** (`teamMemPaths.ts`):
+   - Null byte detection
+   - URL encoding detection (`%2e%2e%2f`)
+   - Unicode normalization attack protection (NFKC)
+   - Symlink resolution verification
+
+2. **Secret Protection**:
+   - Scan before upload, secrets never leave local
+   - Block writes with secrets
+
+3. **OAuth Authentication**:
+   - Requires `CLAUDE_AI_INFERENCE_SCOPE` + `CLAUDE_AI_PROFILE_SCOPE`
+   - Token auto-refresh
+
+---
+
 ## Testing Verification
 
 Run test script to verify Memory configuration:
