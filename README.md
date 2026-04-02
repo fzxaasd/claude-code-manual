@@ -32,10 +32,10 @@
 | 配置体系 | 3 篇 | 配置层次、settings.json、项目配置 |
 | 进阶功能 | 9 篇 | Agent、多Agent、插件、MCP、Team Mode、Sandbox、Plan Mode、Voice Mode、Bridge Remote |
 | 最佳实践 | 3 篇 | 推荐模式、避免使用、团队协作 |
-| 内存系统 | 3 篇 | 概述、API、最佳实践 |
+| 内存系统 | 4 篇 | 概述、API、最佳实践、Agent 记忆 |
 | 任务系统 | 1 篇 | 任务管理 |
 | 插件开发 | 4 篇 | 概述、结构、API、开发示例 |
-| **总计** | **39 篇** | 覆盖 Claude Code 全部核心系统 |
+| **总计** | **40 篇** | 覆盖 Claude Code 全部核心系统 |
 
 ### 源码验证
 
@@ -162,6 +162,7 @@
 | [内存系统概述](./09-memory/01-memory-overview.md) | 持久化记忆机制 | ✅ |
 | [内存 API](./09-memory/02-memory-api.md) | API 参考 | ✅ |
 | [内存最佳实践](./09-memory/03-memory-best-practices.md) | 使用建议 | ✅ |
+| [Agent 记忆系统](./09-memory/04-agent-memory.md) | Agent 专用持久化记忆 | ✅ |
 
 ### 第十部分：任务系统
 
@@ -204,7 +205,7 @@
 
 | 指标 | 数量 |
 |------|------|
-| 文档文件 | 39 |
+| 文档文件 | 40 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 16 |
