@@ -79,19 +79,38 @@ type DependencyRef =
 Agent 使用 **markdown 格式**（不是 JSON），通过 frontmatter 定义：
 
 ```typescript
+// Agent 中的 MCP 服务器规格
+// 可以是已有服务器的名称引用，或内联定义
+type AgentMcpServerSpec =
+  | string  // 引用已有服务器名称（如 "slack"）
+  | { [name: string]: McpServerConfig }  // 内联定义为 { name: config }
+
 interface AgentDefinition {
   name: string              // frontmatter: name
   description: string       // frontmatter: description
   model?: string            // frontmatter: model
   tools?: string[]          // frontmatter: tools（不是 allowedTools！）
   disallowedTools?: string[] // frontmatter: disallowedTools
-  color?: string            // frontmatter: color，UI 显示颜色
-  background?: boolean       // frontmatter: background，后台执行
-  memory?: 'user' | 'project' | 'local' // frontmatter: memory，记忆范围
+  color?: 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink' | 'cyan'
+                             // frontmatter: color，UI 显示颜色
+  background?: boolean       // frontmatter: background，始终作为后台任务运行
+  memory?: 'user' | 'project' | 'local' // frontmatter: memory，持久记忆范围
   isolation?: 'worktree'     // frontmatter: isolation，隔离模式
   effort?: string | number   // frontmatter: effort，effort 级别
-  maxTurns?: number         // frontmatter: maxTurns，最大轮次
+  maxTurns?: number         // frontmatter: maxTurns，最大代理轮次
   skills?: string[]         // frontmatter: skills，预加载技能列表
+  permissionMode?: 'default' | 'acceptEdits' | 'bypassPermissions' | 'dontAsk' | 'plan'
+                             // frontmatter: permissionMode，权限模式
+  mcpServers?: AgentMcpServerSpec[]
+                             // frontmatter: mcpServers，Agent 专属 MCP 服务器
+  hooks?: HooksSettings     // frontmatter: hooks，会话级钩子
+  initialPrompt?: string    // frontmatter: initialPrompt，追加到首个用户轮次的内容
+  requiredMcpServers?: string[]
+                             // frontmatter: requiredMcpServers，Agent 可用时必须配置的
+                             // MCP 服务器名称模式
+  omitClaudeMd?: boolean    // 从 Agent 的 userContext 中省略 CLAUDE.md 层级
+  criticalSystemReminder_EXPERIMENTAL?: string
+                             // 每次用户轮次重新注入的短消息
   // 注意：system_prompt 不是 frontmatter 字段！
   // 系统提示来自 markdown 正文内容（不是 frontmatter 中的 system_prompt）
 }

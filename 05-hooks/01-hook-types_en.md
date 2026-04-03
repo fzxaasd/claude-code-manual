@@ -4,11 +4,11 @@
 
 ## Overview
 
-The Claude Code Hook system provides **28 lifecycle hooks**, allowing custom logic to be executed at key event points.
+The Claude Code Hook system provides **27 lifecycle hooks**, allowing custom logic to be executed at key event points.
 
 ---
 
-## Complete Hook Types (28 Types)
+## Complete Hook Types (27 Types)
 
 ### 1. Tool Execution (4 Types)
 
@@ -111,7 +111,7 @@ The Claude Code Hook system provides **28 lifecycle hooks**, allowing custom log
 
 ---
 
-### 2. Session Lifecycle (4 Types)
+### 2. Session Lifecycle (5 Types)
 
 #### SessionStart
 **Trigger**: Session startup

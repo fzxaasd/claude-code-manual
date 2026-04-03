@@ -729,3 +729,158 @@ Run the test script to verify tool configuration:
 ```bash
 bash tests/03-tools-test.sh
 ```
+
+---
+
+## Context Collapse: Four-Layer Context Management System
+
+Claude Code uses a **four-layer context management strategy** to optimize context efficiency in long sessions.
+
+### Four-Layer Architecture
+
+| Layer | Feature Flag | Mechanism | Description |
+|-------|-------------|-----------|-------------|
+| 1 | `CACHED_MICROCOMPACT` | Microcompact | Deduplicates repeated tool results, caches edits |
+| 2 | `HISTORY_SNIP` | History Snip | Deletes messages before the pre-compression protection tail |
+| 3 | `CONTEXT_COLLAPSE` | Context Collapse | Granular-to-summary projection (core layer) |
+| 4 | - | Autocompact | Traditional full-history summarization |
+
+### Context Collapse Core Mechanism
+
+`src/services/contextCollapse/` implements the context collapse strategy:
+
+```typescript
+// Primary functions
+applyCollapsesIfNeeded()     // Apply collapses
+isContextCollapseEnabled()   // Check if enabled
+getStats()                  // Retrieve statistics
+recoverFromOverflow()        // Handle 413 errors
+```
+
+### Collapse View Projection
+
+Context Collapse projects collapsed views through a **commit log**:
+
+- Summarized messages are stored in the collapse store
+- They are not stored in the REPL array
+- **This is the key to collapse persistence across turns**
+
+### CtxInspectTool
+
+Used to inspect context collapse state:
+
+```bash
+/CtxInspect    # Requires CONTEXT_COLLAPSE feature flag
+```
+
+### SnipTool and /force-snip
+
+The `/force-snip` command forces compression:
+
+```bash
+/force-snip
+```
+
+It triggers the `snipCompactIfNeeded()` function to check whether compression is needed.
+
+### Token Budget System
+
+`query/tokenBudget.ts` implements token budget management:
+
+```typescript
+interface TokenBudgetConfig {
+  completionThreshold: number      // Default 0.9 (stop at 90%)
+  diminishingThreshold: number      // Default 500 (diminishing returns threshold)
+  maxContinuations: number        // Maximum continuation count
+}
+
+// Event tracking
+tengu_token_budget_completed: {
+  continuationCount: number
+  pct: number
+  diminishingReturns: boolean
+}
+```
+
+### Context Suggestions
+
+`src/utils/contextSuggestions.ts` generates context optimization suggestions:
+
+```typescript
+generateContextSuggestions()    // Generate suggestions
+checkNearCapacity()             // Warn at 80% capacity
+checkLargeToolResults()        // Tool results > 15% or 10k tokens
+checkReadResultBloat()         // Read results > 5% or 10k tokens
+checkMemoryBloat()             // Memory > 5% or 5k tokens
+checkAutoCompactDisabled()     // Warn at 50%+ when autocompact is disabled
+```
+
+### Message Types
+
+| Type | File | Description |
+|------|------|-------------|
+| `compact_boundary` | query.ts | Compression boundary with preservedSegment metadata |
+| `tool_use_summary` | query.ts | Haiku-generated tool summary |
+| `api_retry` | query.ts | API retry notification |
+| `hook_stopped_continuation` | stopHooks.ts | Stop hook prevented continuation |
+| `max_turns_reached` | query.ts | Maximum turns reached |
+| `structured_output` | query.ts | Structured output for tools |
+| `queued_command` | query.ts | Queued command for SDK user messages |
+| `tombstone` | query.ts | Control signal to delete messages |
+| `microcompact_boundary` | microCompact.ts | Cached microcompact token deletion |
+| `edited_text_file` | attachments.ts | File change attachment |
+
+### Context Window Management
+
+Context window management in `src/utils/context.ts`:
+
+```typescript
+has1mContext()              // Detect [1m] suffix
+modelSupports1M()           // Supported by Opus 4, Opus 4.6, Sonnet 4.6
+getContextWindowForModel()   // Full resolution chain
+
+// Environment variables
+CLAUDE_CODE_DISABLE_1M_CONTEXT    // Hard-disable 1M context
+CLAUDE_CODE_MAX_CONTEXT_TOKENS    // ANT-specific context upper limit
+CLAUDE_CODE_EMIT_TOOL_USE_SUMMARIES  // Emit Haiku tool summaries
+```
+
+### Query Loop State Machine
+
+`queryLoop()` in `query.ts` is a state machine:
+
+```typescript
+type State = 'running' | 'completed' | 'stop_hook_prevented' | 'blocking_limit' | 'max_turns' | 'aborted_streaming'
+```
+
+### Query Checkpoint Profiling
+
+Performance analysis checkpoint markers:
+
+```
+query_fn_entry, query_snip_start, query_snip_end,
+query_microcompact_start, query_microcompact_end,
+query_autocompact_start, query_autocompact_end,
+query_setup_start, query_setup_end,
+query_api_loop_start, query_api_streaming_start, query_api_streaming_end,
+query_tool_execution_start, query_tool_execution_end,
+query_recursive_call
+```
+
+### /context Command
+
+View current context usage:
+
+```bash
+/context
+```
+
+Output includes:
+- MCP tools usage
+- System tools usage
+- System Prompt size
+- Custom Agents
+- Memory Files
+- Skills
+- Message Breakdown
+

@@ -704,6 +704,144 @@ claude --debug permissions
 
 ---
 
+## /dream Command and autoDream System
+
+### /dream Command
+
+`/dream` is a built-in skill (`src/skills/bundled/dream.ts`) for manually triggering memory consolidation:
+
+```bash
+/dream
+```
+
+**Features**:
+- Scans session history for memories
+- Distills relevant memories and writes them to CLAUDE.md or CLAUDE.local.md
+- Used to proactively organize and archive important information
+
+### autoDream Automatic Memory Consolidation
+
+`autoDream` is a background automatic memory consolidation system (`src/services/autoDream/`).
+
+#### DreamTask State Machine
+
+```
+starting → updating → completed/failed/killed
+```
+
+**State Fields**:
+| Field | Description |
+|-------|-------------|
+| `status` | `'running' \| 'completed' \| 'failed' \| 'killed'` |
+| `phase` | `'starting' \| 'updating'` — switches after first Edit/Write |
+| `sessionsReviewing` | Number of sessions scanned |
+| `filesTouched` | List of modified files (note: Bash writes may be missed) |
+| `turns` | Number of assistant text responses (tool calls are folded) |
+| `abortController` | Abort controller |
+
+#### Consolidation Lock Mechanism
+
+Uses a PID lock to prevent concurrent consolidation:
+
+```typescript
+// Lock file: <memoryDir>/.consolidate-lock
+// Stored content: PID
+// Expiry: 1 hour (HOLDER_STALE_MS)
+```
+
+#### Trigger Conditions (Triple Gate)
+
+Consolidation must satisfy all of the following conditions simultaneously:
+
+| Gate | Default | Description |
+|------|---------|-------------|
+| Time gate | 24 hours (`minHours`) | At least 24 hours since last consolidation |
+| Session gate | 5 sessions (`minSessions`) | New session count reaches 5 |
+| Lock gate | No lock held | No other process is consolidating |
+
+#### autoDream Configuration
+
+```typescript
+interface AutoDreamConfig {
+  minHours: number      // Default 24
+  minSessions: number   // Default 5
+}
+```
+
+Controlled by GrowthBook feature `tengu_onyx_plover`.
+
+#### autoDreamEnabled Setting
+
+```json
+{
+  "autoDreamEnabled": true
+}
+```
+
+This setting controls whether background automatic consolidation is enabled, and can override the server-side default.
+
+#### autoDream vs /dream Comparison
+
+| Feature | autoDream | /dream |
+|---------|-----------|--------|
+| Trigger method | Background automatic | Manual command |
+| Bash permissions | Read-only commands (`ls`, `grep`, `cat`, etc.) | Normal permissions |
+| Session counting | Tracked and displayed in UI | None |
+| Consolidation lock | Used | Not used (optimistic execution) |
+
+#### sessionsReviewing UI Tracking
+
+The number of scanned sessions is displayed in the task status:
+
+```typescript
+// Passed to registerDreamTask
+sessionsReviewing: number  // Viewable in footer pill
+```
+
+#### "Improved memories" Inline Message
+
+After consolidation completes, if files were modified, an inline message is added to the main transcript:
+
+```typescript
+verb: 'Improved'  // e.g., "Improved memories from X sessions"
+```
+
+#### sessionsReviewing Excludes Current Session
+
+When `sessionsReviewing` is passed to `registerDreamTask`, the current session is excluded:
+
+```typescript
+sessionIds = sessionIds.filter(id => id !== currentSession)
+```
+
+#### Scan Throttle Mechanism
+
+`autoDream` uses a 10-minute scan interval to prevent repeated scans:
+
+```typescript
+const SESSION_SCAN_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
+```
+
+#### Consolidation Lock Expiry
+
+Consolidation lock holder expiry time is 1 hour:
+
+```typescript
+const HOLDER_STALE_MS = 60 * 60 * 1000 // 1 hour
+```
+
+#### Dual Circuit Breaker Mechanism
+
+`ExitPlanModeV2Tool` has a Circuit Breaker at both validation and execution stages:
+1. **Validation stage**: Sets `gateFallbackNotification`, displays warning in UI
+2. **Execution stage**: Actually restores and sends notification
+
+#### /dream Command Lock Sync
+
+Manual `/dream` command updates lock file mtime and PID, making autoDream's time gate pass immediately on next check.
+
+---
+
 ## /plan open Command
 
 `/plan open` command behavior:
@@ -717,41 +855,3 @@ claude --debug permissions
 **Purpose**: Manually edit plan files.
 
 > **Note**: `/plan open` only opens the external editor when the session is already in Plan Mode. If not in Plan Mode, the command first enables Plan Mode.
-
----
-
-## Undocumented Features
-
-### autoDream sessionsReviewing Excludes Current Session
-
-`sessionsReviewing` passed to `registerDreamTask` excludes the current session:
-
-```typescript
-sessionIds = sessionIds.filter(id => id !== currentSession)
-```
-
-### Scan Throttle Mechanism
-
-`autoDream` uses a 10-minute scan interval to prevent repeated scans:
-
-```typescript
-const SESSION_SCAN_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
-```
-
-### Consolidation Lock Expiry
-
-Consolidation lock holder expiry time is 1 hour:
-
-```typescript
-const HOLDER_STALE_MS = 60 * 60 * 1000 // 1 hour
-```
-
-### Dual Circuit Breaker Mechanism
-
-`ExitPlanModeV2Tool` has a Circuit Breaker at both validation and execution stages:
-1. **Validation stage**: Sets `gateFallbackNotification`, displays warning in UI
-2. **Execution stage**: Actually restores and sends notification
-
-### /dream Command Lock Sync
-
-Manual `/dream` command updates lock file mtime and PID, making autoDream's time gate pass immediately on next check.

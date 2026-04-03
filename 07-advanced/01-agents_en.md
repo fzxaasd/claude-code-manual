@@ -181,7 +181,7 @@ type BuiltInAgentDefinition = BaseAgentDefinition & {
 
 // Custom Agent - From configuration
 type CustomAgentDefinition = BaseAgentDefinition & {
-  source: SettingSource  // 'userSettings' | 'projectSettings' | 'policySettings' | 'flagSettings' | 'built-in' | 'plugin'
+  source: SettingSource  // 'userSettings' | 'projectSettings' | 'localSettings' | 'flagSettings' | 'policySettings'
   getSystemPrompt: () => string
 }
 
@@ -191,6 +191,8 @@ type PluginAgentDefinition = BaseAgentDefinition & {
   plugin: string          // Plugin name
   getSystemPrompt: () => string
 }
+
+// Note: AgentSource = SettingSource | 'built-in' | 'plugin'
 ```
 
 ### Agent Source Priority
@@ -215,12 +217,17 @@ built-in < plugin < user < project < flag < managed
 ```
 
 **Source Details**:
-| Source | SettingSource | Configuration Location |
-|--------|--------------|------------------------|
+| Source | AgentSource Value | Configuration Location |
+|--------|-------------------|------------------------|
 | built-in | `built-in` | Claude Code built-in |
 | plugin | `plugin` | Plugin provided |
 | user | `userSettings` | `~/.claude/agents/*.md` or `settings.json` |
 | project | `projectSettings` | `.claude/agents/*.md` or project settings |
+| local | `localSettings` | `.claude/settings.local.json` |
+| flag | `flagSettings` | `--agents` CLI argument |
+| policy | `policySettings` | Enterprise policy managed |
+
+> Note: `built-in` and `plugin` are not part of `SettingSource` type. They belong to the extended `AgentSource` type.
 | flag | `flagSettings` | `--agents` CLI argument |
 | policy | `policySettings` | Enterprise policy managed |
 

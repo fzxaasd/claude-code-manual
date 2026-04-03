@@ -180,7 +180,7 @@ type BuiltInAgentDefinition = BaseAgentDefinition & {
 
 // 自定义 Agent - 来自配置
 type CustomAgentDefinition = BaseAgentDefinition & {
-  source: SettingSource  // 'userSettings' | 'projectSettings' | 'policySettings' | 'flagSettings' | 'built-in' | 'plugin'
+  source: SettingSource  // 'userSettings' | 'projectSettings' | 'localSettings' | 'flagSettings' | 'policySettings'
   getSystemPrompt: () => string
 }
 
@@ -190,6 +190,8 @@ type PluginAgentDefinition = BaseAgentDefinition & {
   plugin: string          // 插件名称
   getSystemPrompt: () => string
 }
+
+// 注意: AgentSource = SettingSource | 'built-in' | 'plugin'
 ```
 
 ### Agent 来源优先级
@@ -214,14 +216,17 @@ built-in < plugin < user < project < flag < managed
 ```
 
 **来源详解**：
-| 来源 | SettingSource | 配置位置 |
-|------|--------------|----------|
+| 来源 | AgentSource 值 | 配置位置 |
+|------|----------------|----------|
 | built-in | `built-in` | Claude Code 内置 |
 | plugin | `plugin` | 插件提供 |
 | user | `userSettings` | `~/.claude/agents/*.md` 或 `settings.json` |
 | project | `projectSettings` | `.claude/agents/*.md` 或项目 settings |
+| local | `localSettings` | `.claude/settings.local.json` |
 | flag | `flagSettings` | `--agents` CLI 参数 |
 | policy | `policySettings` | 企业策略托管 |
+
+> 注意：`built-in` 和 `plugin` 不属于 `SettingSource` 类型，它们属于扩展类型 `AgentSource`。
 
 ---
 

@@ -1,6 +1,51 @@
 # 9.1 Memory System Overview
 
-> Based on complete source code analysis of `src/memdir/memoryTypes.ts`
+> Based on complete source code analysis of `src/memdir/memoryTypes.ts` and `src/memdir/claudemd.ts`
+
+---
+
+## CLAUDE.md Six-Layer Memory Architecture
+
+Claude Code uses a **six-layer memory architecture** to manage instructions and context at different levels:
+
+| Layer | Type | Path | Description |
+|-------|------|------|-------------|
+| 1 | Managed | `/etc/claude-code/CLAUDE.md` | Global instructions (shared by all users) |
+| 2 | User | `~/.claude/CLAUDE.md` | User-private global instructions |
+| 3 | Project | `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/*.md` | Project-level instructions (committable to repo) |
+| 4 | Local | `CLAUDE.local.md` | Local-only instructions (not committed) |
+| 5 | AutoMem | `~/.claude/projects/{project}/memory/` | Auto memory directory |
+| 6 | TeamMem | `<autoMem>/team/` | Team shared memory (requires feature flag) |
+
+### Path-Conditional Loading
+
+CLAUDE.md files support `paths` frontmatter for conditional loading:
+
+```markdown
+---
+name: conditional-rule
+paths:
+  - src/**/*.ts
+  - tests/**/*.ts
+---
+```
+
+### @include Directive
+
+Memory files support the `@include` directive to include other files:
+
+| Syntax | Description |
+|--------|-------------|
+| `@path` | Relative to current file |
+| `@./relative/path` | Relative path |
+| `@~/home/path` | User home directory |
+| `@/absolute/path` | Absolute path |
+
+**Limitations**:
+- Supports 130+ file extensions
+- Maximum include depth: 5 levels
+- Non-existent files are silently ignored
+- Automatic circular reference prevention
 
 ---
 

@@ -55,8 +55,14 @@ claude mcp serve [--debug] [--verbose]
 - XAA is enabled via `CLAUDE_CODE_ENABLE_XAA=1` env var, not enterprise-only
 
 **mcp xaa subcommands**:
-- `xaa setup`: Configure XAA (SEP-990) IdP connection
+- `xaa setup`: Configure XAA (SEP-990) IdP connection, one-time setup for all XAA servers
+  - `--issuer` (required): IdP issuer URL
+  - `--client-id` (required): OAuth client ID
+  - `--client-secret` (optional): OAuth client secret, read from env var if not provided
+  - `--callback-port` (optional): Fixed callback port
 - `xaa login`: Login to IdP to get token
+  - `--force`: Ignore cached id_token and re-login
+  - `--id-token <jwt>`: Write prefetched id_token directly, skip OIDC browser login
 - `xaa show`: Show current IdP configuration
 - `xaa clear`: Clear IdP configuration and tokens
 
@@ -402,3 +408,123 @@ The following commands do **NOT exist** in Claude Code:
 - `claude usage`
 - `claude extra-usage`
 - `claude rewind-files`
+
+### Missing CLI Subcommands
+
+The following commands **exist in source code** but are not documented in the detailed command list above:
+
+| Command | Description | Feature Gate |
+|------|------|--------------|
+| `claude login` | Login to Anthropic account | - |
+| `claude logout` | Logout | - |
+| `claude install-github-app` | Setup Claude GitHub Actions | - |
+| `claude install-slack-app` | Install Claude Slack app | - |
+| `claude usage` | View usage limits | - |
+| `claude privacy-settings` | View/update privacy settings | - |
+| `claude release-notes` | View release notes | - |
+| `claude stickers` | Order Claude Code stickers | - |
+| `claude mobile` (aliases: `ios`, `android`) | Show mobile app QR code | - |
+| `claude resume` (alias: `continue`) | Resume previous session | - |
+| `claude rename` | Rename current session | - |
+| `claude tasks` (alias: `bashes`) | List and manage background tasks | - |
+| `claude agents` | Manage Agent configurations | - |
+| `claude memory` | Edit Claude memory files | - |
+| `claude skills` | List available skills | - |
+| `claude status` | Show Claude Code status | - |
+| `claude terminal-setup` | Terminal keybinding setup | - |
+| `claude reload-plugins` | Activate pending plugin changes | - |
+| `claude remote-env` | Configure remote environment | - |
+| `claude env` | ANT only: Environment info | `USER_TYPE === 'ant'` |
+| `claude chrome` | Claude in Chrome setup | Beta |
+| `claude pr-comments` | Fetch GitHub PR comments | - |
+| `claude tag` | Toggle session tags | `USER_TYPE === 'ant'` |
+| `claude files` | List context files | `USER_TYPE === 'ant'` |
+| `claude summary` | Summarize session | - |
+| `claude thinkback` | Claude Code year in review | - |
+| `claude teleport` | Remote session navigation | - |
+| `claude sandbox-toggle` | Sandbox config toggle | - |
+| `claude rate-limit-options` | Rate limit options (hidden) | Hidden |
+| `claude heapdump` | Dump JS heap to desktop (hidden) | `isHidden: true` |
+| `claude thinkback-play` | Play thinkback animation (hidden) | `isHidden: true` |
+| `claude output-style` | Output style config (deprecated, hidden) | `isHidden: true` |
+
+### Command Aliases
+
+The following aliases are not documented in the detailed sections:
+
+| Command | Aliases | Documentation Status |
+|------|------|----------|
+| `/clear` | `reset`, `new` | Only `clear` |
+| `/exit` | `quit` | Only `exit` |
+| `/session` | `remote` | Undocumented |
+| `/config` | `settings` | Undocumented |
+| `/permissions` | `allowed-tools` | Undocumented |
+| `/desktop` | `app` | Undocumented |
+| `/feedback` | `bug` | Undocumented |
+| `/rewind` | `checkpoint` | Undocumented |
+| `/branch` | `fork` | Undocumented |
+
+### Feature-Gated Commands
+
+The following commands require specific features to be enabled:
+
+| Command | Feature Gate | Description |
+|------|-------------|------|
+| `/proactive` | `PROACTIVE` or `KAIROS` | Proactive mode |
+| `/brief` | `KAIROS` or `KAIROS_BRIEF` | Brief mode |
+| `/assistant` | `KAIROS` | Kairos assistant mode |
+| `/voice` | `VOICE_MODE` | Voice mode toggle |
+| `/workflows` | `WORKFLOW_SCRIPTS` | Workflow scripts |
+| `/web-setup` | `CCR_REMOTE_SETUP` | Web setup |
+| `/peers` | `UDS_INBOX` | Peer node commands |
+| `/fork` | `FORK_SUBAGENT` | Fork sub-agent |
+| `/buddy` | `BUDDY` | Buddy desktop companion |
+| `/subscribe-pr` | `KAIROS_GITHUB_WEBHOOKS` | Subscribe to PR |
+| `/ultraplan` | `ULTRAPLAN` | Ultra plan mode |
+| `/torch` | `TORCH` | Torch mode |
+| `/remote-control` (alias: `rc`) | `BRIDGE_MODE` | Remote control |
+| `/backfill-sessions` | `USER_TYPE === 'ant'` | Backfill session data |
+| `/bughunter` | `USER_TYPE === 'ant'` | Bug hunter tool |
+| `/commit` | `USER_TYPE === 'ant'` | Git commit |
+| `/commit-push-pr` | `USER_TYPE === 'ant'` | Commit, push and create PR |
+| `/ctx_viz` | `USER_TYPE === 'ant'` | Context visualization |
+| `/autofix-pr` | `KAIROS_GITHUB_WEBHOOKS` | Auto-fix PR |
+| `/init-verifiers` | `USER_TYPE === 'ant'` | Create verifier skills |
+| `/version` | `USER_TYPE === 'ant'` | Print version |
+
+### MCP Subcommands Supplement
+
+The following MCP subcommands are not documented in the detailed sections above:
+
+| Subcommand | Description |
+|--------|------|
+| `claude mcp reconnect <server>` | Reconnect specified MCP server |
+| `claude mcp enable [server-name]` | Enable MCP server |
+| `claude mcp disable [server-name]` | Disable MCP server |
+| `claude mcp no-redirect` | Test mode (no redirect) |
+| `mcp add --header <header>` | Add custom HTTP header |
+| `mcp add --transport <type>` | Specify transport type |
+
+### CLI Entry Points (Non-REPL Commands)
+
+The following commands are handled as CLI arguments in `main.tsx`, not slash commands:
+
+| Command | Description | Feature Gate |
+|------|------|--------------|
+| `claude ssh <host> [dir]` | SSH remote session | `SSH_REMOTE` |
+| `claude open <cc-url>` | Open CCR session | `DIRECT_CONNECT` |
+| `claude assistant [sessionId]` | Kairos assistant | `KAIROS` |
+
+### Environment Variable Controlled Commands
+
+The following commands can be disabled via environment variables:
+
+| Command | Environment Variable |
+|------|----------|
+| `login` | `DISABLE_LOGIN_COMMAND` |
+| `logout` | `DISABLE_LOGOUT_COMMAND` |
+| `install-github-app` | `DISABLE_INSTALL_GITHUB_APP_COMMAND` |
+| `feedback` | `DISABLE_FEEDBACK_COMMAND`, `DISABLE_BUG_COMMAND` |
+| `extra-usage` | `DISABLE_EXTRA_USAGE_COMMAND` |
+| `compact` | `DISABLE_COMPACT` |
+| `upgrade` | `DISABLE_UPGRADE_COMMAND` |

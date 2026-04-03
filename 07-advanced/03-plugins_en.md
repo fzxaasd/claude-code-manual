@@ -116,6 +116,10 @@ plugin-name/
 }
 ```
 
+**Important Notes**:
+- The `id` field does **not** exist in plugin.json. Plugin ID is automatically derived from `name@marketplace`.
+- The field name in `channels` is `server`, not `mcpServer`.
+
 **Field Reference**:
 
 | Field | Type | Description |
@@ -125,23 +129,23 @@ plugin-name/
 | `description` | string | Brief description |
 | `author` | object | Author info (name required) |
 | `homepage` | string | Homepage URL |
-| `repository` | string | Source repository URL |
-| `license` | string | SPDX license identifier |
+| `repository` | string | Source repository URL (metadata) |
+| `license` | string | SPDX license identifier (metadata) |
 | `keywords` | string[] | Discovery and categorization tags |
 | `strict` | boolean | Require plugin.json (marketplace entries only) |
 | `dependencies` | string[] | Plugin dependencies, auto-resolved at install |
 | `skills` | path\\|path[] | Skills directory paths (not object format) |
 | `agents` | path\\|path[] | Agent definition file paths (not object format) |
-| `commands` | path\\|path[]\\|object | Command file paths or inline definitions |
+| `commands` | path\\|path[]\\|object | Command file paths or inline definitions; supports object format `{source, description, argumentHint, model, allowedTools}` |
 | `hooks` | path\\|object | Hook configuration path or inline config |
-| `mcpServers` | object\\|path\\|MCPB | MCP server configs |
-| `userConfig` | object | User-configurable options |
+| `mcpServers` | object\\|path\\|MCPB | MCP server configs; supports .mcpb/.dxt files |
+| `userConfig` | object | User-configurable options; supports string/number/boolean/directory/file types; `sensitive` values are stored in keychain |
 | `outputStyles` | path\\|path[] | Output styles directory |
-| `channels` | array | MCP message channels (Telegram/Slack/Discord) |
+| `channels` | array | MCP message channels (Telegram/Slack/Discord), injected via `notifications/claude/channel` |
 | `lspServers` | object\\|path | LSP server configurations |
 | `settings` | object | Settings to merge into settings cascade |
 
-> **Note**: `mcpServer` field in channels should be `server`. MCP server config uses `command`/`args`/`env`, not `type`. Skills/agents/hooks paths support string or array only, not object format.
+> **Note**: MCP server config uses `command`/`args`/`env`, not `type`. Skills/agents/hooks paths support string or array only, not object format.
 
 ---
 

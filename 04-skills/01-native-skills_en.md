@@ -241,6 +241,8 @@ Built-in skills are registered via `registerBundledSkill()`, supporting these fi
 | claude-in-chrome | `/claude-in-chrome` | claudeInChrome | Chrome extension | `auto (shouldAutoEnableClaudeInChrome)` | |
 | run-skill-generator | `/run-skill-generator` | runSkillGenerator | Skill generator | `RUN_SKILL_GENERATOR` | |
 
+> **Note**: Source files for `dream`, `hunter`, and `runSkillGenerator` do not exist in the open-source repository. They are loaded via dynamic `require('./xxx.js')` and injected at build time, only available when their respective feature flags are enabled.
+
 ---
 
 ## Directory Structure Specification

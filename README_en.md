@@ -146,8 +146,8 @@ All documents are verified against source code:
 | [Plan Mode](./07-advanced/07-plan-mode.md) | Plan mode | ✅ |
 | [Voice Mode](./07-advanced/09-voice-mode.md) | Voice mode | ✅ |
 | [Bridge Remote](./07-advanced/08-bridge-remote.md) | Remote connection | ✅ |
-| [Companion/Buddy](./companion-buddy-system.md) | Desktop companion system | ✅ |
-| [UpstreamProxy](./upstream-proxy-system.md) | CCR MITM proxy | ✅ |
+| [Companion/Buddy](./companion-buddy-system_en.md) | Desktop companion system | ✅ |
+| [UpstreamProxy](./upstream-proxy-system_en.md) | CCR MITM proxy | ✅ |
 
 ### Part 8: Best Practices
 

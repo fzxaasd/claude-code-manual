@@ -130,13 +130,20 @@ Agent markdown body content. This content will be used as the system prompt.
 | `model` | string | Model to use (sonnet/opus/haiku) |
 | `tools` | string[] | Allowed tools (use `tools`, not `allowedTools`) |
 | `disallowedTools` | string[] | Explicitly denied tools |
-| `color` | string | UI display color |
-| `background` | boolean | Run in background |
-| `memory` | 'user'\\|'project'\\|'local' | Memory scope |
+| `color` | 'red'\\|'blue'\\|'green'\\|'yellow'\\|'purple'\\|'orange'\\|'pink'\\|'cyan' | UI display color |
+| `background` | boolean | Always run as background task |
+| `memory` | 'user'\\|'project'\\|'local' | Persistent memory scope |
 | `isolation` | 'worktree' | Git worktree isolation mode |
 | `effort` | string\\|number | Effort level |
-| `maxTurns` | number | Maximum conversation turns |
-| `skills` | string[] | Pre-loaded skill list |
+| `maxTurns` | number | Maximum agentic turns |
+| `skills` | string[] | Preloaded skill list |
+| `permissionMode` | string | Permission mode (default/acceptEdits/bypassPermissions/dontAsk/plan) |
+| `mcpServers` | AgentMcpServerSpec[] | Agent-specific MCP servers |
+| `hooks` | HooksSettings | Session-scoped hooks |
+| `initialPrompt` | string | Prepended to the first user turn |
+| `requiredMcpServers` | string[] | MCP server name patterns required for agent availability |
+| `omitClaudeMd` | boolean | Omit CLAUDE.md hierarchy from agent's userContext |
+| `criticalSystemReminder_EXPERIMENTAL` | string | Short message re-injected at every user turn |
 
 > **Note**: `system_prompt` is NOT a frontmatter field. The system prompt comes from the markdown body content.
 

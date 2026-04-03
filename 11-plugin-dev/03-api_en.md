@@ -79,12 +79,39 @@ type DependencyRef =
 Agents use **markdown format** (not JSON), defined through frontmatter:
 
 ```typescript
+// MCP server specification in agent definitions
+// Can be either a reference to an existing server by name, or an inline definition
+type AgentMcpServerSpec =
+  | string  // Reference to existing server by name (e.g., "slack")
+  | { [name: string]: McpServerConfig }  // Inline definition as { name: config }
+
 interface AgentDefinition {
   name: string              // frontmatter: name
   description: string       // frontmatter: description
   model?: string            // frontmatter: model
-  tools?: string[]          // frontmatter: tools
+  tools?: string[]          // frontmatter: tools (not allowedTools!)
   disallowedTools?: string[] // frontmatter: disallowedTools
+  color?: 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'pink' | 'cyan'
+                            // frontmatter: color, UI display color
+  background?: boolean      // frontmatter: background, always run as background task
+  memory?: 'user' | 'project' | 'local'
+                            // frontmatter: memory, persistent memory scope
+  isolation?: 'worktree'    // frontmatter: isolation, isolation mode
+  effort?: string | number  // frontmatter: effort, effort level
+  maxTurns?: number         // frontmatter: maxTurns, maximum agentic turns
+  skills?: string[]         // frontmatter: skills, preloaded skill list
+  permissionMode?: 'default' | 'acceptEdits' | 'bypassPermissions' | 'dontAsk' | 'plan'
+                            // frontmatter: permissionMode, permission mode
+  mcpServers?: AgentMcpServerSpec[]
+                            // frontmatter: mcpServers, agent-specific MCP servers
+  hooks?: HooksSettings     // frontmatter: hooks, session-scoped hooks
+  initialPrompt?: string    // frontmatter: initialPrompt, prepended to first user turn
+  requiredMcpServers?: string[]
+                            // frontmatter: requiredMcpServers, MCP server name patterns
+                            // that must be configured for agent to be available
+  omitClaudeMd?: boolean    // Omit CLAUDE.md hierarchy from agent's userContext
+  criticalSystemReminder_EXPERIMENTAL?: string
+                            // Short message re-injected at every user turn
   // Note: system_prompt is NOT a frontmatter field!
   // System prompt comes from markdown body content (not frontmatter system_prompt)
 }
@@ -105,6 +132,8 @@ tools:
 disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
+color: blue
+memory: project
 ---
 
 # Code Review Agent

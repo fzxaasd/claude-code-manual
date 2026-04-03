@@ -241,6 +241,8 @@ paths:                             # 数组
 | claude-in-chrome | `/claude-in-chrome` | claudeInChrome | Chrome 扩展 | `auto (shouldAutoEnableClaudeInChrome)` | |
 | run-skill-generator | `/run-skill-generator` | runSkillGenerator | 技能生成器 | `RUN_SKILL_GENERATOR` | |
 
+> **注意**: `dream`、`hunter`、`runSkillGenerator` 的源码文件不存在于开源仓库中。它们通过 `require('./xxx.js')` 动态加载，由构建系统注入，仅在对应 feature flag 启用时可用。
+
 ---
 
 ## 目录结构规范
