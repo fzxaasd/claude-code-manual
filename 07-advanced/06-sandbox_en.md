@@ -663,6 +663,71 @@ SandboxManager.getLinuxGlobPatternWarnings()
 
 ---
 
+## Undocumented Features
+
+### enabledPlatforms Configuration
+
+`enabledPlatforms` is an **undocumented enterprise configuration option** for NVIDIA enterprise deployments:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "enabledPlatforms": ["macos"]  // Enable sandbox only on macOS
+  }
+}
+```
+
+### Sandbox Internal Environment Variables
+
+The following environment variables are automatically set inside sandbox:
+
+| Variable | Description |
+|----------|-------------|
+| `TMPDIR` | Temporary directory |
+| `CLAUDE_CODE_TMPDIR` | Claude Code dedicated temp directory |
+| `TMPPREFIX` | Temporary file prefix |
+
+### Ant User Danger Commands
+
+Ant users (`USER_TYPE === 'ant'`) have special danger command list:
+- `fa run`, `coo`, `gh`, `gh api`
+- `curl`, `wget`, `git`, `kubectl`
+- `aws`, `gcloud`, `gsutil`
+
+### PowerShell Danger Detection
+
+Complete PowerShell danger command pattern list including:
+- `iex`, `invoke-expression`, `start-process`
+- `register-wmievent`
+- .exe suffix variants
+
+### Windows Path Pattern Detection
+
+NTFS special path patterns:
+- ADS (Alternate Data Streams)
+- 8.3 short filenames
+- Long path prefixes (`\\?\`, `\\.\`)
+- Trailing dots and spaces
+- DOS device names
+- Three or more consecutive dots
+
+### Unix Socket Configuration
+
+`allowUnixSockets` is **macOS only** (seccomp cannot filter by path on Linux).
+
+`enableWeakerNetworkIsolation: true` allows access to `com.apple.trustd.agent` (**security-reducing** option).
+
+### Denial Tracking System
+
+`DENIAL_LIMITS` limits consecutive and total denials, falling back to prompt mode when exceeded.
+
+### /sandbox Command
+
+`/sandbox` command allows users to toggle sandbox state.
+
+---
+
 ## Testing Verification
 
 ```bash

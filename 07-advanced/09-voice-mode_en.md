@@ -146,9 +146,30 @@ Hold the specified key to start recording, release to stop.
 
 Uses Deepgram for speech recognition.
 
-**Nova 3 Model**: Controlled by GrowthBook feature `tengu_cobalt_frost`, not enabled by default.
+**Nova 3 Model**: Controlled by GrowthBook feature `tengu_cobalt_frost`, not enabled by default. Also sets `use_conversation_engine=true` parameter.
 
 **Keyword Enhancement**: Automatically sends programming terms (MCP, symlink, grep, regex, etc.), project names, git branches, and recent filenames to STT as prompts.
+
+### STT WebSocket Parameters
+
+WebSocket request parameters sent:
+
+```typescript
+{
+  encoding: 'linear16',
+  sample_rate: '16000',
+  channels: '1',
+  endpointing_ms: '300',
+  utterance_end_ms: '1000',
+  language: options?.language ?? 'en'
+}
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VOICE_STREAM_BASE_URL` | Override voice_stream WebSocket base URL (for development/testing) |
 
 ### State Machine
 
@@ -214,7 +235,7 @@ Detects `CLAUDE_CODE_REMOTE` environment variable, automatically disables voice.
 
 ### Language Hint Counter
 
-`voiceLangHintShownCount` and `voiceLangHintLastLanguage` track language hint display count, hints shown at most `LANG_HINT_MAX_SHOWS` times.
+`voiceLangHintShownCount` and `voiceLangHintLastLanguage` track language hint display count, hints shown at most **2 times** (`LANG_HINT_MAX_SHOWS = 2`).
 
 ### Linux Audio Implementation
 
@@ -229,6 +250,26 @@ Detects `CLAUDE_CODE_REMOTE` environment variable, automatically disables voice.
 | `tengu_voice_recording_started` | Recording started |
 | `tengu_voice_recording_completed` | Recording completed |
 | `tengu_voice_silent_drop_replay` | Silent-drop replay triggered |
+| `tengu_voice_stream_early_retry` | Early-error retry triggered |
+
+### Audio Slicing Mechanism
+
+WebSocket sending merges audio into ~1 second frames (`SLICE_TARGET_BYTES = 32_000`), reducing network overhead.
+
+### Early-error Retry
+
+When connection error with no transcription, automatically retries once after 250ms:
+- Only retries once (`retryUsedRef`)
+- Audio is re-buffered during retry
+
+### Modifier Key Activation
+
+First press of modifier key combination has **2 second** timeout (`MODIFIER_FIRST_PRESS_FALLBACK_MS`).
+
+### WebSocket Protocol Details
+
+- KeepAlive interval: 8000ms
+- Finalize timeout: safety=5000ms, noData=1500ms
 
 ---
 

@@ -663,6 +663,72 @@ SandboxManager.getLinuxGlobPatternWarnings()
 
 ---
 
+## 未文档化的功能
+
+### enabledPlatforms 配置
+
+`enabledPlatforms` 是 **未文档化的企业配置选项**（undocumented setting），用于 NVIDIA 企业部署的临时方案：
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "enabledPlatforms": ["macos"]  // 仅在 macOS 上启用沙箱
+  }
+}
+```
+
+### 沙箱内环境变量
+
+沙箱内自动设置以下环境变量：
+
+| 变量 | 说明 |
+|------|------|
+| `TMPDIR` | 临时目录 |
+| `CLAUDE_CODE_TMPDIR` | Claude Code 专用临时目录 |
+| `TMPPREFIX` | 临时文件前缀 |
+
+### Ant 用户危险命令列表
+
+Ant 用户 (`USER_TYPE === 'ant'`) 有特殊的危险命令列表：
+
+- `fa run`, `coo`, `gh`, `gh api`
+- `curl`, `wget`, `git`, `kubectl`
+- `aws`, `gcloud`, `gsutil`
+
+### PowerShell 危险权限检测
+
+完整的 PowerShell 危险命令模式列表，包括：
+- `iex`, `invoke-expression`, `start-process`
+- `register-wmievent`
+- .exe 后缀变体匹配
+
+### Windows 路径模式检测
+
+NTFS 特殊路径模式检测：
+- ADS (Alternate Data Streams)
+- 8.3 短文件名
+- 长路径前缀 (`\\?\`, `\\.\`)
+- 尾随点和空格
+- DOS 设备名
+- 三点或更多连续点
+
+### Unix Socket 配置
+
+`allowUnixSockets` 仅 **macOS** 支持（seccomp 无法在 Linux 上按路径过滤）。
+
+`enableWeakerNetworkIsolation: true` 允许访问 `com.apple.trustd.agent`（**降低安全性**的配置）。
+
+### 拒绝追踪系统
+
+`DENIAL_LIMITS` 限制连续和总拒绝次数，超限时回退到提示模式。
+
+### /sandbox 命令
+
+`/sandbox` 命令允许用户切换沙箱状态。
+
+---
+
 ## 测试验证
 
 ```bash

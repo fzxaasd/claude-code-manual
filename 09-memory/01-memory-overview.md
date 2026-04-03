@@ -1,6 +1,51 @@
 # 9.1 内存系统概述
 
-> 基于 `src/memdir/memoryTypes.ts` 完整源码分析
+> 基于 `src/memdir/memoryTypes.ts` 和 `src/memdir/claudemd.ts` 完整源码分析
+
+---
+
+## CLAUDE.md 五层内存架构
+
+Claude Code 使用 **五层内存架构** 来管理不同层级的指令和上下文：
+
+| 层级 | 类型 | 路径 | 说明 |
+|------|------|------|------|
+| 1 | Managed | `/etc/claude-code/CLAUDE.md` | 全局指令（所有用户共享） |
+| 2 | User | `~/.claude/CLAUDE.md` | 用户私有全局指令 |
+| 3 | Project | `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/*.md` | 项目级指令（可提交到代码库） |
+| 4 | Local | `CLAUDE.local.md` | 本机专用指令（不提交） |
+| 5 | AutoMem | `~/.claude/projects/{project}/memory/` | 自动记忆目录 |
+| 6 | TeamMem | `<autoMem>/team/` | 团队共享记忆（需 feature） |
+
+### 路径条件加载
+
+CLAUDE.md 文件支持 `paths` frontmatter 实现条件加载：
+
+```markdown
+---
+name: conditional-rule
+paths:
+  - src/**/*.ts
+  - tests/**/*.ts
+---
+```
+
+### @include 指令
+
+Memory 文件支持 `@include` 指令包含其他文件：
+
+| 语法 | 说明 |
+|------|------|
+| `@path` | 相对于当前文件 |
+| `@./relative/path` | 相对路径 |
+| `@~/home/path` | 用户主目录 |
+| `@/absolute/path` | 绝对路径 |
+
+**限制**：
+- 支持 130+ 文件扩展名
+- 最大包含深度：5 层
+- 不存在的文件静默忽略
+- 自动防止循环引用
 
 ---
 
@@ -26,6 +71,19 @@ Memory = 非衍生信息 × 时间 × 作用域
 | `feedback` | private/team | 工作方式指导 |
 | `project` | private/team | 项目上下文、目标、事件 |
 | `reference` | usually team | 外部系统指针 |
+
+### 两套 Memory 类型系统说明
+
+Claude Code 有**两套不同的 Memory 类型系统**：
+
+1. **Memory Taxonomy** (`MEMORY_TYPES`): `user` / `feedback` / `project` / `reference`
+   - 用于记忆内容的分类方式
+   - 定义在 `memoryTypes.ts`
+
+2. **CLAUDE.md 文件类型** (`MEMORY_TYPE_VALUES`): `User` / `Project` / `Local` / `Managed` / `AutoMem` / `TeamMem`
+   - 用于 CLAUDE.md 文件的作用域层
+   - 定义在 `memoryTypes.ts`
+   - `TeamMem` 仅当 GrowthBook feature `TEAMMEM` 启用时才存在
 
 ---
 
@@ -319,6 +377,12 @@ export const MEMORY_TYPE_VALUES = [
 
 基于 `src/services/SessionMemory/sessionMemoryUtils.ts`:
 
+### 配置来源
+
+Session Memory 阈值由以下来源按优先级获取：
+1. `tengu_sm_config` GrowthBook feature（默认配置）
+2. `DEFAULT_SESSION_MEMORY_CONFIG` 常量
+
 ### 触发阈值
 
 | 参数 | 默认值 | 说明 |
@@ -327,11 +391,20 @@ export const MEMORY_TYPE_VALUES = [
 | `minimumTokensBetweenUpdate` | 5000 | 更新之间的最小 token 数 |
 | `toolCallsBetweenUpdates` | 3 | 更新之间的最小工具调用数 |
 
+> **注意**: `sessionMemoryCompact.ts` 中还有另一套阈值（`minTokens: 10_000`, `minTextBlockMessages: 5`, `maxTokens: 40_000`），这是 session memory compaction 的阈值，与 extraction 阈值不同。
+
 **重要规则**: `minimumTokensBetweenUpdate` 阈值**始终必需**，即使其他条件满足。
 
 ### 手动触发
 
 `/summary` 命令可手动触发 session memory 提取，绕过阈值检查。
+
+### Forked Agent 设计
+
+Session Memory 使用 forked agent 模式：
+- 与主对话共享 prompt cache
+- 闭包作用域状态（便于测试）
+- `createCacheSafeParams` 确保 fork 与父进程共享相同的 cache-critical 参数
 
 ---
 
@@ -546,6 +619,19 @@ autoDream 使用文件锁防止并发冲突：
 - PID-based 锁
 - 1 小时过期保护 (`HOLDER_STALE_MS = 60 * 60 * 1000`)
 - 失败时支持锁回滚
+
+### autoDream 额外门控
+
+autoDream 的 `isGateOpen()` 函数有额外的禁用条件：
+
+```typescript
+function isGateOpen(): boolean {
+  if (getKairosActive()) return false  // KAIROS 模式禁用
+  if (getIsRemoteMode()) return false  // 远程模式禁用
+  if (!isAutoMemoryEnabled()) return false
+  return isAutoDreamEnabled()
+}
+```
 
 ### Session Memory
 

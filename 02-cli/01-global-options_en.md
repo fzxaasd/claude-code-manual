@@ -377,8 +377,9 @@ export ANTHROPIC_BASE_URL="https://api.anthropic.com"
 
 ```bash
 export CLAUDE_DEBUG=1
-export CLAUDE_DEBUG_FILTER="hooks"
 ```
+
+> **Note**: `CLAUDE_DEBUG_FILTER` environment variable does not exist.
 
 ### Proxy
 

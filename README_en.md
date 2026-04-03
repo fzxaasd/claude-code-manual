@@ -2,7 +2,7 @@
 
 > This manual is based on source code analysis of [instructkr/claude-code](https://github.com/instructkr/claude-code), covering the complete knowledge system from installation to plugin development.
 
-**Version**: 2.0.0 | **Updated**: 2026-04-01 | **Source Version**: 2.1.81
+**Version**: 2.2.0 | **Updated**: 2026-04-03 | **Source Version**: 2.1.81
 
 ---
 
@@ -11,7 +11,7 @@
 All content in this manual is based on source code analysis of the [instructkr/claude-code](https://github.com/instructkr/claude-code) open source project.
 
 Special thanks:
-- This manual covers 40 documents through deep source code reading
+- This manual covers 45 documents through deep source code reading
 - All technical details are verified against source code for accuracy
 
 ---
@@ -30,12 +30,12 @@ This is NOT official documentation, but an **independent analysis summary** base
 | Skills System | 3 | Native mechanism, skill creation, Agent integration |
 | Hooks System | 4 | 27 Hook types, configuration & debugging, Python practices, common issues |
 | Configuration | 3 | Hierarchy, settings.json, project config |
-| Advanced Features | 9 | Agent, Multi-Agent, Plugins, MCP, Team Mode, Sandbox, Plan Mode, Voice Mode, Bridge Remote |
+| Advanced Features | 14 | Agent, Multi-Agent, Plugins, MCP, Team Mode, Sandbox, Plan Mode, Voice Mode, Bridge Remote, Companion/Buddy, UpstreamProxy, Setup, Server/Remote/Coordinator, Components/Screens |
 | Best Practices | 3 | Recommended patterns, things to avoid, team collaboration |
 | Memory System | 4 | Overview, API, best practices, Agent memory |
 | Task System | 1 | Task management |
 | Plugin Development | 4 | Overview, structure, API, development examples |
-| **Total** | **40** | Covers all core Claude Code systems |
+| **Total** | **45** | Covers all core Claude Code systems |
 
 ### Source Verification
 
@@ -146,6 +146,8 @@ All documents are verified against source code:
 | [Plan Mode](./07-advanced/07-plan-mode.md) | Plan mode | ✅ |
 | [Voice Mode](./07-advanced/09-voice-mode.md) | Voice mode | ✅ |
 | [Bridge Remote](./07-advanced/08-bridge-remote.md) | Remote connection | ✅ |
+| [Companion/Buddy](./companion-buddy-system.md) | Desktop companion system | ✅ |
+| [UpstreamProxy](./upstream-proxy-system.md) | CCR MITM proxy | ✅ |
 
 ### Part 8: Best Practices
 
@@ -178,6 +180,7 @@ All documents are verified against source code:
 | [Plugin Structure](./11-plugin-dev/02-structure.md) | Directory structure | ✅ |
 | [Plugin API](./11-plugin-dev/03-api.md) | API reference | ✅ |
 | [Dev Examples](./11-plugin-dev/04-examples.md) | Complete examples | ✅ |
+| [Team Plugin Design](./11-plugin-dev/05-team-plugin-design.md) | Complete team plugin solution | ✅ |
 
 ---
 
@@ -205,7 +208,7 @@ All core systems verified via scripts:
 
 | Metric | Count |
 |--------|-------|
-| Document Files | 40 |
+| Document Files | 45 |
 | Test Scripts | 11 |
 | Hook Types | 27 |
 | Skill Frontmatter Fields | 16 |

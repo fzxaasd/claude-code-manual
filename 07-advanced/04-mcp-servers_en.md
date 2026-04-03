@@ -591,17 +591,22 @@ echo $VAR_NAME
 
 ### Connection Timeout
 
-```json
-{
-  "mcpServers": {
-    "slow-server": {
-      "type": "http",
-      "url": "https://api.example.com/mcp",
-      "timeout": 30000
-    }
-  }
-}
+### Connection Timeout
+
+MCP server config has no `timeout` field. Timeout is controlled via environment variables:
+
+| Environment Variable | Default | Description |
+|----------------------|---------|-------------|
+| `MCP_TIMEOUT` | 30000ms | Connection timeout |
+| `MCP_TOOL_TIMEOUT` | 100000000ms (~27.8 hours) | Tool invocation timeout |
+| `MCP_REQUEST_TIMEOUT_MS` | 60000ms | Internal request timeout |
+
+```bash
+# Example: Set 60 second connection timeout
+export MCP_TIMEOUT=60000
 ```
+
+> **Note**: The `timeout` field does not exist in MCP server configuration schema.
 
 ### OAuth Configuration Error
 
@@ -684,11 +689,55 @@ claude --debug mcp
 
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
-| `MCP_TOOL_TIMEOUT` | 100000000 (ms) | MCP tool call timeout |
+| `MCP_TIMEOUT` | 30000ms | MCP server connection timeout |
+| `MCP_TOOL_TIMEOUT` | 100000000ms (~27.8 hours) | MCP tool invocation timeout |
+| `MCP_REQUEST_TIMEOUT_MS` | 60000ms | Internal request timeout |
 | `MCP_CLIENT_SECRET` | - | OAuth client secret (secure storage) |
 | `MCP_OAUTH_CLIENT_METADATA_URL` | - | OAuth client metadata URL (FedStart support) |
 | `CLAUDE_CODE_ENABLE_XAA` | - | Enable XAA (SEP-990) cross-app access |
 | `ENABLE_CLAUDEAI_MCP_SERVERS` | - | Enable/disable claude.ai MCP server fetching |
+
+### OAuth Sensitive Parameter Sanitization
+
+OAuth sensitive parameters are automatically removed from logs:
+
+```typescript
+const SENSITIVE_OAUTH_PARAMS = [
+  'state', 'nonce', 'code_challenge', 'code_verifier', 'code',
+]
+```
+
+### Slack Non-Standard Error Codes
+
+Automatically normalizes Slack and other services' non-standard `invalid_grant` error codes:
+
+```typescript
+const NONSTANDARD_INVALID_GRANT_ALIASES = new Set([
+  'invalid_refresh_token',
+  'expired_refresh_token',
+  'token_expired',
+])
+```
+
+### Token Revocation (RFC 7009)
+
+Supports OAuth token revocation, including `refresh_token` and `access_token`.
+
+### Built-in MCP Servers Default Disabled
+
+Built-in MCP servers (like Computer Use MCP) are default disabled and must be explicitly enabled via `enabledMcpServers`.
+
+### ${VAR:-default} Syntax
+
+Environment variables support default values:
+
+```json
+{
+  "env": {
+    "DATABASE_URL": "${DB_URL:-postgresql://localhost:5432/db}"
+  }
+}
+```
 
 ### headersHelper Security Features
 

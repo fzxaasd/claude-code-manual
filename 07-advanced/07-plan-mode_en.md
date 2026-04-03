@@ -701,3 +701,57 @@ cat ~/.claude/plans/xxx.md
 # Test permission configuration
 claude --debug permissions
 ```
+
+---
+
+## /plan open Command
+
+`/plan open` command behavior:
+- **When NOT in Plan Mode**: Enables Plan Mode with `shouldQuery: true`, waiting for user input
+- **When already in Plan Mode**: Opens current plan file in external editor
+
+```
+/plan open
+```
+
+**Purpose**: Manually edit plan files.
+
+> **Note**: `/plan open` only opens the external editor when the session is already in Plan Mode. If not in Plan Mode, the command first enables Plan Mode.
+
+---
+
+## Undocumented Features
+
+### autoDream sessionsReviewing Excludes Current Session
+
+`sessionsReviewing` passed to `registerDreamTask` excludes the current session:
+
+```typescript
+sessionIds = sessionIds.filter(id => id !== currentSession)
+```
+
+### Scan Throttle Mechanism
+
+`autoDream` uses a 10-minute scan interval to prevent repeated scans:
+
+```typescript
+const SESSION_SCAN_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
+```
+
+### Consolidation Lock Expiry
+
+Consolidation lock holder expiry time is 1 hour:
+
+```typescript
+const HOLDER_STALE_MS = 60 * 60 * 1000 // 1 hour
+```
+
+### Dual Circuit Breaker Mechanism
+
+`ExitPlanModeV2Tool` has a Circuit Breaker at both validation and execution stages:
+1. **Validation stage**: Sets `gateFallbackNotification`, displays warning in UI
+2. **Execution stage**: Actually restores and sends notification
+
+### /dream Command Lock Sync
+
+Manual `/dream` command updates lock file mtime and PID, making autoDream's time gate pass immediately on next check.

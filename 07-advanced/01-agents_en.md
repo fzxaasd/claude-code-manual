@@ -181,7 +181,7 @@ type BuiltInAgentDefinition = BaseAgentDefinition & {
 
 // Custom Agent - From configuration
 type CustomAgentDefinition = BaseAgentDefinition & {
-  source: SettingSource  // 'user' | 'project' | 'policy' | 'local'
+  source: SettingSource  // 'userSettings' | 'projectSettings' | 'policySettings' | 'flagSettings' | 'built-in' | 'plugin'
   getSystemPrompt: () => string
 }
 

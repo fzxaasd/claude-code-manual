@@ -88,7 +88,6 @@ Connect to remote MCP server via HTTP SSE:
       },
       "oauth": {
         "clientId": "your-client-id",
-        "clientSecret": "${MCP_CLIENT_SECRET}",
         "authServerMetadataUrl": "https://auth.example.com/.well-known/openid-configuration",
         "callbackPort": 3000
       }
@@ -103,10 +102,11 @@ Connect to remote MCP server via HTTP SSE:
 - `headersHelper` (optional): Helper request header file path
 - `oauth` (optional): OAuth 2.0 configuration
   - `clientId`: OAuth client ID
-  - `clientSecret`: OAuth client secret
   - `authServerMetadataUrl`: OIDC discovery URL
   - `callbackPort`: Callback port
   - `xaa` (optional): Enable XAA (SEP-990) cross-app access
+
+> **Note**: `clientSecret` is not in the config file. OAuth client secrets are stored in Keychain.
 
 #### 3. sse-ide (IDE-Only)
 

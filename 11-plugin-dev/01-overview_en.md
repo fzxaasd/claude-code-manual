@@ -98,7 +98,7 @@ Agent definitions use **markdown format** with frontmatter for metadata:
 name: reviewer
 description: Code review Agent
 model: sonnet
-allowedTools:
+tools:
   - Read
   - Glob
   - Grep
@@ -106,13 +106,39 @@ allowedTools:
 disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-systemPrompt: You are a strict code reviewer...
+color: blue
+background: true
+memory: project
+isolation: worktree
+effort: medium
+maxTurns: 10
+skills:
+  - code-review
 ---
 
-# Agent Content
+# Code Review Agent
 
-Agent markdown body content.
+Agent markdown body content. This content will be used as the system prompt.
 ```
+
+### AgentDefinition Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Agent name (required) |
+| `description` | string | Agent description (required) |
+| `model` | string | Model to use (sonnet/opus/haiku) |
+| `tools` | string[] | Allowed tools (use `tools`, not `allowedTools`) |
+| `disallowedTools` | string[] | Explicitly denied tools |
+| `color` | string | UI display color |
+| `background` | boolean | Run in background |
+| `memory` | 'user'\\|'project'\\|'local' | Memory scope |
+| `isolation` | 'worktree' | Git worktree isolation mode |
+| `effort` | string\\|number | Effort level |
+| `maxTurns` | number | Maximum conversation turns |
+| `skills` | string[] | Pre-loaded skill list |
+
+> **Note**: `system_prompt` is NOT a frontmatter field. The system prompt comes from the markdown body content.
 
 ### outputStyles Configuration
 

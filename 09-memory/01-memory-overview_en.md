@@ -27,6 +27,19 @@ Based on `MEMORY_TYPES` constant definition (`memoryTypes.ts:14-21`):
 | `project` | private/team | Project context, goals, events |
 | `reference` | usually team | External system pointers |
 
+### Two Memory Type Systems Explained
+
+Claude Code has **two different Memory type systems**:
+
+1. **Memory Taxonomy** (`MEMORY_TYPES`): `user` / `feedback` / `project` / `reference`
+   - Used for memory content classification
+   - Defined in `memoryTypes.ts`
+
+2. **CLAUDE.md File Types** (`MEMORY_TYPE_VALUES`): `User` / `Project` / `Local` / `Managed` / `AutoMem` / `TeamMem`
+   - Used for CLAUDE.md file scope layers
+   - Defined in `memoryTypes.ts`
+   - `TeamMem` only exists when GrowthBook feature `TEAMMEM` is enabled
+
 ---
 
 ## Type Details
@@ -319,6 +332,12 @@ export const MEMORY_TYPE_VALUES = [
 
 Based on `src/services/SessionMemory/sessionMemoryUtils.ts`:
 
+### Configuration Source
+
+Session Memory thresholds are sourced from (by priority):
+1. `tengu_sm_config` GrowthBook feature (default config)
+2. `DEFAULT_SESSION_MEMORY_CONFIG` constant
+
 ### Trigger Thresholds
 
 | Parameter | Default | Description |
@@ -327,11 +346,20 @@ Based on `src/services/SessionMemory/sessionMemoryUtils.ts`:
 | `minimumTokensBetweenUpdate` | 5000 | Minimum tokens between updates |
 | `toolCallsBetweenUpdates` | 3 | Minimum tool calls between updates |
 
+> **Note**: `sessionMemoryCompact.ts` has another set of thresholds (`minTokens: 10_000`, `minTextBlockMessages: 5`, `maxTokens: 40_000`) for session memory compaction, which is different from extraction thresholds.
+
 **Important Rule**: `minimumTokensBetweenUpdate` threshold is **always required**, even if other conditions are met.
 
 ### Manual Trigger
 
 `/summary` command can manually trigger session memory extraction, bypassing threshold checks.
+
+### Forked Agent Design
+
+Session Memory uses forked agent mode:
+- Shares prompt cache with main conversation
+- Closure-scoped state (easy to test)
+- `createCacheSafeParams` ensures fork shares same cache-critical parameters as parent
 
 ---
 
@@ -564,6 +592,19 @@ autoDream uses file locking to prevent concurrent conflicts:
 - PID-based locking
 - 1 hour stale protection (`HOLDER_STALE_MS = 60 * 60 * 1000`)
 - Lock rollback on failure
+
+### autoDream Extra Gates
+
+autoDream's `isGateOpen()` function has additional disable conditions:
+
+```typescript
+function isGateOpen(): boolean {
+  if (getKairosActive()) return false  // KAIROS mode disabled
+  if (getIsRemoteMode()) return false  // Remote mode disabled
+  if (!isAutoMemoryEnabled()) return false
+  return isAutoDreamEnabled()
+}
+```
 
 ### Session Memory
 

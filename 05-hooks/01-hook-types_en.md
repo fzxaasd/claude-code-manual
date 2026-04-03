@@ -4,11 +4,11 @@
 
 ## Overview
 
-The Claude Code Hook system provides 27 lifecycle hooks, allowing custom logic to be executed at key event points.
+The Claude Code Hook system provides **28 lifecycle hooks**, allowing custom logic to be executed at key event points.
 
 ---
 
-## Complete Hook Types (27 Types)
+## Complete Hook Types (28 Types)
 
 ### 1. Tool Execution (4 Types)
 
@@ -800,6 +800,42 @@ InstructionsLoaded Hook is a read-only hook that does not support blocking opera
  * and does not support blocking.
  */
 ```
+
+### HTTP Hook: allowedEnvVars Whitelist
+
+HTTP Hook supports environment variable interpolation in header values, but must explicitly whitelist:
+
+```typescript
+{
+  type: 'http',
+  url: 'https://example.com/webhook',
+  headers: {
+    'X-Custom-Header': '${MY_HEADER}'
+  },
+  allowedEnvVars: ['MY_HEADER']  // Must explicitly declare
+}
+```
+
+Variables not in the whitelist are replaced with empty strings.
+
+### asyncRewake: Async Hook Wake Mechanism
+
+When `asyncRewake: true`:
+- Hook executes asynchronously in background
+- Exit code 2 wakes the model
+- Automatically sets `async: true`
+
+### Agent Hook Max Turns Limit
+
+Agent Hook executes maximum 50 turns to prevent infinite loops.
+
+### SessionEnd Hook Timeout
+
+SessionEnd Hook has special timeout configuration:
+
+| Environment Variable | Default |
+|---------------------|---------|
+| `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` | 1500ms |
 
 ---
 

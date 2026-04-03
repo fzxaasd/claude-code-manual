@@ -83,8 +83,15 @@ interface AgentDefinition {
   name: string              // frontmatter: name
   description: string       // frontmatter: description
   model?: string            // frontmatter: model
-  tools?: string[]          // frontmatter: tools
+  tools?: string[]          // frontmatter: tools（不是 allowedTools！）
   disallowedTools?: string[] // frontmatter: disallowedTools
+  color?: string            // frontmatter: color，UI 显示颜色
+  background?: boolean       // frontmatter: background，后台执行
+  memory?: 'user' | 'project' | 'local' // frontmatter: memory，记忆范围
+  isolation?: 'worktree'     // frontmatter: isolation，隔离模式
+  effort?: string | number   // frontmatter: effort，effort 级别
+  maxTurns?: number         // frontmatter: maxTurns，最大轮次
+  skills?: string[]         // frontmatter: skills，预加载技能列表
   // 注意：system_prompt 不是 frontmatter 字段！
   // 系统提示来自 markdown 正文内容（不是 frontmatter 中的 system_prompt）
 }
@@ -105,6 +112,8 @@ tools:
 disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
+color: blue
+memory: project
 ---
 
 # 代码审查 Agent
@@ -155,6 +164,22 @@ interface HooksConfig {
 }
 ```
 
+### CommandMetadata
+
+Command 支持两种定义方式：文件引用或内联内容：
+
+```typescript
+interface CommandMetadata {
+  source?: string     // Markdown 文件路径（与 content 互斥）
+  content?: string    // 内联 Markdown 内容（与 source 互斥）
+  description?: string
+  argumentHint?: string  // 参数占位符提示
+  model?: string         // 指定模型
+}
+```
+
+**注意**: `source` 和 `content` 是互斥的，不能同时使用。
+
 ### Hook 事件详解
 
 共 **27 种 Hook 事件**：
@@ -200,7 +225,7 @@ interface HookRule {
 
 ### HookEntry
 
-支持 **4 种 Hook 类型**：
+支持 **5 种 Hook 类型**：
 
 ```typescript
 // 类型 1: Shell 命令
@@ -230,25 +255,29 @@ interface PromptHook {
 interface AgentHook {
   type: 'agent'
   agent: string         // Agent 名称
-  model?: string        // 指定模型
   if?: string           // 条件规则
-  once?: boolean        // 是否只运行一次
-  statusMessage?: string // 自定义状态消息
 }
 
 // 类型 4: HTTP 请求
 interface HttpHook {
   type: 'http'
   url: string           // 请求 URL
-  method?: string       // HTTP 方法
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  headers?: Record<string, string>  // 请求头
   body?: unknown        // 请求体
-  headers?: Record<string, string> // 请求头
-  allowedEnvVars?: string[] // 允许传递的环境变量
+  allowedEnvVars?: string[]  // 允许注入的环境变量
   if?: string           // 条件规则
-  once?: boolean        // 是否只运行一次
-  statusMessage?: string // 自定义状态消息
+  timeout?: number      // 超时时间（秒）
+}
+
+// 类型 5: 回调函数（内部使用）
+interface CallbackHook {
+  type: 'callback'
+  // 用于内部钩子注册，不可持久化到 settings
 }
 ```
+
+**注意**: `callback` 和 `function` 类型用于内部钩子注册，无法通过 settings.json 持久化。
 
 ### HookEntry 字段说明
 
@@ -272,7 +301,92 @@ interface McpServerConfig {
   command: string
   args?: string[]
   env?: Record<string, string>
-  transport?: 'stdio' | 'sse' | 'sse-ide' | 'http' | 'ws' | 'sdk'
+  transport?: 'stdio' | 'sse' | 'sse-ide' | 'http' | 'ws' | 'sdk' | 'ws-ide' | 'claudeai-proxy'
+}
+```
+
+### 传输类型详解
+
+| 传输类型 | 说明 | 额外字段 |
+|----------|------|----------|
+| `stdio` | 标准输入/输出 | `command`, `args`, `env` |
+| `sse` | Server-Sent Events | `url`, `headers?`, `oauth?` |
+| `sse-ide` | IDE SSE 连接 | - |
+| `http` | HTTP POST | `url`, `headers?`, `oauth?` |
+| `ws` | WebSocket | `url`, `headers?` |
+| `sdk` | SDK 服务器 | `name` |
+| `ws-ide` | IDE WebSocket | `url`, `authToken?` |
+| `claudeai-proxy` | Claude.ai 代理 | `url`, `id` |
+
+### OAuth 配置
+
+```typescript
+interface McpOAuthConfig {
+  clientId?: string
+  callbackPort?: number
+  authServerMetadataUrl?: string  // 必须 https:// 开头
+  xaa?: boolean  // Cross-App Access (SEP-990)
+}
+```
+
+### ws-ide 认证
+
+```typescript
+interface WsIdeConfig {
+  url: string
+  authToken?: string  // 认证令牌
+}
+```
+
+### Claude.ai Proxy 配置
+
+```typescript
+interface McpClaudeAIProxyServerConfig {
+  type: 'claudeai-proxy'
+  url: string
+  id: string
+}
+```
+
+### ConfigScope
+
+MCP 服务器配置作用域：
+
+```typescript
+type ConfigScope = 'local' | 'user' | 'project' | 'dynamic' | 'enterprise' | 'claudeai' | 'managed'
+```
+
+### MCPServerConnection 状态
+
+```typescript
+type ConnectedMCPServer = {
+  status: 'connected'
+  name: string
+  tools: Tool[]
+  resources: Resource[]
+  // ...
+}
+
+type FailedMCPServer = {
+  status: 'failed'
+  name: string
+  error: string
+}
+
+type NeedsAuthMCPServer = {
+  status: 'needs_auth'
+  name: string
+  authType: 'oauth' | 'xaa'
+}
+
+type PendingMCPServer = {
+  status: 'pending'
+  name: string
+}
+
+type DisabledMCPServer = {
+  status: 'disabled'
+  name: string
 }
 ```
 
@@ -324,7 +438,7 @@ interface LspServerConfig {
   command: string
   args?: string[]
   extensionToLanguage: Record<string, string>  // { ".ts": "typescript" }
-  transport?: 'stdio' | 'sse' | 'http' | 'ws'
+  transport?: 'stdio' | 'socket'  // 仅支持 stdio 和 socket 传输
   env?: Record<string, string>
   initializationOptions?: unknown
   settings?: unknown
@@ -333,6 +447,157 @@ interface LspServerConfig {
   shutdownTimeout?: number
   restartOnCrash?: boolean
   maxRestarts?: number
+}
+```
+
+**注意**: `transport` 字段仅支持 `'stdio'` 和 `'socket'`，`'sse'`、`'http'`、`'ws'` **不是**有效的 LSP 传输类型。
+
+---
+
+## PermissionUpdate 类型
+
+权限更新操作类型：
+
+```typescript
+type PermissionUpdate =
+  | { op: 'addRules'; rules: PermissionRule[] }
+  | { op: 'replaceRules'; rules: PermissionRule[] }
+  | { op: 'removeRules'; rules: PermissionRule[] }
+  | { op: 'setMode'; mode: PermissionMode }
+  | { op: 'addDirectories'; directories: AdditionalWorkingDirectory[] }
+  | { op: 'removeDirectories'; directories: string[] }
+```
+
+### PermissionUpdateDestination
+
+权限更新的目标位置：
+
+```typescript
+type PermissionUpdateDestination =
+  | 'userSettings'
+  | 'projectSettings'
+  | 'localSettings'
+  | 'session'
+  | 'cliArg'
+```
+
+### AdditionalWorkingDirectory
+
+额外的允许工作目录：
+
+```typescript
+interface AdditionalWorkingDirectory {
+  path: string
+  source: 'cliArg' | 'hook'
+}
+```
+
+---
+
+## LoadedPlugin 类型
+
+插件加载后的完整类型：
+
+```typescript
+interface LoadedPlugin {
+  id: string
+  name: string
+  version?: string
+  description?: string
+  source: 'user' | 'project' | 'local' | 'managed'
+  repository?: string
+  isBuiltin: boolean
+  sha?: string  // Git commit SHA
+
+  // 组件路径
+  commandsPath?: string
+  commandsPaths?: string[]
+  agentsPath?: string
+  agentsPaths?: string[]
+  skillsPath?: string
+  skillsPaths?: string[]
+  outputStylesPath?: string
+  outputStylesPaths?: string[]
+
+  // 组件元数据
+  commandsMetadata?: Record<string, CommandMetadata>
+  hooksConfig?: HooksConfig
+  lspServers?: LspServerConfig[]
+  settings?: Record<string, unknown>
+
+  // MCP 配置
+  mcpServers?: McpServerConfig
+}
+```
+
+### PluginRepository
+
+插件仓库类型：
+
+```typescript
+interface PluginRepository {
+  type: 'github' | 'git' | 'npm' | 'url'
+  url: string
+  name?: string
+  branch?: string
+  path?: string  // marketplace.json 路径
+  sparsePaths?: string[]  // 稀疏克隆路径
+}
+```
+
+---
+
+## MarketplaceSource 类型
+
+```typescript
+type MarketplaceSource =
+  | { source: 'url'; url: string; sha?: string }
+  | { source: 'github'; repo: string; sparsePaths?: string[]; path?: string; ref?: string }
+  | { source: 'git'; url: string; sparsePaths?: string[]; path?: string; ref?: string }
+  | { source: 'npm'; package: string; version?: string; registry?: string }
+  | { source: 'file'; path: string }
+  | { source: 'directory'; path: string }
+  | { source: 'hostPattern'; pattern: string; pluginSource: MarketplaceSource }
+  | { source: 'pathPattern'; pattern: string; pluginSource: MarketplaceSource }
+  | { source: 'settings'; settings: PluginManifest }
+```
+
+---
+
+## InstalledPlugins 格式
+
+### V1 格式
+
+```json
+{
+  "plugins": {
+    "plugin-name": {
+      "source": "...",
+      "scope": "user",
+      "gitCommitSha": "abc123..."
+    }
+  }
+}
+```
+
+### V2 格式
+
+```json
+{
+  "plugins": {
+    "plugin-name": [
+      {
+        "source": "...",
+        "scope": "user",
+        "gitCommitSha": "abc123..."
+      },
+      {
+        "source": "...",
+        "scope": "project",
+        "projectPath": "/path/to/project"
+      }
+    ]
+  }
 }
 ```
 

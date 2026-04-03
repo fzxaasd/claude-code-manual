@@ -25,13 +25,22 @@ Claude Code 有 6 种配置来源：
 
 ## 不同配置类型的优先级规则
 
-**注意**: 源码 `SETTING_SOURCES` 数组是从**低优先级到高优先级**遍历，后面的覆盖前面的。
+**注意**: 源码 `SETTING_SOURCES` 数组定义了 5 个配置来源（从低到高）：`user` / `project` / `local` / `flag` / `policy`。`pluginSettings` 是特殊的基础层，由 `getPluginSettingsBase()` 返回，在 `loadSettingsFromDisk()` 中先加载作为最低优先级基础。
 
 所有配置类型（Hooks、Permissions、General Settings）使用相同的优先级顺序：
 
 ```
-pluginSettings (最低) → userSettings → projectSettings → localSettings → flagSettings → policySettings (最高)
+pluginSettings (最低基础层) → userSettings → projectSettings → localSettings → flagSettings → policySettings (最高)
 ```
+
+### SETTING_SOURCES 常量
+
+```typescript
+// src/utils/settings/constants.ts
+export const SETTING_SOURCES = ['user', 'project', 'local', 'flag', 'policy'] as const
+```
+
+> **注意**：pluginSettings 不是 SETTING_SOURCES 的一部分，而是通过 `getPluginSettingsBase()` 单独加载。
 
 ### 特殊说明
 

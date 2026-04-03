@@ -592,17 +592,20 @@ echo $VAR_NAME
 
 ### 连接超时
 
-```json
-{
-  "mcpServers": {
-    "slow-server": {
-      "type": "http",
-      "url": "https://api.example.com/mcp",
-      "timeout": 30000
-    }
-  }
-}
+MCP 服务器配置中没有 `timeout` 字段。超时通过环境变量控制：
+
+| 环境变量 | 默认值 | 说明 |
+|---------|--------|------|
+| `MCP_TIMEOUT` | 30000ms | 连接超时 |
+| `MCP_TOOL_TIMEOUT` | 100000000ms (~27.8小时) | 工具调用超时 |
+| `MCP_REQUEST_TIMEOUT_MS` | 60000ms | 内部请求超时 |
+
+```bash
+# 示例：设置 60 秒连接超时
+export MCP_TIMEOUT=60000
 ```
+
+> **注意**: MCP 服务器配置 schema 中不存在 `timeout` 字段。
 
 ### OAuth 配置错误
 
@@ -685,11 +688,55 @@ claude --debug mcp
 
 | 环境变量 | 默认值 | 说明 |
 |---------|--------|------|
+| `MCP_TIMEOUT` | 30000ms | MCP 服务器连接超时 |
 | `MCP_TOOL_TIMEOUT` | 100000000 (ms) | MCP 工具调用超时时间 |
+| `MCP_REQUEST_TIMEOUT_MS` | 60000ms | 内部请求超时 |
 | `MCP_CLIENT_SECRET` | - | OAuth 客户端密钥（安全存储） |
 | `MCP_OAUTH_CLIENT_METADATA_URL` | - | OAuth 客户端元数据 URL（FedStart 支持） |
 | `CLAUDE_CODE_ENABLE_XAA` | - | 启用 XAA (SEP-990) 跨应用访问 |
 | `ENABLE_CLAUDEAI_MCP_SERVERS` | - | 启用/禁用 claude.ai MCP 服务器获取 |
+
+### OAuth 敏感参数脱敏
+
+OAuth 敏感参数自动从日志中移除：
+
+```typescript
+const SENSITIVE_OAUTH_PARAMS = [
+  'state', 'nonce', 'code_challenge', 'code_verifier', 'code',
+]
+```
+
+### Slack 非标准错误码处理
+
+自动规范化 Slack 等服务使用的非标准 `invalid_grant` 错误码：
+
+```typescript
+const NONSTANDARD_INVALID_GRANT_ALIASES = new Set([
+  'invalid_refresh_token',
+  'expired_refresh_token',
+  'token_expired',
+])
+```
+
+### Token 撤销 (RFC 7009)
+
+支持 OAuth token 撤销，包括 `refresh_token` 和 `access_token`。
+
+### 内置 MCP 服务器默认禁用
+
+内置 MCP 服务器（如 Computer Use MCP）默认禁用，需通过 `enabledMcpServers` 显式启用。
+
+### ${VAR:-default} 语法
+
+环境变量支持带默认值：
+
+```json
+{
+  "env": {
+    "DATABASE_URL": "${DB_URL:-postgresql://localhost:5432/db}"
+  }
+}
+```
 
 ### headersHelper 安全特性
 

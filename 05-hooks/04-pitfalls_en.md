@@ -159,10 +159,7 @@ Script depends on environment variables that don't exist.
         "hooks": [
           {
             "type": "command",
-            "command": "script.sh",
-            "env": {
-              "MY_VAR": "value"
-            }
+            "command": "script.sh"
           }
         ]
       }
@@ -170,6 +167,11 @@ Script depends on environment variables that don't exist.
   }
 }
 ```
+
+> **Note**: The `env` field **does not exist** in Hook configuration. To set environment variables, include them directly in the command:
+> ```bash
+> MY_VAR=value script.sh
+> ```
 
 ### 7. Working Directory Errors
 

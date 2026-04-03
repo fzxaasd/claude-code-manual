@@ -344,11 +344,9 @@ Verify generated files.
 |-------|-------------|
 | `hide-from-slash-command-tool` | Controls visibility in SlashCommand tool |
 | `immediate` | When true, bypasses queue and executes immediately |
-| `isSensitive` | When true, args are redacted from history |
-| `kind: 'workflow'` | Marks as workflow-backed, shows badge in autocomplete |
-| `availability` | Declares available auth environments ('claude-ai' or 'console') |
-| `disableNonInteractive` | Disables execution in non-interactive mode |
 | `skills` | List of skills to preload for agents |
+
+> **Note**: The following fields do NOT exist in the source code and should not be used: `isSensitive`, `kind`, `availability`, `disableNonInteractive`.
 
 ### Shell Command Blocks
 
@@ -431,9 +429,7 @@ effort: 42        # Integer
 | `paths` | Path pattern activation | Optional |
 | `files` | Related files | Optional |
 | `immediate` | Bypass queue and execute immediately | Optional |
-| `isSensitive` | Redact args from history | Optional |
-| `availability` | Environment restriction | Optional |
-| `disableNonInteractive` | Disable non-interactive mode | Optional |
+| `skills` | List of skills to preload | Optional |
 
 ### Complete Example
 

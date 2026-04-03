@@ -327,12 +327,12 @@ Template variables available to plugins:
 | Variable | Description |
 |------|-------------|
 | `${PLUGIN_DIR}` | Plugin root directory |
-| `${CLAUDE_PLUGIN_ROOT}` | Plugin installation root directory (versioned) |
-| `${CLAUDE_PLUGIN_DATA}` | Plugin data directory (persistent storage) |
 | `${SKILL_DIR}` | Skills directory |
 | `${HOOK_DIR}` | Hooks directory |
 | `${AGENT_DIR}` | Agents directory |
 | `${COMMAND_DIR}` | Commands directory |
+| `${CLAUDE_PLUGIN_ROOT}` | Version-scoped plugin install dir (recreated on update) |
+| `${CLAUDE_PLUGIN_DATA}` | Persistent data directory (survives updates) |
 | `${user_config.KEY}` | Variables defined in userConfig |
 
 ---

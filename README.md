@@ -2,7 +2,7 @@
 
 > 本手册基于 [instructkr/claude-code](https://github.com/instructkr/claude-code) 源码分析编写，涵盖从安装配置到插件开发的完整知识体系。
 
-**版本**: 2.0.0 | **更新**: 2026-04-01 | **源码版本**: 2.1.81
+**版本**: 2.2.0 | **更新**: 2026-04-03 | **源码版本**: 2.1.81
 
 ---
 
@@ -30,12 +30,12 @@
 | 技能系统 | 3 篇 | 原生机制、技能创建、与Agent配合 |
 | Hook 系统 | 4 篇 | 27种Hook类型、配置调试、Python实践、常见问题 |
 | 配置体系 | 3 篇 | 配置层次、settings.json、项目配置 |
-| 进阶功能 | 9 篇 | Agent、多Agent、插件、MCP、Team Mode、Sandbox、Plan Mode、Voice Mode、Bridge Remote |
+| 进阶功能 | 14 篇 | Agent、多Agent、插件、MCP、Team Mode、Sandbox、Plan Mode、Voice Mode、Bridge Remote、Companion/Buddy、UpstreamProxy、Setup流程、Server/Remote/Coordinator、Components/Screens |
 | 最佳实践 | 3 篇 | 推荐模式、避免使用、团队协作 |
 | 内存系统 | 4 篇 | 概述、API、最佳实践、Agent 记忆 |
 | 任务系统 | 1 篇 | 任务管理 |
 | 插件开发 | 4 篇 | 概述、结构、API、开发示例 |
-| **总计** | **40 篇** | 覆盖 Claude Code 全部核心系统 |
+| **总计** | **45 篇** | 覆盖 Claude Code 全部核心系统 |
 
 ### 源码验证
 
@@ -146,6 +146,8 @@
 | [Plan Mode](./07-advanced/07-plan-mode.md) | 规划模式 | ✅ |
 | [Voice Mode](./07-advanced/09-voice-mode.md) | 语音模式 | ✅ |
 | [Bridge Remote](./07-advanced/08-bridge-remote.md) | 远程连接 | ✅ |
+| [Companion/Buddy 系统](./companion-buddy-system.md) | 桌面伴侣系统 | ✅ |
+| [UpstreamProxy 系统](./upstream-proxy-system.md) | CCR MITM 代理 | ✅ |
 
 ### 第八部分：最佳实践
 
@@ -178,6 +180,7 @@
 | [插件结构](./11-plugin-dev/02-structure.md) | 目录结构 | ✅ |
 | [插件 API](./11-plugin-dev/03-api.md) | API 参考 | ✅ |
 | [开发示例](./11-plugin-dev/04-examples.md) | 完整开发示例 | ✅ |
+| [团队规范插件设计](./11-plugin-dev/05-team-plugin-design.md) | 团队级规范插件完整方案 | ✅ |
 
 ---
 
@@ -205,7 +208,7 @@
 
 | 指标 | 数量 |
 |------|------|
-| 文档文件 | 40 |
+| 文档文件 | 45 |
 | 测试脚本 | 11 |
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 16 |

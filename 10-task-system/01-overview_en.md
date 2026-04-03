@@ -177,6 +177,35 @@ function isTodoV2Enabled(): boolean {
 
 Tasks V2 includes: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListTool`
 
+### Undocumented Task Tools
+
+#### TaskOutputTool
+
+Get output from any background task:
+
+```typescript
+interface TaskOutputToolInput {
+  task_id: string      // Task ID
+  block?: boolean      // Wait for task completion
+  timeout?: number     // Timeout in seconds
+}
+```
+
+Returns: `task_id, task_type, status, output, exitCode`
+
+#### TaskStopTool
+
+Stop running background task:
+
+```typescript
+interface TaskStopToolInput {
+  task_id?: string           // Task ID
+  shell_id?: string         // Deprecated, use task_id
+}
+```
+
+Alias: `KillShell` (SDK compatibility)
+
 ---
 
 ## Cron Scheduling Tool ⭐ GA Feature

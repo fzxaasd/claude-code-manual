@@ -51,7 +51,7 @@ The following tools are only available when `USER_TYPE === 'ant'`:
 | EnterWorktreeTool | isWorktreeModeEnabled() | Enter worktree |
 | ExitWorktreeTool | isWorktreeModeEnabled() | Exit worktree |
 | ToolSearchTool | isToolSearchEnabledOptimistic() | Tool search |
-| SendMessageTool | Always included | Send message (Team mode) |
+| SendMessageTool | isAgentSwarmsEnabled() | Send message (Team mode) |
 | LSPTool | ENABLE_LSP_TOOL environment variable | LSP language service |
 | TeamCreateTool | isAgentSwarmsEnabled() | Create team |
 | TeamDeleteTool | isAgentSwarmsEnabled() | Delete team |

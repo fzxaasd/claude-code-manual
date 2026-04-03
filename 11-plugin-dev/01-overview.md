@@ -98,7 +98,7 @@ Agent 定义使用 **markdown 格式**，通过 frontmatter 定义元数据：
 name: reviewer
 description: 代码审查 Agent
 model: sonnet
-allowedTools:
+tools:
   - Read
   - Glob
   - Grep
@@ -106,7 +106,14 @@ allowedTools:
 disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-systemPrompt: 你是一个严格的代码审查员...
+color: blue                    # 可选：Agent UI 颜色
+background: true                # 可选：后台执行
+memory: project                 # 可选：记忆范围 (user/project/local)
+isolation: worktree             # 可选：隔离模式 (worktree)
+effort: medium                 # 可选：effort 级别
+maxTurns: 50                   # 可选：最大轮次
+skills:                        # 可选：预加载技能列表
+  - my-skill
 ---
 
 # Agent 内容

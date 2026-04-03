@@ -130,8 +130,7 @@ interface BaseAgentDefinition {
 
   // MCP 配置
   mcpServers?: AgentMcpServerSpec[]  // MCP 服务器
-  requiredMcpServers?: string[]      // 必需的 MCP 服务器名称（仅限内置 Agent，不支持用户配置）
-  // 注意: requiredMcpServers 只能在内置 Agent 代码中设置，无法通过用户 markdown/JSON 配置
+  requiredMcpServers?: string[]      // 必需的 MCP 服务器名称
 
   // 钩子
   hooks?: HooksSettings      // 关联 Hooks
@@ -181,7 +180,7 @@ type BuiltInAgentDefinition = BaseAgentDefinition & {
 
 // 自定义 Agent - 来自配置
 type CustomAgentDefinition = BaseAgentDefinition & {
-  source: SettingSource  // 'user' | 'project' | 'policy' | 'local'
+  source: SettingSource  // 'userSettings' | 'projectSettings' | 'policySettings' | 'flagSettings' | 'built-in' | 'plugin'
   getSystemPrompt: () => string
 }
 
@@ -255,7 +254,7 @@ permissionMode: acceptEdits  # default/plan/acceptEdits/dontAsk/bypassPermission
 mcpServers:             # MCP 服务器配置
   - github              # 引用已有服务器
   - slack               # 或内联定义: { slack: { command: "npx", args: [...] } }
-requiredMcpServers:     # 必需的 MCP 服务器（仅内置 Agent 支持）
+requiredMcpServers:     # 必需的 MCP 服务器
   - database
 
 # 执行控制
@@ -418,7 +417,7 @@ hooks:
 1. **`system_prompt` 不是 frontmatter 字段** - Markdown 文件的提示词来自文件正文内容
 2. **`allowed_tools` 已废弃** - 请使用 `tools`
 3. **`disallowed_tools` 已废弃** - 请使用 `disallowedTools`
-4. **`requiredMcpServers` 仅内置 Agent 支持** - 不支持通过用户配置设置
+4. **`requiredMcpServers`** - 支持在任何 Agent 配置中设置（包括用户自定义 Agent）
 
 ---
 

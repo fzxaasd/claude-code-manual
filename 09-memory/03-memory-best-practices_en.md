@@ -309,8 +309,10 @@ user:     "always private"
 
 feedback: "default to private"
 // Private unless clearly team convention
+// Must be a project-wide convention that every contributor should follow
 // Example: Testing policy → team
 // Example: Communication preference → private
+// Example: Personal style preference → private
 
 project:  "private or team, bias toward team"
 // Strongly bias toward team

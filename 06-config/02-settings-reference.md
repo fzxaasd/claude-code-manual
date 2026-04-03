@@ -228,7 +228,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 | 字段 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `alwaysThinkingEnabled` | boolean | true | 启用思考 |
-| `effortLevel` | enum | medium | low/medium/high |
+| `effortLevel` | enum | medium | low/medium/high (ANT 用户额外支持 max) |
 | `fastMode` | boolean | false | 快速模式 |
 | `promptSuggestionEnabled` | boolean | true | 提示建议 |
 

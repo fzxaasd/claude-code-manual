@@ -146,9 +146,30 @@ function isVoiceGrowthBookEnabled(): boolean {
 
 使用 Deepgram 进行语音识别。
 
-**Nova 3 模型**: 由 GrowthBook feature `tengu_cobalt_frost` 控制，非默认启用。
+**Nova 3 模型**: 由 GrowthBook feature `tengu_cobalt_frost` 控制，非默认启用。同时设置 `use_conversation_engine=true` 参数。
 
 **关键字增强**：自动向 STT 发送编程术语（MCP, symlink, grep, regex 等）、项目名称、git 分支、近期文件名作为提示词。
+
+### STT WebSocket 参数
+
+发送的 WebSocket 请求参数：
+
+```typescript
+{
+  encoding: 'linear16',
+  sample_rate: '16000',
+  channels: '1',
+  endpointing_ms: '300',
+  utterance_end_ms: '1000',
+  language: options?.language ?? 'en'
+}
+```
+
+### 环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `VOICE_STREAM_BASE_URL` | 覆盖 voice_stream WebSocket 端点的基 URL（开发和测试用） |
 
 ### 状态机
 
@@ -214,7 +235,7 @@ Focus 模式下每个 final transcript 立即注入（非累积）。
 
 ### 语言提示计数器
 
-`voiceLangHintShownCount` 和 `voiceLangHintLastLanguage` 跟踪语言提示显示次数，提示最多显示 `LANG_HINT_MAX_SHOWS` 次。
+`voiceLangHintShownCount` 和 `voiceLangHintLastLanguage` 跟踪语言提示显示次数，提示最多显示 **2 次** (`LANG_HINT_MAX_SHOWS = 2`)。
 
 ### Linux 音频实现
 
@@ -229,8 +250,26 @@ Focus 模式下每个 final transcript 立即注入（非累积）。
 | `tengu_voice_recording_started` | 开始录音 |
 | `tengu_voice_recording_completed` | 录音完成 |
 | `tengu_voice_silent_drop_replay` | Silent-drop replay 触发 |
+| `tengu_voice_stream_early_retry` | Early-error retry 触发 |
 
----
+### 音频分片机制
+
+WebSocket 发送时将音频合并为约 1 秒的帧 (`SLICE_TARGET_BYTES = 32_000`)，减少网络开销。
+
+### Early-error Retry
+
+当连接错误且无转录时，250ms 后自动重试：
+- 仅重试一次 (`retryUsedRef`)
+- 重试期间音频会重新缓冲
+
+### 修饰键组合激活
+
+首次按下修饰键组合时，有 **2 秒**超时 (`MODIFIER_FIRST_PRESS_FALLBACK_MS`)。
+
+### WebSocket 协议细节
+
+- KeepAlive 间隔: 8000ms
+- Finalize 超时: safety=5000ms, noData=1500ms
 
 ## 安全与隐私
 

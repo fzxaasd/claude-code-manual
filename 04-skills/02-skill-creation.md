@@ -340,15 +340,19 @@ context: fork
 
 ### 未文档化的 frontmatter 字段
 
+以下字段在源码中存在：
+
 | 字段 | 说明 |
 |------|------|
 | `hide-from-slash-command-tool` | 控制 SlashCommand 工具中的可见性 |
 | `immediate` | true 时绕过队列立即执行 |
-| `isSensitive` | true 时从会话历史中删除参数 |
-| `kind: 'workflow'` | 标记为 workflow-backed，在自动补全中显示徽章 |
-| `availability` | 声明可用的认证环境 ('claude-ai' 或 'console') |
-| `disableNonInteractive` | 禁用非交互模式执行 |
-| `skills` | Agent 预加载的技能列表 |
+| `skills` | Agent 预加载的技能列表（仅用于 Agent 定义，非 Skill frontmatter） |
+
+**以下字段在源码中不存在，不要使用**：
+- `isSensitive` - 不存在
+- `kind: 'workflow'` - 不存在
+- `availability` - 不存在
+- `disableNonInteractive` - 这是 Command 属性，不是 frontmatter 字段
 
 ### Shell 命令块
 
@@ -431,9 +435,9 @@ effort: 42        # 整数
 | `paths` | 路径模式激活 | 可选 |
 | `files` | 相关文件 | 可选 |
 | `immediate` | 绕过队列立即执行 | 可选 |
-| `isSensitive` | 从历史中删除参数 | 可选 |
-| `availability` | 可用环境限制 | 可选 |
-| `disableNonInteractive` | 禁用非交互模式 | 可选 |
+| `isSensitive` | ❌ 不存在，不要使用 | - |
+| `availability` | ❌ 不存在，不要使用 | - |
+| `disableNonInteractive` | ❌ 这是 Command 属性，不是 frontmatter 字段 | - |
 
 ### 完整示例
 

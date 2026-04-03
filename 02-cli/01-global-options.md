@@ -377,8 +377,9 @@ export ANTHROPIC_BASE_URL="https://api.anthropic.com"
 
 ```bash
 export CLAUDE_DEBUG=1
-export CLAUDE_DEBUG_FILTER="hooks"
 ```
+
+> **注意**: `CLAUDE_DEBUG_FILTER` 环境变量不存在。
 
 ### 代理
 

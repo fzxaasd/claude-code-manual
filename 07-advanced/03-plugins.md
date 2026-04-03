@@ -81,8 +81,7 @@ plugin-name/
 
 ```json
 {
-  "id": "my-plugin@marketplace",
-  "name": "My Plugin",
+  "name": "my-plugin",
   "version": "1.0.0",
   "description": "插件描述",
   "author": "Author Name",
@@ -94,7 +93,7 @@ plugin-name/
   "agents": [{ "name": "my-agent", "path": "agents/my-agent.md" }],
   "commands": {
     "build": { "source": "commands/build.md", "description": "Build project" },
-    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet", "allowedTools": ["Bash(npm *)", "Read"] }
+    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet" }
   },
   "hooks": { "path": "hooks/hooks.json" },
   "mcpServers": {
@@ -108,10 +107,14 @@ plugin-name/
   },
   "outputStyles": [{ "name": "concise", "path": "output-styles/concise.md" }],
   "channels": [
-    { "name": "telegram", "displayName": "Telegram", "mcpServer": "telegram-bot" }
+    { "name": "telegram", "displayName": "Telegram", "server": "telegram-bot" }
   ]
 }
 ```
+
+**注意**：
+- `id` 字段**不存在**于 plugin.json 中，插件 ID 由 `name@marketplace` 自动计算
+- `channels` 中的字段名是 `server` 而非 `mcpServer`
 
 **字段说明**：
 

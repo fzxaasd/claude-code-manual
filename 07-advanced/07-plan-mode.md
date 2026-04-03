@@ -705,3 +705,157 @@ cat ~/.claude/plans/xxx.md
 # 测试权限配置
 claude --debug permissions
 ```
+
+---
+
+## /dream 命令与 autoDream 系统
+
+### /dream 命令
+
+`/dream` 是一个内置技能（`src/skills/bundled/dream.ts`），用于手动触发记忆整合：
+
+```bash
+/dream
+```
+
+**功能**：
+- 扫描会话历史中的记忆
+- 将相关记忆提炼并写入 CLAUDE.md 或 CLAUDE.local.md
+- 用于主动整理和归档重要信息
+
+### autoDream 自动记忆整合
+
+`autoDream` 是后台运行的自动记忆整合系统（`src/services/autoDream/`）。
+
+#### DreamTask 状态机
+
+```
+starting → updating → completed/failed/killed
+```
+
+**状态字段**：
+| 字段 | 说明 |
+|------|------|
+| `status` | `'running' | 'completed' | 'failed' | 'killed'` |
+| `phase` | `'starting' | 'updating'` — 首次 Edit/Write 后切换 |
+| `sessionsReviewing` | 已扫描的会话数 |
+| `filesTouched` | 修改的文件列表（注意：Bash 写入可能遗漏） |
+| `turns` | 助手文本响应数（工具调用被折叠） |
+| `abortController` | 中止控制器 |
+
+#### 整合锁机制
+
+使用 PID 锁防止并发整合：
+
+```typescript
+// 锁文件：<memoryDir>/.consolidate-lock
+// 存储内容：PID
+// 过期时间：1 小时（HOLDER_STALE_MS）
+```
+
+#### 触发条件（三重门控）
+
+整合必须同时满足以下条件：
+
+| 门控 | 默认值 | 说明 |
+|------|--------|------|
+| 时间门 | 24 小时 (`minHours`) | 距离上次整合至少 24 小时 |
+| 会话门 | 5 个会话 (`minSessions`) | 新会话数达到 5 个 |
+| 锁门 | 无锁持有 | 无其他进程正在整合 |
+
+#### autoDream 配置
+
+```typescript
+interface AutoDreamConfig {
+  minHours: number      // 默认 24
+  minSessions: number   // 默认 5
+}
+```
+
+通过 GrowthBook feature `tengu_onyx_plover` 控制。
+
+#### autoDreamEnabled 设置
+
+```json
+{
+  "autoDreamEnabled": true
+}
+```
+
+此设置控制是否启用后台自动整合，可覆盖服务端默认值。
+
+#### autoDream 与 /dream 的区别
+
+| 特性 | autoDream | /dream |
+|------|-----------|--------|
+| 触发方式 | 后台自动 | 手动命令 |
+| Bash 权限 | 仅读命令 (`ls`, `grep`, `cat` 等) | 正常权限 |
+| 会话计数 | 追踪并显示在 UI 中 | 无 |
+| 整合锁 | 使用 | 不使用（乐观执行） |
+
+#### sessionsReviewing UI 追踪
+
+已扫描的会话数会显示在任务状态中：
+
+```typescript
+// 传递给 registerDreamTask
+sessionsReviewing: number  // 可在 footer pill 中查看
+```
+
+#### "Improved memories" 内联消息
+
+整合完成后，如果修改了文件，会在主 transcript 添加内联消息：
+
+```typescript
+verb: 'Improved'  // 例如 "Improved memories from X sessions"
+```
+
+#### sessionsReviewing 排除当前会话
+
+`sessionsReviewing` 传递给 `registerDreamTask` 时，会排除当前会话：
+
+```typescript
+sessionIds = sessionIds.filter(id => id !== currentSession)
+```
+
+#### 扫描节流机制
+
+`autoDream` 使用 10 分钟扫描间隔防止重复扫描：
+
+```typescript
+const SESSION_SCAN_INTERVAL_MS = 10 * 60 * 1000 // 10 分钟
+```
+
+#### 整合锁过期
+
+整合锁持有者的过期时间为 1 小时：
+
+```typescript
+const HOLDER_STALE_MS = 60 * 60 * 1000 // 1 小时
+```
+
+#### 双 Circuit Breaker 机制
+
+`ExitPlanModeV2Tool` 在验证和执行阶段各有一个 Circuit Breaker：
+1. **验证阶段**：设置 `gateFallbackNotification`，在 UI 中显示警告通知
+2. **执行阶段**：实际执行恢复并发送通知
+
+#### `/dream` 命令的锁同步
+
+手动 `/dream` 命令会更新锁文件的 mtime 和 PID，使 autoDream 的时间门立即通过下次检查。
+
+---
+
+## /plan open 命令
+
+`/plan open` 命令行为：
+- **不在 Plan Mode 时**：启用 Plan Mode 并设置 `shouldQuery: true`，等待用户输入后续指令
+- **已在 Plan Mode 时**：打开当前计划文件在外部编辑器中
+
+```
+/plan open
+```
+
+**用途**：手动编辑计划文件。
+
+> **注意**：只有当会话已处于 Plan Mode 时，`/plan open` 才会打开外部编辑器。如果当前不在 Plan Mode，该命令会先启用 Plan Mode。

@@ -93,7 +93,7 @@
 
 ### 2. Hook 类型
 
-Hook 支持 4 种类型（文档仅展示了 `command`）：
+Hook 支持 4 种类型（command/prompt/agent/http）：
 
 ```json
 {
@@ -578,14 +578,16 @@ interface TeammateMessage {
 
 ### 5. 后端配置
 
+**注意**: `swarm.backend` 不存在，正确字段是 `teammateMode`。
+
 ```json
 // settings.json 中配置执行后端
 {
-  "swarm": {
-    "backend": "tmux"  // 或 "iterm2", "in-process"
-  }
+  "teammateMode": "tmux"  // 或 "in-process"，"auto" 自动选择
 }
 ```
+
+有效值: `"auto" | "tmux" | "in-process"`
 
 ---
 
@@ -607,6 +609,8 @@ Agent 通过以下环境变量识别身份：
 | `CLAUDE_CODE_AGENT_ID` | Agent 唯一标识 (格式: agentName@teamName) |
 | `CLAUDE_CODE_AGENT_NAME` | Agent 名称 |
 | `CLAUDE_CODE_AGENT_COLOR` | UI 显示颜色 |
+| `CLAUDE_CODE_AGENT_TYPE` | Agent 类型 |
+| `CLAUDE_CODE_TEAMMATE_COMMAND` | Team 成员启动命令 |
 
 ### 3. Team Lead 识别
 

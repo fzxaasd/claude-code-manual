@@ -390,21 +390,122 @@ claude auto-mode critique [--model <model>]
 | `claude memory` | REPL 命令 | `/memory` |
 | `claude exit` | REPL 命令 | `/exit` |
 
-### 不存在的命令
+### 缺失的 CLI 子命令
 
-以下命令**不存在**于 Claude Code:
+以下命令**存在于源码中**但未在上面的详细命令列表中记录：
 
-- `claude privacy-settings`
-- `claude sandbox-toggle`
-- `claude rate-limit-options`
-- `claude review`
-- `claude security-review`
-- `claude release-notes`
-- `claude desktop`
-- `claude clear`
-- `claude copy`
-- `claude stickers`
-- `claude help`
-- `claude usage`
-- `claude extra-usage`
-- `claude rewind-files`
+| 命令 | 说明 | Feature Gate |
+|------|------|--------------|
+| `claude login` | 登录 Anthropic 账户 | - |
+| `claude logout` | 登出 | - |
+| `claude install-github-app` | 设置 Claude GitHub Actions | - |
+| `claude install-slack-app` | 安装 Claude Slack 应用 | - |
+| `claude usage` | 查看使用限制 | - |
+| `claude privacy-settings` | 查看/更新隐私设置 | - |
+| `claude release-notes` | 查看发布说明 | - |
+| `claude stickers` | 订购 Claude Code 贴纸 | - |
+| `claude mobile` (aliases: `ios`, `android`) | 显示手机应用二维码 | - |
+| `claude resume` (alias: `continue`) | 恢复之前的会话 | - |
+| `claude rename` | 重命名当前会话 | - |
+| `claude tasks` (alias: `bashes`) | 列出和管理后台任务 | - |
+| `claude agents` | 管理 Agent 配置 | - |
+| `claude memory` | 编辑 Claude 记忆文件 | - |
+| `claude skills` | 列出可用技能 | - |
+| `claude status` | 显示 Claude Code 状态 | - |
+| `claude terminal-setup` | 终端键位设置 | - |
+| `claude reload-plugins` | 激活待定插件更改 | - |
+| `claude remote-env` | 配置远程环境 | - |
+| `claude env` | ANT 专用：环境信息 | `USER_TYPE === 'ant'` |
+| `claude chrome` | Claude in Chrome 设置 | Beta |
+| `claude pr-comments` | 获取 GitHub PR 评论 | - |
+| `claude tag` | 切换会话标签 | `USER_TYPE === 'ant'` |
+| `claude files` | 列出上下文文件 | `USER_TYPE === 'ant'` |
+| `claude summary` | 总结会话 | - |
+| `claude thinkback` | Claude Code 年度回顾 | - |
+| `claude teleport` | 远程会话导航 | - |
+| `claude sandbox-toggle` | 沙箱配置切换 | - |
+| `claude rate-limit-options` | 速率限制选项（隐藏） | 隐藏 |
+| `claude heapdump` | 导出 JS 堆到桌面（隐藏） | `isHidden: true` |
+| `claude thinkback-play` | 播放 thinkback 动画（隐藏） | `isHidden: true` |
+| `claude output-style` | 输出样式配置（已废弃，隐藏） | `isHidden: true` |
+
+### 命令别名
+
+以下别名未在详细文档中说明：
+
+| 命令 | 别名 | 文档状态 |
+|------|------|----------|
+| `/clear` | `reset`, `new` | 仅 `clear` |
+| `/exit` | `quit` | 仅 `exit` |
+| `/session` | `remote` | 未记录 |
+| `/config` | `settings` | 均未记录 |
+| `/permissions` | `allowed-tools` | 均未记录 |
+| `/desktop` | `app` | 均未记录 |
+| `/feedback` | `bug` | 均未记录 |
+| `/rewind` | `checkpoint` | 均未记录 |
+| `/branch` | `fork` | 均未记录 |
+
+### Feature-Gated 命令
+
+以下命令需要特定 feature 才能使用：
+
+| 命令 | Feature Gate | 说明 |
+|------|-------------|------|
+| `/proactive` | `PROACTIVE` or `KAIROS` | 主动模式 |
+| `/brief` | `KAIROS` or `KAIROS_BRIEF` | 简洁模式 |
+| `/assistant` | `KAIROS` | Kairos 助手模式 |
+| `/voice` | `VOICE_MODE` | 语音模式切换 |
+| `/workflows` | `WORKFLOW_SCRIPTS` | 工作流脚本 |
+| `/web-setup` | `CCR_REMOTE_SETUP` | Web 设置 |
+| `/peers` | `UDS_INBOX` | 对等节点命令 |
+| `/fork` | `FORK_SUBAGENT` | Fork 子 Agent |
+| `/buddy` | `BUDDY` | Buddy 桌面伴侣 |
+| `/subscribe-pr` | `KAIROS_GITHUB_WEBHOOKS` | 订阅 PR |
+| `/ultraplan` | `ULTRAPLAN` | Ultra 计划模式 |
+| `/torch` | `TORCH` | Torch 模式 |
+| `/remote-control` (alias: `rc`) | `BRIDGE_MODE` | 远程控制 |
+| `/backfill-sessions` | `USER_TYPE === 'ant'` | 填充会话数据 |
+| `/bughunter` | `USER_TYPE === 'ant'` | Bug 猎人工具 |
+| `/commit` | `USER_TYPE === 'ant'` | Git 提交 |
+| `/commit-push-pr` | `USER_TYPE === 'ant'` | 提交推送创建 PR |
+| `/ctx_viz` | `USER_TYPE === 'ant'` | 上下文可视化 |
+| `/autofix-pr` | `KAIROS_GITHUB_WEBHOOKS` | 自动修复 PR |
+| `/init-verifiers` | `USER_TYPE === 'ant'` | 创建验证器技能 |
+| `/version` | `USER_TYPE === 'ant'` | 打印版本 |
+
+### MCP 子命令补充
+
+以下 MCP 子命令未在上面的详细文档中记录：
+
+| 子命令 | 说明 |
+|--------|------|
+| `claude mcp reconnect <server>` | 重连指定 MCP 服务器 |
+| `claude mcp enable [server-name]` | 启用 MCP 服务器 |
+| `claude mcp disable [server-name]` | 禁用 MCP 服务器 |
+| `claude mcp no-redirect` | 测试模式（无重定向） |
+| `mcp add --header <header>` | 添加自定义 HTTP 头 |
+| `mcp add --transport <type>` | 指定传输类型 |
+
+### CLI 入口点（非 REPL 命令）
+
+以下命令在 `main.tsx` 中作为 CLI 参数处理，不是斜杠命令：
+
+| 命令 | 说明 | Feature Gate |
+|------|------|--------------|
+| `claude ssh <host> [dir]` | SSH 远程会话 | `SSH_REMOTE` |
+| `claude open <cc-url>` | 打开 CCR 会话 | `DIRECT_CONNECT` |
+| `claude assistant [sessionId]` | Kairos 助手 | `KAIROS` |
+
+### 环境变量控制的命令
+
+以下命令可通过环境变量禁用：
+
+| 命令 | 环境变量 |
+|------|----------|
+| `login` | `DISABLE_LOGIN_COMMAND` |
+| `logout` | `DISABLE_LOGOUT_COMMAND` |
+| `install-github-app` | `DISABLE_INSTALL_GITHUB_APP_COMMAND` |
+| `feedback` | `DISABLE_FEEDBACK_COMMAND`, `DISABLE_BUG_COMMAND` |
+| `extra-usage` | `DISABLE_EXTRA_USAGE_COMMAND` |
+| `compact` | `DISABLE_COMPACT` |
+| `upgrade` | `DISABLE_UPGRADE_COMMAND` |

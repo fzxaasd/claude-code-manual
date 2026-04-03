@@ -93,7 +93,7 @@ Project Root/
 
 ### 2. Hook Types
 
-4 types are supported (documentation only shows `command`):
+4 types are supported (command/prompt/agent/http):
 
 ```json
 {
@@ -581,11 +581,11 @@ This allows the Leader to track communication status between team members.
 ```json
 // Configure execution backend in settings.json
 {
-  "swarm": {
-    "backend": "tmux"  // or "iterm2", "in-process"
-  }
+  "teammateMode": "tmux"  // or "iterm2", "in-process"
 }
 ```
+
+> **Note**: The correct field name is `teammateMode`, not `swarm.backend`.
 
 ---
 
@@ -604,8 +604,10 @@ Agents identify themselves through these environment variables:
 | Environment Variable | Description |
 |---------------------|-------------|
 | `CLAUDE_CODE_TEAM_NAME` | Team name |
+| `CLAUDE_CODE_TEAMMATE_COMMAND` | Entry command for teammate (e.g., "claude --team") |
 | `CLAUDE_CODE_AGENT_ID` | Agent unique ID (format: agentName@teamName) |
 | `CLAUDE_CODE_AGENT_NAME` | Agent name |
+| `CLAUDE_CODE_AGENT_TYPE` | Agent type (swarm/backend/teammate) |
 | `CLAUDE_CODE_AGENT_COLOR` | UI display color |
 
 ### 3. Team Lead Identification

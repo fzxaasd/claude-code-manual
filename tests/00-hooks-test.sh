@@ -2,7 +2,7 @@
 # Claude Code Hook 系统测试脚本
 # 用途：验证 Hook 配置是否正确生效
 
-set -e
+set -o pipefail
 
 echo "=========================================="
 echo "Claude Code Hook 系统测试"

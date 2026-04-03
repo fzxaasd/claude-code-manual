@@ -159,10 +159,7 @@ chmod +x .claude/hooks/*.py
         "hooks": [
           {
             "type": "command",
-            "command": "script.sh",
-            "env": {
-              "MY_VAR": "value"
-            }
+            "command": "script.sh"
           }
         ]
       }
@@ -170,6 +167,11 @@ chmod +x .claude/hooks/*.py
   }
 }
 ```
+
+> **注意**: Hook 配置中**不存在 `env` 字段**。如需设置环境变量，请在命令中直接设置：
+> ```bash
+> MY_VAR=value script.sh
+> ```
 
 ### 7. 工作目录错误
 

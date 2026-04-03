@@ -309,8 +309,10 @@ user:     "always private"
 
 feedback: "default to private"
 // 除非是明确的团队约定，否则私有
+// 必须是每个贡献者都应该遵循的项目级约定
 // 例如: 测试政策 → 团队
 // 例如: 沟通偏好 → 私有
+// 例如: 个人风格偏好 → 私有
 
 project:  "private or team, bias toward team"
 // 强烈偏向团队

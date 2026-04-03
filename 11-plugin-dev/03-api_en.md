@@ -272,7 +272,91 @@ interface McpServerConfig {
   command: string
   args?: string[]
   env?: Record<string, string>
-  transport?: 'stdio' | 'sse' | 'sse-ide' | 'http' | 'ws' | 'sdk'
+  transport?: 'stdio' | 'sse' | 'sse-ide' | 'http' | 'ws' | 'sdk' | 'ws-ide' | 'claudeai-proxy'
+}
+```
+
+### Transport Types
+
+| Type | Description | Additional Fields |
+|------|-------------|------------------|
+| `stdio` | Standard input/output | `command`, `args`, `env` |
+| `sse` | Server-Sent Events | `url`, `headers?`, `oauth?` |
+| `sse-ide` | IDE SSE connection | - |
+| `http` | HTTP POST | `url`, `headers?`, `oauth?` |
+| `ws` | WebSocket | `url`, `headers?` |
+| `sdk` | SDK server | `name` |
+| `ws-ide` | IDE WebSocket | `url`, `authToken?` |
+| `claudeai-proxy` | Claude.ai proxy | `url`, `id` |
+
+### OAuth Configuration
+
+```typescript
+interface McpOAuthConfig {
+  clientId?: string
+  callbackPort?: number
+  authServerMetadataUrl?: string  // Must be https://
+  xaa?: boolean  // Cross-App Access (SEP-990)
+}
+```
+
+### ws-ide Authentication
+
+```typescript
+interface WsIdeConfig {
+  url: string
+  authToken?: string
+}
+```
+
+### Claude.ai Proxy Configuration
+
+```typescript
+interface McpClaudeAIProxyServerConfig {
+  type: 'claudeai-proxy'
+  url: string
+  id: string
+}
+```
+
+### ConfigScope
+
+MCP server configuration scope:
+
+```typescript
+type ConfigScope = 'local' | 'user' | 'project' | 'dynamic' | 'enterprise' | 'claudeai' | 'managed'
+```
+
+### MCPServerConnection States
+
+```typescript
+type ConnectedMCPServer = {
+  status: 'connected'
+  name: string
+  tools: Tool[]
+  resources: Resource[]
+}
+
+type FailedMCPServer = {
+  status: 'failed'
+  name: string
+  error: string
+}
+
+type NeedsAuthMCPServer = {
+  status: 'needs_auth'
+  name: string
+  authType: 'oauth' | 'xaa'
+}
+
+type PendingMCPServer = {
+  status: 'pending'
+  name: string
+}
+
+type DisabledMCPServer = {
+  status: 'disabled'
+  name: string
 }
 ```
 
@@ -324,7 +408,7 @@ interface LspServerConfig {
   command: string
   args?: string[]
   extensionToLanguage: Record<string, string>  // { ".ts": "typescript" }
-  transport?: 'stdio' | 'sse' | 'http' | 'ws'
+  transport?: 'stdio' | 'socket'  // Only stdio and socket are supported
   env?: Record<string, string>
   initializationOptions?: unknown
   settings?: unknown
@@ -333,6 +417,155 @@ interface LspServerConfig {
   shutdownTimeout?: number
   restartOnCrash?: boolean
   maxRestarts?: number
+}
+```
+
+**Note**: `transport` field only supports `'stdio'` and `'socket'`. `'sse'`, `'http'`, `'ws'` are **NOT** valid LSP transport types.
+
+---
+
+## PermissionUpdate Type
+
+Permission update operation types:
+
+```typescript
+type PermissionUpdate =
+  | { op: 'addRules'; rules: PermissionRule[] }
+  | { op: 'replaceRules'; rules: PermissionRule[] }
+  | { op: 'removeRules'; rules: PermissionRule[] }
+  | { op: 'setMode'; mode: PermissionMode }
+  | { op: 'addDirectories'; directories: AdditionalWorkingDirectory[] }
+  | { op: 'removeDirectories'; directories: string[] }
+```
+
+### PermissionUpdateDestination
+
+Destination for permission updates:
+
+```typescript
+type PermissionUpdateDestination =
+  | 'userSettings'
+  | 'projectSettings'
+  | 'localSettings'
+  | 'session'
+  | 'cliArg'
+```
+
+### AdditionalWorkingDirectory
+
+Additional allowed working directories:
+
+```typescript
+interface AdditionalWorkingDirectory {
+  path: string
+  source: 'cliArg' | 'hook'
+}
+```
+
+---
+
+## LoadedPlugin Type
+
+Complete type after plugin loading:
+
+```typescript
+interface LoadedPlugin {
+  id: string
+  name: string
+  version?: string
+  description?: string
+  source: 'user' | 'project' | 'local' | 'managed'
+  repository?: string
+  isBuiltin: boolean
+  sha?: string
+
+  // Component paths
+  commandsPath?: string
+  commandsPaths?: string[]
+  agentsPath?: string
+  agentsPaths?: string[]
+  skillsPath?: string
+  skillsPaths?: string[]
+  outputStylesPath?: string
+  outputStylesPaths?: string[]
+
+  // Component metadata
+  commandsMetadata?: Record<string, CommandMetadata>
+  hooksConfig?: HooksConfig
+  lspServers?: LspServerConfig[]
+  settings?: Record<string, unknown>
+
+  // MCP configuration
+  mcpServers?: McpServerConfig
+}
+```
+
+### PluginRepository
+
+```typescript
+interface PluginRepository {
+  type: 'github' | 'git' | 'npm' | 'url'
+  url: string
+  name?: string
+  branch?: string
+  path?: string
+  sparsePaths?: string[]
+}
+```
+
+---
+
+## MarketplaceSource Type
+
+```typescript
+type MarketplaceSource =
+  | { source: 'url'; url: string; sha?: string }
+  | { source: 'github'; repo: string; sparsePaths?: string[]; path?: string; ref?: string }
+  | { source: 'git'; url: string; sparsePaths?: string[]; path?: string; ref?: string }
+  | { source: 'npm'; package: string; version?: string; registry?: string }
+  | { source: 'file'; path: string }
+  | { source: 'directory'; path: string }
+  | { source: 'hostPattern'; pattern: string; pluginSource: MarketplaceSource }
+  | { source: 'pathPattern'; pattern: string; pluginSource: MarketplaceSource }
+  | { source: 'settings'; settings: PluginManifest }
+```
+
+---
+
+## InstalledPlugins Format
+
+### V1 Format
+
+```json
+{
+  "plugins": {
+    "plugin-name": {
+      "source": "...",
+      "scope": "user",
+      "gitCommitSha": "abc123..."
+    }
+  }
+}
+```
+
+### V2 Format
+
+```json
+{
+  "plugins": {
+    "plugin-name": [
+      {
+        "source": "...",
+        "scope": "user",
+        "gitCommitSha": "abc123..."
+      },
+      {
+        "source": "...",
+        "scope": "project",
+        "projectPath": "/path/to/project"
+      }
+    ]
+  }
 }
 ```
 

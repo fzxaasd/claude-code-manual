@@ -25,13 +25,22 @@ Claude Code has 6 configuration sources:
 
 ## Priority Rules for Different Configuration Types
 
-**Note**: Source `SETTING_SOURCES` array iterates from **lowest to highest priority**, later items override earlier ones.
+**Note**: Source `SETTING_SOURCES` array defines 5 sources (lowest to highest): `user` / `project` / `local` / `flag` / `policy`. `pluginSettings` is a special base layer loaded via `getPluginSettingsBase()`, loaded first in `loadSettingsFromDisk()` as the lowest priority base.
 
 All configuration types (Hooks, Permissions, General Settings) use the same priority order:
 
 ```
-pluginSettings (lowest) → userSettings → projectSettings → localSettings → flagSettings → policySettings (highest)
+pluginSettings (lowest base) → userSettings → projectSettings → localSettings → flagSettings → policySettings (highest)
 ```
+
+### SETTING_SOURCES Constant
+
+```typescript
+// src/utils/settings/constants.ts
+export const SETTING_SOURCES = ['user', 'project', 'local', 'flag', 'policy'] as const
+```
+
+> **Note**: pluginSettings is not part of SETTING_SOURCES, loaded separately via `getPluginSettingsBase()`.
 
 ### Special Notes
 

@@ -81,34 +81,37 @@ plugin-name/
 
 ```json
 {
-  "id": "my-plugin@marketplace",
-  "name": "My Plugin",
+  "name": "my-plugin@marketplace",
   "version": "1.0.0",
   "description": "Plugin description",
-  "author": "Author Name",
+  "author": {
+    "name": "Author Name",
+    "email": "author@example.com"
+  },
   "homepage": "https://github.com/author/plugin",
   "repository": "https://github.com/author/plugin",
   "license": "MIT",
   "keywords": ["testing", "mcp"],
-  "skills": [{ "name": "my-skill", "path": "skills/my-skill" }],
-  "agents": [{ "name": "my-agent", "path": "agents/my-agent.md" }],
+  "strict": true,
+  "skills": "./skills",
+  "agents": "./agents",
   "commands": {
     "build": { "source": "commands/build.md", "description": "Build project" },
-    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet", "allowedTools": ["Read", "Bash(npm *)", "Write"] }
+    "deploy": { "source": "commands/deploy.md", "description": "Deploy", "argumentHint": "<env>", "model": "sonnet", "tools": ["Read", "Bash(npm *)", "Write"] }
   },
-  "hooks": { "path": "hooks/hooks.json" },
+  "hooks": "./hooks/hooks.json",
   "dependencies": ["formatter@marketplace", "linter"],
   "mcpServers": {
-    "github-server": { "type": "stdio", "command": "npx", "args": ["@modelcontextprotocol/server-github"] }
+    "github-server": { "command": "npx", "args": ["@modelcontextprotocol/server-github"] }
   },
   "userConfig": {
     "api_key": { "type": "string", "description": "API Key", "sensitive": true, "required": true },
     "project_dir": { "type": "directory", "description": "Project directory" },
     "config_file": { "type": "file", "description": "Config file path" }
   },
-  "outputStyles": [{ "name": "concise", "path": "output-styles/concise.md" }],
+  "outputStyles": "./output-styles",
   "channels": [
-    { "name": "telegram", "displayName": "Telegram", "mcpServer": "telegram-bot" }
+    { "name": "telegram", "displayName": "Telegram", "server": "telegram-bot" }
   ]
 }
 ```
@@ -117,17 +120,28 @@ plugin-name/
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `dependencies` | string[] | Plugin dependencies, auto-resolved at install |
-| `mcpServers` | object | MCP server configs, supports .mcpb/.dxt files |
-| `commands` | object | Command mapping, supports object format `{source, description, argumentHint, model, allowedTools}` |
-| `userConfig` | object | User-configurable options, supports string/number/boolean/directory/file types, `sensitive` stored in keychain |
-| `outputStyles` | array | Custom output styles |
-| `channels` | array | MCP message channels (Telegram/Slack/Discord), inject via `notifications/claude/channel` |
-| `lspServers` | array | LSP server configurations |
-| `settings` | object | Settings to merge into settings cascade |
-| `repository` | string | Source repository URL (metadata) |
-| `license` | string | SPDX license identifier (metadata) |
+| `name` | string | Plugin ID in kebab-case with `@marketplace` suffix (required) |
+| `version` | string | Semantic version (semver) |
+| `description` | string | Brief description |
+| `author` | object | Author info (name required) |
+| `homepage` | string | Homepage URL |
+| `repository` | string | Source repository URL |
+| `license` | string | SPDX license identifier |
 | `keywords` | string[] | Discovery and categorization tags |
+| `strict` | boolean | Require plugin.json (marketplace entries only) |
+| `dependencies` | string[] | Plugin dependencies, auto-resolved at install |
+| `skills` | path\\|path[] | Skills directory paths (not object format) |
+| `agents` | path\\|path[] | Agent definition file paths (not object format) |
+| `commands` | path\\|path[]\\|object | Command file paths or inline definitions |
+| `hooks` | path\\|object | Hook configuration path or inline config |
+| `mcpServers` | object\\|path\\|MCPB | MCP server configs |
+| `userConfig` | object | User-configurable options |
+| `outputStyles` | path\\|path[] | Output styles directory |
+| `channels` | array | MCP message channels (Telegram/Slack/Discord) |
+| `lspServers` | object\\|path | LSP server configurations |
+| `settings` | object | Settings to merge into settings cascade |
+
+> **Note**: `mcpServer` field in channels should be `server`. MCP server config uses `command`/`args`/`env`, not `type`. Skills/agents/hooks paths support string or array only, not object format.
 
 ---
 

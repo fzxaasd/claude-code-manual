@@ -327,12 +327,12 @@ hooks/
 | 变量 | 说明 |
 |------|------|
 | `${PLUGIN_DIR}` | 插件根目录 |
-| `${CLAUDE_PLUGIN_ROOT}` | 插件安装根目录 (版本化) |
-| `${CLAUDE_PLUGIN_DATA}` | 插件数据目录 (持久化存储) |
 | `${SKILL_DIR}` | 技能目录 |
 | `${HOOK_DIR}` | Hooks 目录 |
 | `${AGENT_DIR}` | Agent 目录 |
 | `${COMMAND_DIR}` | Commands 目录 |
+| `${CLAUDE_PLUGIN_ROOT}` | 版本化的插件安装目录（更新时重建） |
+| `${CLAUDE_PLUGIN_DATA}` | 持久化数据目录（更新后保留） |
 | `${user_config.KEY}` | userConfig 中定义的变量 |
 
 ---

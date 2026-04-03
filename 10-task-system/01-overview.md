@@ -177,11 +177,42 @@ function isTodoV2Enabled(): boolean {
 
 Tasks V2 包含: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListTool`
 
+### 未文档化的任务工具
+
+#### TaskOutputTool
+
+获取任何后台任务的输出：
+
+```typescript
+interface TaskOutputToolInput {
+  task_id: string      // 任务 ID
+  block?: boolean      // 等待任务完成
+  timeout?: number     // 超时时间（秒）
+}
+```
+
+返回：`task_id, task_type, status, output, exitCode`
+
+#### TaskStopTool
+
+停止运行中的后台任务：
+
+```typescript
+interface TaskStopToolInput {
+  task_id?: string           // 任务 ID
+  shell_id?: string         // 已废弃，使用 task_id
+}
+```
+
+别名：`KillShell`（SDK 兼容性）
+
 ---
 
-## Cron 调度工具 ⭐ GA 功能
+## Cron 调度工具
 
 基于 `src/tools/ScheduleCronTool/` 深度分析。Crontab 定时任务工具。
+
+> **注意**：Cron 功能由 `tengu_kairos_cron` GrowthBook feature 控制（需要 `AGENT_TRIGGERS` feature 启用）。
 
 ### 概述
 

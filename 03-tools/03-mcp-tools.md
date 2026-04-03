@@ -88,7 +88,6 @@ export const TransportSchema = z.enum(['stdio', 'sse', 'sse-ide', 'http', 'ws', 
       },
       "oauth": {
         "clientId": "your-client-id",
-        "clientSecret": "${MCP_CLIENT_SECRET}",
         "authServerMetadataUrl": "https://auth.example.com/.well-known/openid-configuration",
         "callbackPort": 3000
       }
@@ -103,10 +102,11 @@ export const TransportSchema = z.enum(['stdio', 'sse', 'sse-ide', 'http', 'ws', 
 - `headersHelper` (可选): 辅助请求头文件路径
 - `oauth` (可选): OAuth 2.0 配置
   - `clientId`: OAuth 客户端 ID
-  - `clientSecret`: OAuth 客户端密钥
   - `authServerMetadataUrl`: OIDC 发现 URL
   - `callbackPort`: 回调端口
   - `xaa` (可选): 启用 XAA (SEP-990) 跨应用访问
+
+> **注意**: `clientSecret` 不在配置文件中，OAuth 客户端密钥通过 Keychain 存储。
 
 #### 3. sse-ide (IDE 专用)
 
