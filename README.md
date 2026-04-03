@@ -11,7 +11,7 @@
 本手册的所有内容均基于 [instructkr/claude-code](https://github.com/instructkr/claude-code) 开源项目的源码分析编写。
 
 特别感谢：
-- 本手册通过深度阅读源码目录，归纳总结出 40 篇文档
+- 本手册通过深度阅读源码目录，归纳总结出 45 篇文档
 - 所有技术细节均经过源码验证，确保准确性
 
 ---
@@ -180,7 +180,6 @@
 | [插件结构](./11-plugin-dev/02-structure.md) | 目录结构 | ✅ |
 | [插件 API](./11-plugin-dev/03-api.md) | API 参考 | ✅ |
 | [开发示例](./11-plugin-dev/04-examples.md) | 完整开发示例 | ✅ |
-| [团队规范插件设计](./11-plugin-dev/05-team-plugin-design.md) | 团队级规范插件完整方案 | ✅ |
 
 ---
 

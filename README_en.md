@@ -180,7 +180,6 @@ All documents are verified against source code:
 | [Plugin Structure](./11-plugin-dev/02-structure.md) | Directory structure | ✅ |
 | [Plugin API](./11-plugin-dev/03-api.md) | API reference | ✅ |
 | [Dev Examples](./11-plugin-dev/04-examples.md) | Complete examples | ✅ |
-| [Team Plugin Design](./11-plugin-dev/05-team-plugin-design.md) | Complete team plugin solution | ✅ |
 
 ---
 
