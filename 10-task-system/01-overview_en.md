@@ -87,6 +87,19 @@ export type TaskStateBase = {
   outputOffset: number    // Output offset
   notified: boolean       // Whether notification sent
 }
+
+// Tasks V2 TaskSchema (src/utils/tasks.ts)
+export type TaskSchema = {
+  id: string
+  subject: string
+  description: string
+  activeForm?: string     // Current action description
+  owner?: string          // Task owner
+  status: TaskStatus
+  blocks?: string[]       // Tasks blocked by this task
+  blockedBy?: string[]    // Tasks that block this task
+  metadata?: Record<string, unknown>  // Custom metadata
+}
 ```
 
 ---
@@ -148,7 +161,7 @@ const inputSchema = z.strictObject({
 
 ### Tasks V2 System (feature-gated)
 
-When `CLAUDE_CODE_ENABLE_TASKS=true` or in non-interactive sessions, TodoWriteTool is disabled and Tasks V2 is enabled:
+When `CLAUDE_CODE_ENABLE_TASKS=true` or in **interactive** sessions, Tasks V2 is enabled and TodoWriteTool is disabled:
 
 ```typescript
 // Source code src/utils/tasks.ts
@@ -156,9 +169,11 @@ function isTodoV2Enabled(): boolean {
   if (isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_TASKS)) {
     return true
   }
-  return !getIsNonInteractiveSession()
+  return !getIsNonInteractiveSession()  // Returns true in interactive sessions
 }
 ```
+
+**Note**: Tasks V2 is enabled in **interactive** sessions, disabled in non-interactive sessions (unless `CLAUDE_CODE_ENABLE_TASKS=true` is set).
 
 Tasks V2 includes: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListTool`
 
@@ -217,8 +232,10 @@ Teammates can only view/delete their own cron jobs (cross-session isolation).
 |-----------|-------|-------------|
 | `recurringFrac` | 0.1 (10%) | Recurring task jitter |
 | `recurringCapMs` | 15 minutes | Jitter cap |
+| `recurringMaxAgeMs` | 7 days | Maximum age for recurring tasks |
 | `oneShotMaxMs` | 90 seconds | Maximum advance for one-shot tasks |
-| one-shot | Random minutes | Random around :00/:30 |
+| `oneShotFloorMs` | 0 | Minimum delay for one-shot tasks |
+| `oneShotMinuteMod` | 30 | One-shot minute modulo (random around :00/:30) |
 
 ### Usage Examples
 

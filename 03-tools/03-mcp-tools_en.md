@@ -586,7 +586,8 @@ claude mcp get <server-name>
 claude mcp remove <server-name>
 claude mcp add <server-name> <command>
 
-# Note: claude mcp status, mcp debug, mcp reconnect commands do not exist
+# Reconnect specific server
+claude mcp reconnect <server-name>
 ```
 
 ### Tool Not Available

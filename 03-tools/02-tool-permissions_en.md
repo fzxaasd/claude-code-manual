@@ -99,8 +99,10 @@ Rules are grouped and managed by source:
 ### Source Priority
 
 ```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
+policySettings (highest) > flagSettings > localSettings > projectSettings > userSettings > pluginSettings (lowest)
 ```
+
+**Note**: Configurations are traversed from **lowest to highest priority**, later items override earlier ones.
 
 ### Execution Order
 

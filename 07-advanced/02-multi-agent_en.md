@@ -419,6 +419,102 @@ claude agents history <agent-id>
 
 ---
 
+## Undocumented Features
+
+### Complete TeamFile Structure
+
+Full `TeamFile` structure from source:
+
+```typescript
+type TeamFile = {
+  name: string
+  description?: string
+  createdAt: number
+  leadAgentId: string
+  leadSessionId?: string      // Leader's session UUID
+  hiddenPaneIds?: string[]    // Panes hidden from swarm UI
+  teamAllowedPaths?: TeamAllowedPath[]  // Paths all teammates can edit
+  members: Array<{
+    agentId: string
+    name: string
+    agentType?: string
+    model?: string
+    prompt?: string
+    color?: string
+    planModeRequired?: boolean
+    joinedAt: number
+    tmuxPaneId: string
+    cwd: string
+    worktreePath?: string    // Git worktree path
+    sessionId?: string       // Teammate's session UUID
+    subscriptions: string[]  // Topic subscription array
+    backendType?: BackendType  // 'tmux' | 'iterm2' | 'in-process'
+    isActive?: boolean      // false = idle
+    mode?: PermissionMode   // Current permission mode
+  }>
+}
+
+type TeamAllowedPath = {
+  path: string
+  toolName: string
+  addedBy: string
+  addedAt: number
+}
+```
+
+### Undocumented Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CLAUDE_CODE_TEAMMATE_COMMAND` | Override teammate spawn binary |
+| `CLAUDE_CODE_AGENT_COLOR` | Teammate's UI color |
+| `CLAUDE_CODE_PLAN_MODE_REQUIRED` | Require teammate to use plan mode |
+| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | Enable agent teams (external users need this) |
+| `--agent-teams` | CLI flag for opt-in |
+
+### BackendType Execution Backends
+
+3 execution modes:
+- `in-process`: Uses AsyncLocalStorage in same Node.js process
+- `tmux`: Uses tmux panes
+- `iterm2`: Uses native iTerm2 split panes
+
+### Teammate Mode Selection
+
+`teammateMode` setting:
+```typescript
+teammateMode: 'auto' | 'tmux' | 'in-process'
+```
+
+### Structured Message Protocol
+
+Message types supported by Mailbox:
+
+| Message Type | Description |
+|-------------|-------------|
+| `idle_notification` | Sent when teammate becomes idle |
+| `permission_request/response` | Tool permission bridging |
+| `sandbox_permission_request/response` | Network access requests |
+| `shutdown_request/approved/rejected` | Graceful shutdown |
+| `plan_approval_request/response` | Plan mode approval |
+| `task_assignment` | Task delegation |
+| `team_permission_update` | Broadcast permission changes |
+| `mode_set_request` | Change teammate permission mode |
+
+### Auto-registration
+
+Spawning a teammate without `TeamCreate` automatically sets up leader as team lead.
+
+### Color Assignment
+
+Agents get deterministic colors via `assignTeammateColor()`.
+
+### Hook Conversion
+
+For agents, `Stop` hooks are automatically converted to `SubagentStop` hooks.
+
+---
+
 ## Template Configuration
 
 ### Quick Start Template

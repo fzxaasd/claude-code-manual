@@ -540,6 +540,13 @@ The Claude Code Hook system provides 27 lifecycle hooks, allowing custom logic t
 }
 ```
 
+**Response Options**:
+```typescript
+{
+  watchPaths?: string[]  // Dynamic watch path configuration
+}
+```
+
 **Use Cases**: Environment variable injection, path updates
 
 ---
@@ -556,6 +563,13 @@ The Claude Code Hook system provides 27 lifecycle hooks, allowing custom logic t
   session_id: string,
   transcript_path: string,
   cwd: string
+}
+```
+
+**Response Options**:
+```typescript
+{
+  watchPaths?: string[]  // Dynamic watch path configuration
 }
 ```
 
@@ -630,7 +644,7 @@ The Claude Code Hook system provides 27 lifecycle hooks, allowing custom logic t
 |-----------|----------|------------------|
 | 0 | Success/Continue | All Hooks |
 | 1 | Non-blocking error | All Hooks |
-| 2 | Blocking error | PreToolUse, Stop, SubagentStop, PreCompact, ConfigChange |
+| 2 | Blocking error | PreToolUse, Stop, SubagentStop, PreCompact, ConfigChange, TeammateIdle, TaskCreated, TaskCompleted |
 
 ### Basic Hook Input
 
@@ -726,6 +740,66 @@ Using HTTP Hooks for these events will be ignored.
 | `asyncRewake` | boolean | Wake model when async hook errors (implies async) |
 | `if` | string | Permission rule syntax condition |
 | `timeout` | number | Timeout in seconds |
+
+---
+
+## Undocumented Features
+
+### PostToolUse updatedMCPToolOutput
+
+PostToolUse Hook can return `updatedMCPToolOutput` to modify MCP tool output:
+
+```typescript
+{
+  hookEventName: "PostToolUse",
+  updatedMCPToolOutput: unknown  // Replace tool's original output
+}
+```
+
+### WorktreeCreate worktreePath
+
+WorktreeCreate Hook can return `worktreePath` to specify the worktree directory path:
+
+```typescript
+{
+  hookEventName: "WorktreeCreate",
+  worktreePath: string  // Absolute path to the worktree
+}
+```
+
+### PermissionDenied retry
+
+PermissionDenied Hook can return `retry: true` to retry the denied operation:
+
+```typescript
+{
+  hookEventName: "PermissionDenied",
+  retry: boolean  // Retry the denied operation
+}
+```
+
+### ConfigChange source Values
+
+ConfigChange Hook's `source` field supports these values:
+
+```typescript
+source: "user_settings" | "project_settings" | "local_settings" | "policy_settings" | "skills"
+```
+
+**Note**: When `source` is `policy_settings`, even if the Hook returns a blocking result, it will be ignored (enterprise policies cannot be blocked).
+
+**Note**: `cli_args` and `env` are NOT valid ConfigChange source values.
+
+### InstructionsLoaded Cannot Block
+
+InstructionsLoaded Hook is a read-only hook that does not support blocking operations:
+
+```typescript
+/**
+ * Fire-and-forget — this hook is for observability/audit only
+ * and does not support blocking.
+ */
+```
 
 ---
 

@@ -90,7 +90,7 @@ paths:
   - "*.tsx"
   - "*.js"
   - "*.jsx"
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
@@ -150,7 +150,8 @@ version: "1.0.0"
 name: code-reviewer
 description: 专业的代码审查 Agent
 model: sonnet
-allowed_tools:
+effort: medium
+tools:
   - Read
   - Glob
   - Grep
@@ -158,11 +159,30 @@ allowed_tools:
   - Bash(npm test)
   - Bash(git diff)
   - Bash(git log)
-disallowed_tools:
+disallowedTools:
   - Bash(rm -rf *)
   - Bash(sudo *)
   - Write(/etc/**)
-system_prompt: 你是一个资深的代码审查专家，专注于：
+maxTurns: 50
+memory: project
+skills:
+  - code-review
+  - security-check
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${HOOK_DIR}/security-check.sh"
+          timeout: 5
+color: blue
+---
+
+# 代码审查专家 Agent
+
+此 Agent 专注于代码质量和安全审查。
+
+我是一个资深的代码审查专家，专注于：
 
 1. **安全性审查**
    - 识别 SQL 注入、XSS、CSRF 等安全漏洞
@@ -185,11 +205,6 @@ system_prompt: 你是一个资深的代码审查专家，专注于：
    - 适当的错误处理
 
 请给出具体的改进建议和代码示例。
----
-
-# 代码审查专家 Agent
-
-此 Agent 专注于代码质量和安全审查。
 ```
 
 ---

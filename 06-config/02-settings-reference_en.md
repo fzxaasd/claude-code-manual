@@ -400,13 +400,12 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 **sshConfigs structure**:
 ```typescript
 {
-  name: string,           // Configuration name
-  host: string,           // SSH host
-  port?: number,          // SSH port, default 22
-  user?: string,          // SSH user
-  identityFile?: string,  // SSH private key path
-  jumpHost?: string,      // Jump host / bastion
-  timeout?: number,       // Connection timeout (ms)
+  id: string,                   // Unique identifier
+  name: string,                 // Configuration name
+  sshHost: string,              // SSH host
+  sshPort?: number,             // SSH port, default 22
+  sshIdentityFile?: string,      // SSH private key path
+  startDirectory?: string,       // Start directory
 }
 ```
 

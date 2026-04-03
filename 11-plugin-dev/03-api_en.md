@@ -83,9 +83,10 @@ interface AgentDefinition {
   name: string              // frontmatter: name
   description: string       // frontmatter: description
   model?: string            // frontmatter: model
-  allowed_tools?: string[]  // frontmatter: allowed_tools
-  disallowed_tools?: string[] // frontmatter: disallowed_tools
-  system_prompt?: string     // frontmatter: system_prompt
+  tools?: string[]          // frontmatter: tools
+  disallowedTools?: string[] // frontmatter: disallowedTools
+  // Note: system_prompt is NOT a frontmatter field!
+  // System prompt comes from markdown body content (not frontmatter system_prompt)
 }
 ```
 
@@ -96,20 +97,21 @@ interface AgentDefinition {
 name: reviewer
 description: Code review Agent
 model: sonnet
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
   - Bash(git *)
-disallowed_tools:
+disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-system_prompt: You are a strict code reviewer...
 ---
 
 # Code Review Agent
 
 Agent detailed description and usage guide.
+
+This content will be used as the system prompt.
 ```
 
 ---

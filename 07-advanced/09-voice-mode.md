@@ -108,10 +108,12 @@ function isVoiceGrowthBookEnabled(): boolean {
 - 事件追踪：`focusTriggered`、`silenceTimedOut`、`focusFlushedChars`
 
 **Hold-to-talk 检测细节**：
-- 第一次按键即开始录音（无延迟）
-- 使用 auto-repeat 检测控制释放计时器
+- **Bare-char 绑定** (如 space): 需要 5 次快速按键才激活 (`HOLD_THRESHOLD = 5`)
+  - 120ms 内按键算快速连续 (`RAPID_KEY_GAP_MS = 120`)
+  - 第 2 次按键后显示 "keep holding..." (`WARMUP_THRESHOLD = 2`)
+- **修饰键组合** (如 `meta+k`): 第一次按键即激活，有 2s 超时 (`MODIFIER_FIRST_PRESS_FALLBACK_MS = 2000`)
 - 释放超时 200ms (`RELEASE_TIMEOUT_MS = 200`)
-- 修饰键组合直接激活，无需按键次数检测
+- 支持全角空格 (CJK IME) 识别为 space
 
 ### 按键配置
 
@@ -142,7 +144,9 @@ function isVoiceGrowthBookEnabled(): boolean {
 
 ### STT 服务
 
-使用 Deepgram Nova 3 模型 (`deepgram-nova3`) 进行语音识别。
+使用 Deepgram 进行语音识别。
+
+**Nova 3 模型**: 由 GrowthBook feature `tengu_cobalt_frost` 控制，非默认启用。
 
 **关键字增强**：自动向 STT 发送编程术语（MCP, symlink, grep, regex 等）、项目名称、git 分支、近期文件名作为提示词。
 
@@ -203,6 +207,14 @@ Focus 模式下每个 final transcript 立即注入（非累积）。
 ### Remote Session 检测
 
 检测 `CLAUDE_CODE_REMOTE` 环境变量，自动禁用语音。
+
+### Homespace 环境检测
+
+`isRunningOnHomespace()` 函数检测是否运行在 Homespace（Ant 内部云环境），自动禁用语音录制功能。
+
+### 语言提示计数器
+
+`voiceLangHintShownCount` 和 `voiceLangHintLastLanguage` 跟踪语言提示显示次数，提示最多显示 `LANG_HINT_MAX_SHOWS` 次。
 
 ### Linux 音频实现
 

@@ -926,3 +926,132 @@ ls ~/.claude/teams/
 # View team config
 cat ~/.claude/teams/{team-name}/config.json
 ```
+
+---
+
+## Undocumented Features
+
+### Mailbox Message Structure
+
+```typescript
+interface TeammateMessage {
+  from: string
+  text: string
+  timestamp: string
+  read: boolean              // Whether message has been read
+  color?: string             // Teammate color
+  summary?: string           // 5-10 word preview summary
+}
+```
+
+### File Locking Mechanism
+
+Mailbox uses proper-lockfile for concurrent access:
+```typescript
+const LOCK_OPTIONS = {
+  retries: {
+    retries: 10,
+    minTimeout: 5,
+    maxTimeout: 100,
+  },
+}
+```
+
+### SendMessage Internal Routing
+
+**UDS_INBOX Feature Flag**:
+```typescript
+// Conditionally includes uds: addressing
+'Recipient: teammate name, "*" for broadcast, "uds:<socket-path>" for a local peer, or "bridge:<session-id>" for a Remote Control peer'
+```
+
+**In-Process Agent Direct Routing**:
+```typescript
+// If target is in same process, route directly without mailbox
+if (typeof input.message === 'string' && input.to !== '*') {
+  const registered = appState.agentNameRegistry.get(input.to)
+  // Route directly to in-process teammate
+}
+```
+
+### InboxPoller Priority Mechanism
+
+Poll interval is fixed at 1000ms (1 second).
+
+**Message Processing Priority Order**:
+1. Permission Requests - Leader routes to ToolUseConfirmQueue
+2. Permission Responses - Worker executes callbacks
+3. Sandbox Permission Requests - Leader routes to workerSandboxPermissions
+4. Sandbox Permission Responses - Worker executes callbacks
+5. Team Permission Updates - Worker applies permission updates
+6. Mode Set Requests - Worker changes mode and syncs to config.json
+7. Plan Approval Requests - Leader auto-approves and writes response
+8. Shutdown Requests - Teammate side passes through to UI
+9. Shutdown Approvals - Leader kills pane and removes from team
+10. Regular Messages - Submit immediately when idle, queue when busy
+
+### agentNameRegistry
+
+Mechanism for SendMessage to route by name instead of full agentId:
+```typescript
+// AppStateStore.ts
+agentNameRegistry: Map<string, AgentId>
+```
+
+### parseAddress Supported Prefixes
+
+```typescript
+type AddressScheme = 'uds' | 'bridge' | 'other'
+
+// Supported prefix formats:
+// "uds:<socket-path>" - Unix Domain Socket
+// "bridge:<session-id>" - Remote Control peer
+// "/<path>" - Legacy UDS format (no prefix)
+```
+
+### TeammateExecutor Interface
+
+Interface that abstracts teammate lifecycle operations:
+```typescript
+interface TeammateExecutor {
+  readonly type: BackendType
+  isAvailable(): Promise<boolean>
+  spawn(config: TeammateSpawnConfig): Promise<TeammateSpawnResult>
+  sendMessage(agentId: string, message: TeammateMessage): Promise<void>
+  terminate(agentId: string, reason?: string): Promise<boolean>
+  kill(agentId: string): Promise<boolean>
+  isActive(agentId: string): Promise<boolean>
+}
+```
+
+### TeamMemorySync Service
+
+Complete team memory bidirectional sync service:
+- Sync between local filesystem and server
+- Secret scanning (PSR M22174)
+- Conflict resolution with retry
+- ETag conditional requests
+- Batch upload size limits
+- Requires OAuth authentication
+
+### TeammateLayoutManager
+
+Feature for managing teammate pane layouts (undocumented).
+
+### Reconnection System
+
+Teammate reconnection handling mechanism (undocumented).
+
+### Mailbox Class (In-Memory)
+
+In-memory message queue for in-process teammates:
+```typescript
+class Mailbox {
+  private queue: Message[]
+  private waiters: Waiter[]
+  send(msg: Message): void
+  poll(fn: (msg: Message) => boolean = () => true): Message | undefined
+  receive(fn: (msg: Message) => boolean = () => true): Promise<Message>
+  subscribe = this.changed.subscribe
+}
+```

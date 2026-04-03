@@ -25,37 +25,32 @@ Claude Code has 6 configuration sources:
 
 ## Priority Rules for Different Configuration Types
 
-### 1. Hooks Priority
+**Note**: Source `SETTING_SOURCES` array iterates from **lowest to highest priority**, later items override earlier ones.
+
+All configuration types (Hooks, Permissions, General Settings) use the same priority order:
 
 ```
-policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+pluginSettings (lowest) → userSettings → projectSettings → localSettings → flagSettings → policySettings (highest)
 ```
 
-**Characteristics**: Policy and flag settings have the highest priority.
+### Special Notes
 
-### 2. Permissions Priority
+1. **Permissions Configuration**
+   - `projectSettings` is intentionally excluded from `autoMode` config (malicious project injection prevention)
+   - When `allowManagedPermissionRulesOnly` is enabled, only policySettings is used
 
-```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
-```
+2. **Hooks Configuration**
+   - Arrays use "concat-dedupe" merge strategy (concatenate then deduplicate)
 
-**Characteristics**: User settings have the highest priority (user autonomy takes precedence).
-
-### 3. Skills Priority
-
-```
-policySettings > userSettings > projectSettings > bundled > plugin
-```
-
-**Characteristics**: Bundled skills have higher priority than plugin skills.
+3. **autoMode Configuration**
+   - Only uses `userSettings`, `localSettings`, `flagSettings`, `policySettings`
+   - Excludes `projectSettings` (security reason)
 
 ### 4. General Settings Priority
 
 ```
-policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+pluginSettings (lowest base) → userSettings → projectSettings → localSettings → flagSettings → policySettings (highest)
 ```
-
-**Characteristics**: Policy settings have the highest priority.
 
 ---
 
@@ -201,11 +196,15 @@ deny > allow  // deny rules always take precedence
 
 ### Permission Configuration Load Priority
 
+All configurations use the same priority order:
+
 ```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
+pluginSettings → userSettings → projectSettings → localSettings → flagSettings → policySettings
 ```
 
-**Note**: User settings have the highest priority (user autonomy takes precedence), and policy settings have the lowest priority (cannot override user choices).
+**Note**:
+- `projectSettings` is excluded from `autoMode` config (security reason)
+- When `allowManagedPermissionRulesOnly` is enabled, only policySettings is used
 
 ### Example
 

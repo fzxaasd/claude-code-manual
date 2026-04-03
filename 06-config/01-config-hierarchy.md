@@ -25,37 +25,32 @@ Claude Code 有 6 种配置来源：
 
 ## 不同配置类型的优先级规则
 
-### 1. Hooks 优先级
+**注意**: 源码 `SETTING_SOURCES` 数组是从**低优先级到高优先级**遍历，后面的覆盖前面的。
+
+所有配置类型（Hooks、Permissions、General Settings）使用相同的优先级顺序：
 
 ```
-policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+pluginSettings (最低) → userSettings → projectSettings → localSettings → flagSettings → policySettings (最高)
 ```
 
-**特点**：policy 和 flag 设置优先级最高。
+### 特殊说明
 
-### 2. Permissions 优先级
+1. **Permissions 权限配置**
+   - `projectSettings` 出于安全原因被排除在 `autoMode` 配置之外（防止恶意项目注入）
+   - 当 `allowManagedPermissionRulesOnly` 开启时，仅使用 policySettings
 
-```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
-```
+2. **Hooks 配置**
+   - 数组使用"concat-dedupe"合并策略（拼接后去重）
 
-**特点**：user 设置优先级最高（用户自主权优先）。
-
-### 3. Skills 优先级
-
-```
-policySettings > userSettings > projectSettings > bundled > plugin
-```
-
-**特点**：bundled skills 优先级高于 plugin skills。
+3. **autoMode 配置**
+   - 仅使用 `userSettings`、`localSettings`、`flagSettings`、`policySettings`
+   - 排除 `projectSettings`（安全原因）
 
 ### 4. General Settings 优先级
 
 ```
-policySettings > flagSettings > localSettings > projectSettings > userSettings > pluginSettings
+pluginSettings (最低基础层) → userSettings → projectSettings → localSettings → flagSettings → policySettings (最高)
 ```
-
-**特点**：policy 设置优先级最高。
 
 ---
 
@@ -201,11 +196,15 @@ deny > allow  // deny 规则总是优先
 
 ### 权限配置的加载优先级
 
+所有配置使用相同的优先级顺序：
+
 ```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
+pluginSettings → userSettings → projectSettings → localSettings → flagSettings → policySettings
 ```
 
-**注意**：用户设置优先级最高（用户自主权优先），policy 设置优先级最低（不能覆盖用户选择）。
+**注意**：
+- `projectSettings` 被排除在 `autoMode` 配置之外（安全原因）
+- 当 `allowManagedPermissionRulesOnly` 开启时，仅使用 policySettings
 
 ### 示例
 

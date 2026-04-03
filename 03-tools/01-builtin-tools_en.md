@@ -24,7 +24,7 @@ Claude Code's tool system consists of **core tools** and **conditional tools**.
 | AskUserQuestionTool | AskUserQuestionTool | Ask user questions |
 | SkillTool | SkillTool | Invoke skills |
 | ExitPlanModeV2Tool | ExitPlanModeV2Tool | Exit plan mode |
-| BriefTool | BriefTool | Summary generation |
+| SendUserMessageTool | SendUserMessageTool | Send message to user |
 | ListMcpResourcesTool | ListMcpResourcesTool | List MCP resources |
 | ReadMcpResourceTool | ReadMcpResourceTool | Read MCP resources |
 
@@ -36,7 +36,6 @@ The following tools are only available when `USER_TYPE === 'ant'`:
 
 | Tool | Class Name | Description |
 |------|------------|-------------|
-| EnterPlanModeTool | EnterPlanModeTool | Enter plan mode |
 | ConfigTool | ConfigTool | Configuration management |
 | TungstenTool | TungstenTool | Tungsten tool |
 | REPLTool | REPLTool | REPL execution environment |
@@ -52,7 +51,7 @@ The following tools are only available when `USER_TYPE === 'ant'`:
 | EnterWorktreeTool | isWorktreeModeEnabled() | Enter worktree |
 | ExitWorktreeTool | isWorktreeModeEnabled() | Exit worktree |
 | ToolSearchTool | isToolSearchEnabledOptimistic() | Tool search |
-| SendMessageTool | COORDINATOR_MODE feature | Send message (coordinator mode) |
+| SendMessageTool | Always included | Send message (Team mode) |
 | LSPTool | ENABLE_LSP_TOOL environment variable | LSP language service |
 | TeamCreateTool | isAgentSwarmsEnabled() | Create team |
 | TeamDeleteTool | isAgentSwarmsEnabled() | Delete team |
@@ -263,10 +262,11 @@ Shell command execution tool.
 **Input parameters**:
 ```typescript
 interface BashInput {
-  command: string           // Command to execute
-  timeout?: number         // Timeout in milliseconds
-  current_dir?: string     // Working directory
-  bg?: boolean             // Run in background
+  command: string                       // Command to execute
+  timeout?: number                     // Timeout in milliseconds
+  description?: string                 // Command description (for logging)
+  run_in_background?: boolean        // Run in background (not bg)
+  dangerouslyDisableSandbox?: boolean // Disable sandbox
 }
 ```
 
@@ -342,7 +342,7 @@ File pattern matching.
 ```typescript
 interface GlobInput {
   pattern: string          // Glob pattern
-  cwd?: string             // Search directory
+  path?: string           // Search directory (not cwd)
 }
 ```
 
@@ -366,10 +366,18 @@ Regular expression search.
 ```typescript
 interface GrepInput {
   pattern: string          // Regular expression
-  path?: string            // Search path
-  "-n"?: boolean           // Show line numbers
-  "-i"?: boolean           // Case insensitive
-  "-C"?: number           // Context lines
+  path?: string           // Search path
+  glob?: string           // Filename filter pattern
+  "-n"?: boolean          // Show line numbers
+  "-i"?: boolean          // Case insensitive
+  "-C"?: number          // Context lines
+  "-B"?: number          // Lines before match
+  "-A"?: number          // Lines after match
+  context?: number        // Alias for -C
+  type?: string            // File type filter (e.g., "js", "py")
+  head_limit?: number     // Limit result count
+  offset?: number         // Skip results
+  multiline?: boolean     // Multiline mode
   output_mode?: 'content' | 'files_with_matches' | 'count'
 }
 ```
@@ -399,8 +407,9 @@ Web search.
 **Input parameters**:
 ```typescript
 interface WebSearchInput {
-  query: string            // Search query
-  source?: 'news' | 'reddit' | 'wikipedia'
+  query: string                       // Search query
+  allowed_domains?: string[]          // Restrict to domains
+  blocked_domains?: string[]         // Exclude domains
 }
 ```
 
@@ -413,9 +422,16 @@ Invoke sub-agent.
 **Input parameters**:
 ```typescript
 interface AgentInput {
-  name: string             // Agent name
-  prompt?: string          // Task description
-  subagent_type?: string   // Agent type
+  description: string                  // Agent description (required, 3-5 words)
+  prompt: string                      // Task description (required)
+  subagent_type?: string             // Agent type
+  model?: 'sonnet' | 'opus' | 'haiku' // Specify model
+  run_in_background?: boolean        // Run in background
+  // Multi-agent mode parameters
+  name?: string                      // Agent instance name
+  team_name?: string                 // Team name
+  mode?: PermissionMode              // Permission mode
+  isolation?: 'worktree'             // Isolation mode
 }
 ```
 
@@ -620,6 +636,90 @@ The following features exist in source code but are not covered in the main docu
 | Structured messages | `shutdown_request`, `shutdown_response` |
 | Cross-session | UDS/bridge messaging |
 | Auto-resume | Stopped agents auto-resume |
+
+---
+
+## Undocumented Tools
+
+The following tools exist in source code but are not documented:
+
+| Tool Name | Feature Gate | Description |
+|---------|-------------|-------------|
+| `PowerShellTool` | PowerShell available | PowerShell execution |
+| `SnipTool` | `HISTORY_SNIP` | History snippet tool |
+| `MonitorTool` | `MONITOR_TOOL` | Monitoring tool |
+| `SendUserFileTool` | `KAIROS` | Send user file |
+| `PushNotificationTool` | `KAIROS_PUSH_NOTIFICATION` | Push notifications |
+| `SubscribePRTool` | `KAIROS_GITHUB_WEBHOOKS` | PR subscription |
+| `RemoteTriggerTool` | `AGENT_TRIGGERS_REMOTE` | Remote trigger management |
+| `ListPeersTool` | `UDS_INBOX` | List UDS peers |
+| `CtxInspectTool` | `CONTEXT_COLLAPSE` | Context inspection |
+| `TerminalCaptureTool` | `TERMINAL_PANEL` | Terminal capture |
+| `VerifyPlanExecutionTool` | `CLAUDE_CODE_VERIFY_PLAN=true` | Plan verification |
+| `MCPTool` | MCP tools | MCP tool wrapper |
+| `McpAuthTool` | MCP auth | MCP authentication |
+
+---
+
+## Undocumented Tool Parameters
+
+### BashTool Additional Parameters
+
+```typescript
+{
+  command: string,
+  timeout?: number,
+  description?: string,              // Command description for logging
+  run_in_background?: boolean,        // Background execution
+  dangerouslyDisableSandbox?: boolean,
+}
+```
+
+### AgentTool Runtime Parameters
+
+```typescript
+{
+  description: string,
+  prompt: string,
+  subagent_type?: string,
+  model?: 'sonnet' | 'opus' | 'haiku',  // model override for THIS call
+  run_in_background?: boolean,
+  name?: string,           // teammate name
+  team_name?: string,      // team name
+  mode?: PermissionMode,   // spawn permission mode
+  isolation?: 'worktree' | 'remote',  // isolation mode
+  cwd?: string,            // KAIROS only
+}
+```
+
+### SendMessageTool Routing Prefixes
+
+```typescript
+// Supported prefix formats:
+// "uds:<socket-path>" - Unix Domain Socket
+// "bridge:<session-id>" - Remote Control peer
+// "team-lead" - Team leader
+```
+
+### TaskOutputTool Parameters
+
+```typescript
+{
+  task_id: string,
+  block?: boolean,        // default true
+  timeout?: number,       // default 30000ms, max 600000ms
+}
+```
+
+### SkillTool Output Types
+
+```typescript
+// inline response
+{ success: true, commandName: string, allowedTools?: string[], model?: string, status: 'inline' }
+
+// forked response
+{ success: true, commandName: string, status: 'forked', agentId: string, result: unknown }
+```
 
 ---
 

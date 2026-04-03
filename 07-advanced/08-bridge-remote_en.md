@@ -692,6 +692,118 @@ Options:
 
 ---
 
+## Bridge vs Remote System Differences
+
+Two remote-related systems exist in the source code:
+
+| Feature | Bridge (src/bridge/) | Remote (src/remote/) |
+|---------|---------------------|---------------------|
+| **Purpose** | CCR Remote Control (bridge) | Remote Session Manager |
+| **Protocol** | SSE + HTTP PUT | WebSocket (`/v1/sessions/ws/{id}/subscribe`) |
+| **Direction** | claude.ai → local REPL | Generic WebSocket session subscription |
+| **Auth** | OAuth + Trusted Device Token | Token-based |
+| **Entry** | `claude remote-control` | RemoteSessionManager |
+
+### RemoteSessionManager Overview
+
+Based on `src/remote/RemoteSessionManager.ts`:
+
+```typescript
+export class RemoteSessionManager {
+  // WebSocket connection management
+  subscribe(sessionId: string): Promise<void>
+  unsubscribe(): void
+
+  // Session status
+  getStatus(): SessionStatus
+  onStatusChange(callback: (status: SessionStatus) => void): void
+}
+```
+
+**Use case**: Remote viewing/interacting with sessions via WebSocket subscription.
+
+---
+
+## Undocumented Features
+
+### Undocumented GrowthBook Features
+
+| Feature Key | Description |
+|-------------|-------------|
+| `tengu_bridge_initial_history_cap` | Max initial messages to replay (default 200) |
+| `tengu_cobalt_harbor` | CCR auto-connect default (ant-only) |
+| `tengu_ccr_bridge_multi_session` | Multiple sessions per environment |
+| `tengu_ccr_bridge_multi_environment` | Multiple environments per host:dir |
+
+### Undocumented Environment Variables
+
+| Variable | Scope | Description |
+|----------|-------|-------------|
+| `CLAUDE_BRIDGE_SESSION_INGRESS_URL` | Ant-only | Override session ingress URL |
+| `CLAUDE_CODE_SESSION_ACCESS_TOKEN` | Process-wide | Single-session OAuth token fallback |
+| `CLAUDE_TRUSTED_DEVICE_TOKEN` | Testing | Override trusted device token |
+| `CLAUDE_BRIDGE_USE_CCR_V2` | CCR v2 | Force CCR v2 transport in standalone bridge |
+
+### heartbeatWork Response Fields
+
+Undocumented response fields:
+```typescript
+{
+  lease_extended: boolean,
+  state: string,
+  last_heartbeat: string,    // ISO timestamp
+  ttl_seconds: number         // remaining TTL
+}
+```
+
+### BridgeState Type
+
+```typescript
+export type BridgeState = 'ready' | 'connected' | 'reconnecting' | 'failed'
+```
+
+### Essential Traffic Check
+
+Trusted Device Token enrollment is gated by `isEssentialTrafficOnly()` check - skips enrollment in essential traffic mode.
+
+### Fault Injection System (Ant-only)
+
+Development features for manually testing bridge recovery paths:
+- `/bridge-kick <subcommand>` slash command
+- `injectFault()` - Queue faults for testing
+- `fireClose()` - Test ws_closed → reconnect escalation
+- `forceReconnect()` - Trigger reconnectEnvironmentWithSession
+
+### Session ID Compatibility Layer
+
+```typescript
+toCompatSessionId(cse_* → session_*)  // v1 compat API
+toInfraSessionId(session_* → cse_*)  // infrastructure layer calls
+setCseShimGate()  // Dynamic kill switch injection
+```
+
+### Token Refresh Scheduler
+
+```typescript
+scheduleFromExpiresIn()  // Schedule refresh using explicit TTL
+cancel() / cancelAll()   // Cancel scheduled refreshes
+```
+
+### CCRClient Constants
+
+```typescript
+MAX_CONSECUTIVE_AUTH_FAILURES = 10  // Auth failure threshold before giving up
+STREAM_EVENT_FLUSH_INTERVAL_MS = 100  // Text delta batching window
+```
+
+### OAuth 401 Retry Logic
+
+```typescript
+withOAuthRetry()  // Attempts token refresh on 401
+```
+
+---
+
 ## Comparison with Legacy Documentation
 
 ### Removed Fictional Content

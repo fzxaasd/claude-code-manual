@@ -586,7 +586,8 @@ claude mcp get <server-name>
 claude mcp remove <server-name>
 claude mcp add <server-name> <command>
 
-# 注意: claude mcp status、mcp debug、mcp reconnect 命令不存在
+# 重新连接特定服务器
+claude mcp reconnect <server-name>
 ```
 
 ### 工具不可用

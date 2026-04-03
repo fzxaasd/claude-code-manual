@@ -267,7 +267,7 @@ memory/
 
 ---
 
-## 信任 Memory 中的信息
+## 在推荐前验证 Memory
 
 基于 `TRUSTING_RECALL_SECTION` (`memoryTypes.ts:240-256`)：
 
@@ -286,6 +286,52 @@ Memory 中提到的具体 function、file、flag 是**声明**，不是事实：
 Memory 总结的 repo 状态（如活动日志、架构快照）是**时间冻结**的。
 
 如果用户问"最近的"或"当前的"状态，优先使用 `git log` 或读代码，而不是回忆快照。
+
+---
+
+## Memory 类型值
+
+基于 `MEMORY_TYPE_VALUES` (`memoryTypes.ts`):
+
+```typescript
+export const MEMORY_TYPE_VALUES = [
+  'User',
+  'Project',
+  'Local',
+  'Managed',
+  'AutoMem',
+  ...(feature('TEAMMEM') ? (['TeamMem'] as const) : []),
+] as const
+```
+
+| 类型 | 说明 |
+|------|------|
+| User | 用户级别记忆 |
+| Project | 项目级别记忆 |
+| Local | 本机专用记忆 |
+| Managed | 管理级别记忆 |
+| AutoMem | 自动记忆 |
+| TeamMem | 团队记忆（需 TEAMMEM feature） |
+
+---
+
+## Session Memory 配置
+
+基于 `src/services/SessionMemory/sessionMemoryUtils.ts`:
+
+### 触发阈值
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `minimumMessageTokensToInit` | 10000 | 初始化所需的最小 token 数 |
+| `minimumTokensBetweenUpdate` | 5000 | 更新之间的最小 token 数 |
+| `toolCallsBetweenUpdates` | 3 | 更新之间的最小工具调用数 |
+
+**重要规则**: `minimumTokensBetweenUpdate` 阈值**始终必需**，即使其他条件满足。
+
+### 手动触发
+
+`/summary` 命令可手动触发 session memory 提取，绕过阈值检查。
 
 ---
 
@@ -468,6 +514,77 @@ isAutoMemoryEnabled()         // 需要自动记忆启用
 isTeamMemoryEnabled()          // 'tengu_herring_clock' 功能标志
 isUsingOAuth()                 // 需要第一方 OAuth 认证
 ```
+
+---
+
+## 未文档化的功能
+
+### autoMemoryDirectory 安全限制
+
+**重要**: `.claude/settings.json` (projectSettings) **不能**设置 `autoMemoryDirectory`，因为恶意仓库可能设置 `autoMemoryDirectory: "~/.ssh"` 来获取静默写权限。只有 policy、flag、local 和 user settings 可以配置此目录。
+
+### CLAUDE_CODE_DISABLE_AUTO_MEMORY 行为
+
+`CLAUDE_CODE_DISABLE_AUTO_MEMORY` 的值有特殊行为：
+- `=1` 或 `=true`: 禁用自动记忆
+- `=0` 或 `=false`: **强制启用**自动记忆（忽略其他设置）
+- 未设置: 使用默认行为
+
+### Agent Memory Snapshots
+
+Agent Memory 有完整的快照同步系统，用于跨机器同步 agent memory：
+- 快照存储在 `.claude/agent-memory-snapshots/<agentType>/`
+- `checkAgentMemorySnapshot()` - 检查快照
+- `initializeFromSnapshot()` - 从快照初始化
+- `replaceFromSnapshot()` - 替换为快照
+- `markSnapshotSynced()` - 标记已同步
+
+### autoDream 锁机制
+
+autoDream 使用文件锁防止并发冲突：
+- 锁文件位置: `<memoryDir>/.consolidate-lock`
+- PID-based 锁
+- 1 小时过期保护 (`HOLDER_STALE_MS = 60 * 60 * 1000`)
+- 失败时支持锁回滚
+
+### Session Memory
+
+Session Memory 是与 Auto Memory 完全独立的系统：
+- 在 `<sessionMemoryDir>/session-memory.md` 维护当前会话的笔记
+- 运行在分叉的 subagent 上
+- 使用 `tengu_sm_config` GrowthBook feature 的阈值
+- 默认值: `minimumMessageTokensToInit: 10000`, `minimumTokensBetweenUpdate: 5000`, `toolCallsBetweenUpdates: 3`
+
+### Memory Shape Telemetry
+
+通过 `MEMORY_SHAPE_TELEMETRY` feature flag 启用，记录 memory recall 模式。
+
+### 其他 Secret 扫描规则
+
+除了文档列出的规则外，还有以下未文档化的扫描规则：
+
+| 规则名 | 匹配模式 |
+|--------|----------|
+| `azure-ad-client-secret` | Azure AD 客户端密钥 |
+| `digitalocean-pat` | DigitalOcean PAT |
+| `digitalocean-access-token` | DigitalOcean Access Token |
+| `anthropic-admin-api-key` | Admin API Keys (`sk-ant-admin01-*`) |
+| `github-app-token` | GitHub App Tokens (`ghu_*`, `ghs_*`) |
+| `github-oauth` | OAuth Tokens (`gho_*`) |
+| `github-refresh-token` | Refresh Tokens (`ghr_*`) |
+| `gitlab-pat` | GitLab PAT |
+| `gitlab-deploy-token` | GitLab Deploy Token |
+| `twilio-api-key` | Twilio API Keys |
+| `databricks-api-token` | Databricks Tokens |
+| `hashicorp-tf-api-token` | Terraform Cloud Tokens |
+| `pulumi-api-token` | Pulumi Tokens |
+| `postman-api-token` | Postman API Keys |
+| `grafana-cloud-api-token` | Grafana Cloud Tokens |
+| `grafana-service-account-token` | Grafana Service Account Tokens |
+| `sentry-org-token` | Sentry Organization Tokens |
+| `stripe-access-token` | Stripe Keys (`sk_*`, `rk_*`) |
+| `shopify-access-token` | Shopify Access Tokens |
+| `shopify-shared-secret` | Shopify Shared Secrets |
 
 ---
 

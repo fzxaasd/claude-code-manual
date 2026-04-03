@@ -926,3 +926,132 @@ ls ~/.claude/teams/
 # 查看团队配置
 cat ~/.claude/teams/{team-name}/config.json
 ```
+
+---
+
+## 未文档化的功能
+
+### Mailbox 消息结构
+
+```typescript
+interface TeammateMessage {
+  from: string
+  text: string
+  timestamp: string
+  read: boolean              // 消息是否已读
+  color?: string             // 工具人颜色
+  summary?: string           // 5-10 词预览摘要
+}
+```
+
+### 文件锁机制
+
+Mailbox 使用 proper-lockfile 处理并发访问：
+```typescript
+const LOCK_OPTIONS = {
+  retries: {
+    retries: 10,
+    minTimeout: 5,
+    maxTimeout: 100,
+  },
+}
+```
+
+### SendMessage 内部路由
+
+**UDS_INBOX Feature Flag**:
+```typescript
+// 条件包含 uds: 寻址
+'Recipient: teammate name, "*" for broadcast, "uds:<socket-path>" for a local peer, or "bridge:<session-id>" for a Remote Control peer'
+```
+
+**进程内 Agent 直接路由**:
+```typescript
+// 如果目标是在同一进程内，直接路由而不经过 mailbox
+if (typeof input.message === 'string' && input.to !== '*') {
+  const registered = appState.agentNameRegistry.get(input.to)
+  // 直接路由到进程内工具人
+}
+```
+
+### InboxPoller 优先级机制
+
+轮询间隔固定为 1000ms (1秒)。
+
+**消息处理优先级顺序**:
+1. Permission Requests - Leader 路由到 ToolUseConfirmQueue
+2. Permission Responses - Worker 执行回调
+3. Sandbox Permission Requests - Leader 路由到 workerSandboxPermissions
+4. Sandbox Permission Responses - Worker 执行回调
+5. Team Permission Updates - Worker 应用权限更新
+6. Mode Set Requests - Worker 更改模式并同步到 config.json
+7. Plan Approval Requests - Leader 自动批准并写入响应
+8. Shutdown Requests - 工具人侧透传到 UI
+9. Shutdown Approvals - Leader 关闭窗格并移出团队
+10. Regular Messages - 空闲时立即提交，忙碌时队列
+
+### agentNameRegistry
+
+用于 SendMessage 按名称而非完整 agentId 路由消息的机制：
+```typescript
+// AppStateStore.ts
+agentNameRegistry: Map<string, AgentId>
+```
+
+### parseAddress 支持的前缀
+
+```typescript
+type AddressScheme = 'uds' | 'bridge' | 'other'
+
+// 支持的前缀格式：
+// "uds:<socket-path>" - Unix Domain Socket
+// "bridge:<session-id>" - Remote Control peer
+// "/<path>" - 遗留 UDS 格式（无前缀）
+```
+
+### TeammateExecutor 接口
+
+抽象工具人生命周期操作的接口：
+```typescript
+interface TeammateExecutor {
+  readonly type: BackendType
+  isAvailable(): Promise<boolean>
+  spawn(config: TeammateSpawnConfig): Promise<TeammateSpawnResult>
+  sendMessage(agentId: string, message: TeammateMessage): Promise<void>
+  terminate(agentId: string, reason?: string): Promise<boolean>
+  kill(agentId: string): Promise<boolean>
+  isActive(agentId: string): Promise<boolean>
+}
+```
+
+### TeamMemorySync 服务
+
+完整的团队记忆双向同步服务：
+- 本地文件系统与服务器间同步
+- Secret 扫描 (PSR M22174)
+- 冲突解决与重试
+- ETag 条件请求
+- 批量上传大小限制
+- 需要 OAuth 认证
+
+### TeammateLayoutManager
+
+管理工具人窗格布局的功能（未文档化）。
+
+### Reconnection System
+
+工具人重连处理机制（未文档化）。
+
+### Mailbox 类 (内存)
+
+用于进程内工具人的内存消息队列：
+```typescript
+class Mailbox {
+  private queue: Message[]
+  private waiters: Waiter[]
+  send(msg: Message): void
+  poll(fn: (msg: Message) => boolean = () => true): Message | undefined
+  receive(fn: (msg: Message) => boolean = () => true): Promise<Message>
+  subscribe = this.changed.subscribe
+}
+```

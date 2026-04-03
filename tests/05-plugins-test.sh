@@ -1,6 +1,7 @@
 #!/bin/bash
 # Claude Code 插件系统测试脚本
-# 用途：验证插件结构和 manifest.json
+# 用途：验证插件结构和 .claude-plugin/plugin.json
+# 注意：skills/agents/hooks 在 plugin.json 中使用路径字符串数组
 
 set -e
 
@@ -17,58 +18,39 @@ echo ""
 echo "测试 1: 插件目录结构验证"
 echo "--------------------------------"
 
-mkdir -p "$TEST_DIR/my-plugin"
-mkdir -p "$TEST_DIR/my-plugin/skills"
-mkdir -p "$TEST_DIR/my-plugin/agents"
+mkdir -p "$TEST_DIR/my-plugin/.claude-plugin"
+mkdir -p "$TEST_DIR/my-plugin/skills/greeting"
+mkdir -p "$TEST_DIR/my-plugin/agents/helper"
 mkdir -p "$TEST_DIR/my-plugin/hooks"
-mkdir -p "$TEST_DIR/my-plugin/tools"
 
 echo "插件目录结构:"
 find "$TEST_DIR/my-plugin" -type d
 
-# 测试 2: manifest.json 结构
+# 测试 2: .claude-plugin/plugin.json 结构
+# 注意：清单文件必须在 .claude-plugin/ 子目录中
 echo ""
-echo "测试 2: manifest.json 结构验证"
+echo "测试 2: .claude-plugin/plugin.json 结构验证"
 echo "--------------------------------"
 
-cat > "$TEST_DIR/my-plugin/manifest.json" << 'EOF'
+cat > "$TEST_DIR/my-plugin/.claude-plugin/plugin.json" << 'EOF'
 {
   "name": "my-plugin",
   "version": "1.0.0",
   "description": "我的第一个 Claude Code 插件",
-  "author": "Developer",
-  "skills": [
-    {
-      "name": "greeting",
-      "path": "./skills/greeting/SKILL.md"
-    }
-  ],
-  "agents": [
-    {
-      "name": "helper",
-      "path": "./agents/helper/AGENT.md"
-    }
-  ],
-  "hooks": [
-    {
-      "type": "PreToolUse",
-      "matcher": "Bash",
-      "command": "./hooks/security.py"
-    }
-  ],
-  "tools": [
-    {
-      "name": "customTool",
-      "description": "自定义工具"
-    }
-  ]
+  "author": {
+    "name": "Developer",
+    "email": "developer@example.com"
+  },
+  "skills": ["./skills/greeting/SKILL.md"],
+  "agents": ["./agents/helper/AGENT.md"],
+  "hooks": ["./hooks"]
 }
 EOF
 
-if python3 -c "import json; json.load(open('$TEST_DIR/my-plugin/manifest.json'))" 2>/dev/null; then
-    echo "✅ manifest.json JSON 语法正确"
+if python3 -c "import json; json.load(open('$TEST_DIR/my-plugin/.claude-plugin/plugin.json'))" 2>/dev/null; then
+    echo "✅ .claude-plugin/plugin.json JSON 语法正确"
 else
-    echo "❌ manifest.json JSON 语法错误"
+    echo "❌ .claude-plugin/plugin.json JSON 语法错误"
 fi
 
 # 测试 3: 插件技能定义
@@ -76,7 +58,6 @@ echo ""
 echo "测试 3: 插件技能定义验证"
 echo "--------------------------------"
 
-mkdir -p "$TEST_DIR/my-plugin/skills/greeting"
 cat > "$TEST_DIR/my-plugin/skills/greeting/SKILL.md" << 'EOF'
 ---
 name: greeting
@@ -135,16 +116,10 @@ echo "--------------------------------"
 
 cat > "$TEST_DIR/plugin-config.json" << 'EOF'
 {
-  "enabledPlugins": {
-    "formatter@anthropic-tools": true,
-    "linter@custom-marketplace": true
-  },
-  "pluginConfigs": {
-    "formatter@anthropic-tools": {
-      "options": {
-        "autoFormat": true,
-        "extensions": [".ts", ".tsx"]
-      }
+  "plugins": {
+    "enabled": {
+      "formatter@anthropic-tools": true,
+      "linter@custom-marketplace": true
     }
   }
 }
@@ -165,18 +140,18 @@ check_plugin_structure() {
     local plugin_dir="$1"
     local errors=0
 
-    # 检查必需文件
-    if [ ! -f "$plugin_dir/manifest.json" ]; then
-        echo "❌ 缺少 manifest.json"
+    # 检查必需文件：必须在 .claude-plugin/ 子目录中
+    if [ ! -f "$plugin_dir/.claude-plugin/plugin.json" ]; then
+        echo "❌ 缺少 .claude-plugin/plugin.json"
         ((errors++))
     fi
 
-    # 检查 skills 目录
+    # 检查 skills 目录（可选）
     if [ ! -d "$plugin_dir/skills" ]; then
         echo "⚠️  缺少 skills 目录（可选）"
     fi
 
-    # 检查 agents 目录
+    # 检查 agents 目录（可选）
     if [ ! -d "$plugin_dir/agents" ]; then
         echo "⚠️  缺少 agents 目录（可选）"
     fi
@@ -203,12 +178,6 @@ cat > "$TEST_DIR/marketplace-config.json" << 'EOF'
       }
     }
   },
-  "strictKnownMarketplaces": [
-    {
-      "type": "github",
-      "repo": "approved/marketplace"
-    }
-  ],
   "blockedMarketplaces": [
     "untrusted-marketplace"
   ]

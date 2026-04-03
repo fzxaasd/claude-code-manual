@@ -90,7 +90,7 @@ paths:
   - "*.tsx"
   - "*.js"
   - "*.jsx"
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
@@ -150,7 +150,8 @@ Review report includes: Issue list, severity ratings, security assessment, reada
 name: code-reviewer
 description: Professional code review Agent
 model: sonnet
-allowed_tools:
+effort: medium
+tools:
   - Read
   - Glob
   - Grep
@@ -158,11 +159,30 @@ allowed_tools:
   - Bash(npm test)
   - Bash(git diff)
   - Bash(git log)
-disallowed_tools:
+disallowedTools:
   - Bash(rm -rf *)
   - Bash(sudo *)
   - Write(/etc/**)
-system_prompt: You are a senior code review expert focused on:
+maxTurns: 50
+memory: project
+skills:
+  - code-review
+  - security-check
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "${HOOK_DIR}/security-check.sh"
+          timeout: 5
+color: blue
+---
+
+# Code Review Expert Agent
+
+This Agent focuses on code quality and security review.
+
+I am a senior code review expert focused on:
 
 1. **Security Review**
    - Identify SQL injection, XSS, CSRF and other security vulnerabilities
@@ -185,11 +205,6 @@ system_prompt: You are a senior code review expert focused on:
    - Appropriate error handling
 
 Please provide specific improvement suggestions and code examples.
----
-
-# Code Review Expert Agent
-
-This Agent focuses on code quality and security review.
 ```
 
 ---

@@ -42,10 +42,11 @@ const TransportSchema = z.enum([
   'sse-ide',         // IDE extension-specific SSE
   'http',            // HTTP requests
   'ws',              // WebSocket
-  'ws-ide',          // IDE extension-specific WebSocket
-  'sdk',             // SDK internal transport (IDE integration)
-  'claudeai-proxy'   // Claude.ai Proxy server
+  'sdk'              // SDK internal transport (IDE integration)
 ])
+
+// Note: 'ws-ide' and 'claudeai-proxy' are NOT part of TransportSchema;
+// they have their own separate config schemas (see dedicated sections below)
 ```
 
 ### 1. stdio Server
@@ -167,7 +168,30 @@ interface McpSdkServerConfig {
 // Does not use standard network transport, directly calls within the same process
 ```
 
-### 6. Claude.ai Proxy
+### 6. IDE SSE Server (sse-ide)
+
+```typescript
+interface McpSSEIDEServerConfig {
+  type: 'sse-ide'
+  url: string
+  ideName: string
+  ideRunningInWindows?: boolean  // Windows environment flag (undocumented)
+}
+```
+
+### 7. IDE WebSocket Server (ws-ide)
+
+```typescript
+interface McpWebSocketIDEServerConfig {
+  type: 'ws-ide'
+  url: string
+  ideName: string
+  authToken?: string              // IDE WebSocket auth token (undocumented)
+  ideRunningInWindows?: boolean   // Windows environment flag (undocumented)
+}
+```
+
+### 8. Claude.ai Proxy
 
 ```typescript
 interface McpClaudeAIProxyServerConfig {
@@ -175,7 +199,6 @@ interface McpClaudeAIProxyServerConfig {
   url: string
   id: string
 }
-```
 
 ---
 
@@ -531,7 +554,7 @@ type ServerResource = Resource & {
 /mcp reconnect <server-name>
 ```
 
-**Note**: `claude mcp test` and `claude mcp get` commands do not exist. MCP management is done via the interactive interface (`/mcp`).
+**Note**: `claude mcp test` command does not exist (use interactive `/mcp` interface). `claude mcp get` is used to get server details.
 
 ---
 
@@ -652,3 +675,67 @@ cat ~/.claude/mcp.json
 # View MCP status
 claude --debug mcp
 ```
+
+---
+
+## Undocumented Features
+
+### MCP-Related Environment Variables
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `MCP_TOOL_TIMEOUT` | 100000000 (ms) | MCP tool call timeout |
+| `MCP_CLIENT_SECRET` | - | OAuth client secret (secure storage) |
+| `MCP_OAUTH_CLIENT_METADATA_URL` | - | OAuth client metadata URL (FedStart support) |
+| `CLAUDE_CODE_ENABLE_XAA` | - | Enable XAA (SEP-990) cross-app access |
+| `ENABLE_CLAUDEAI_MCP_SERVERS` | - | Enable/disable claude.ai MCP server fetching |
+
+### headersHelper Security Features
+
+`headersHelper` scripts are blocked when:
+- Project/local MCP servers
+- Non-CI/CD mode
+- Workspace trust not established
+
+Passed environment variables:
+- `CLAUDE_CODE_MCP_SERVER_NAME`
+- `CLAUDE_CODE_MCP_SERVER_URL`
+
+### Server Configuration Priority
+
+MCP server configuration priority (highest to lowest):
+1. `local` (highest)
+2. `project` (approved servers only)
+3. `user`
+4. `plugin` (lowest)
+5. `claude.ai` connectors
+
+### Channel Permissions System
+
+Enabled via `tengu_harbor_permissions` GrowthBook feature:
+
+```typescript
+// Permission response format
+/^\s*(y|yes|n|no)\s+([a-km-z]{5})\s*$/i
+// Example: "yes tbxkq" - 5-letter ID system
+```
+
+### Dynamic MCP Configuration
+
+MCP servers can be configured dynamically via:
+- `--mcp-config` CLI flag (JSON file)
+- `mcp_set_servers` control message
+- SDK V2 `Query.setMcpServers()`
+
+### Built-in Default-Disabled Servers
+
+Some MCP servers are built-in and default disabled:
+- Requires explicit opt-in via `enabledMcpServers`
+- Controlled by `CHICAGO_MCP` feature flag
+
+### URL Pattern Matching
+
+Enterprise policy URL pattern matching rules:
+- Only `*` is treated as wildcard
+- `.*` in pattern becomes literal `.*`
+- `\*` escape not supported

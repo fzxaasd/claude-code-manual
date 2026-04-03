@@ -419,6 +419,102 @@ claude agents history <agent-id>
 
 ---
 
+## 未文档化的功能
+
+### TeamFile 完整结构
+
+源码中的完整 `TeamFile` 结构：
+
+```typescript
+type TeamFile = {
+  name: string
+  description?: string
+  createdAt: number
+  leadAgentId: string
+  leadSessionId?: string      // Leader 的 session UUID
+  hiddenPaneIds?: string[]    // 从 swarm UI 隐藏的窗格
+  teamAllowedPaths?: TeamAllowedPath[]  // 所有 teammate 可编辑的路径
+  members: Array<{
+    agentId: string
+    name: string
+    agentType?: string
+    model?: string
+    prompt?: string
+    color?: string
+    planModeRequired?: boolean
+    joinedAt: number
+    tmuxPaneId: string
+    cwd: string
+    worktreePath?: string    // Git worktree 路径
+    sessionId?: string       // Teammate 的 session UUID
+    subscriptions: string[]  // 主题订阅数组
+    backendType?: BackendType  // 'tmux' | 'iterm2' | 'in-process'
+    isActive?: boolean      // false = 空闲
+    mode?: PermissionMode   // 当前权限模式
+  }>
+}
+
+type TeamAllowedPath = {
+  path: string
+  toolName: string
+  addedBy: string
+  addedAt: number
+}
+```
+
+### 未文档化的环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `CLAUDE_CODE_TEAMMATE_COMMAND` | 覆盖 teammate spawn 二进制 |
+| `CLAUDE_CODE_AGENT_COLOR` | Teammate 的 UI 颜色 |
+| `CLAUDE_CODE_PLAN_MODE_REQUIRED` | 要求 teammate 使用 plan mode |
+| `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` | 启用 agent teams (外部用户需要) |
+| `--agent-teams` | CLI 标志用于 opt-in |
+
+### BackendType 执行后端
+
+3 种执行模式：
+- `in-process`: 使用 AsyncLocalStorage 在同一 Node.js 进程中运行
+- `tmux`: 使用 tmux 窗格
+- `iterm2`: 使用原生 iTerm2 split 窗格
+
+### Teammate Mode Selection
+
+`teammateMode` 设置：
+```typescript
+teammateMode: 'auto' | 'tmux' | 'in-process'
+```
+
+### 结构化消息协议
+
+Mailbox 支持的结构化消息类型：
+
+| 消息类型 | 说明 |
+|---------|------|
+| `idle_notification` | teammate 空闲时发送 |
+| `permission_request/response` | 工具权限桥接 |
+| `sandbox_permission_request/response` | 网络访问请求 |
+| `shutdown_request/approved/rejected` | 优雅关闭 |
+| `plan_approval_request/response` | Plan mode 批准 |
+| `task_assignment` | 任务分配 |
+| `team_permission_update` | 广播权限变更 |
+| `mode_set_request` | 更改 teammate 权限模式 |
+
+### Auto-registration
+
+Spawn teammate 而不调用 `TeamCreate` 会自动设置 leader 为 team lead。
+
+### Color Assignment
+
+Agents 通过 `assignTeammateColor()` 获取确定性颜色。
+
+### Hook 转换
+
+对于 agents，`Stop` hooks 会自动转换为 `SubagentStop` hooks。
+
+---
+
 ## 模板配置
 
 ### 快速启动模板

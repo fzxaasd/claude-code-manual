@@ -83,9 +83,10 @@ interface AgentDefinition {
   name: string              // frontmatter: name
   description: string       // frontmatter: description
   model?: string            // frontmatter: model
-  allowed_tools?: string[]  // frontmatter: allowed_tools
-  disallowed_tools?: string[] // frontmatter: disallowed_tools
-  system_prompt?: string     // frontmatter: system_prompt
+  tools?: string[]          // frontmatter: tools
+  disallowedTools?: string[] // frontmatter: disallowedTools
+  // 注意：system_prompt 不是 frontmatter 字段！
+  // 系统提示来自 markdown 正文内容（不是 frontmatter 中的 system_prompt）
 }
 ```
 
@@ -96,20 +97,21 @@ interface AgentDefinition {
 name: reviewer
 description: 代码审查 Agent
 model: sonnet
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
   - Bash(git *)
-disallowed_tools:
+disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-system_prompt: 你是一个严格的代码审查员...
 ---
 
 # 代码审查 Agent
 
 Agent 的详细说明和使用指南。
+
+这里的内容会作为系统提示被使用。
 ```
 
 ---

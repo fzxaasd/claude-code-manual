@@ -184,7 +184,7 @@ when_to_use: Use when you need to greet
 paths:
   - "*.ts"
   - "*.js"
-allowed_tools:
+tools:
   - Bash
   - Read
 version: "1.0.0"
@@ -216,20 +216,21 @@ agents/
 name: reviewer
 description: Code review Agent
 model: sonnet
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
   - Bash(git *)
-disallowed_tools:
+disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-system_prompt: You are a strict code reviewer...
 ---
 
 # Code Review Agent
 
 Agent detailed description and usage guide.
+
+System prompt comes from markdown body content, not frontmatter.
 
 ## Features
 
@@ -245,9 +246,9 @@ Agent frontmatter field descriptions:
 | `name` | string | Agent name |
 | `description` | string | Description |
 | `model` | string | Default model |
-| `allowed_tools` | string[] | Allowed tools |
-| `disallowed_tools` | string[] | Disallowed tools |
-| `system_prompt` | string | System prompt |
+| `tools` | string[] | Allowed tools |
+| `disallowedTools` | string[] | Disallowed tools |
+| System prompt | - | From markdown body content, not a frontmatter field |
 
 ---
 

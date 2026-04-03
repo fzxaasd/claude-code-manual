@@ -595,6 +595,103 @@ Interview Phase（ants 用户）不受 Pewter Ledger 实验影响，因为：
 
 ---
 
+## 未文档化的功能
+
+### useAutoModeDuringPlan 设置
+
+控制 Plan Mode 期间是否使用自动模式语义：
+
+```typescript
+// settings.json
+{
+  "useAutoModeDuringPlan": true  // 默认 true
+}
+```
+
+### skipAutoPermissionPrompt 设置
+
+控制自动模式选择加入对话框的行为：
+
+```typescript
+{
+  "skipAutoPermissionPrompt": true  // 跳过自动模式选择加入对话框
+}
+```
+
+### prePlanMode 和 strippedDangerousRules
+
+内部权限上下文字段：
+
+```typescript
+type ToolPermissionContext = {
+  readonly strippedDangerousRules?: ToolPermissionRulesBySource
+  readonly shouldAvoidPermissionPrompts?: boolean
+  readonly awaitAutomatedChecksBeforeDialog?: boolean
+  readonly prePlanMode?: PermissionMode  // 进入 Plan Mode 前的权限模式
+}
+```
+
+**`prePlanMode`**: 存储进入 Plan Mode 前的权限模式，用于 ExitPlanMode 恢复原始模式。
+
+**`strippedDangerousRules`**: 当 Plan Mode 期间使用自动模式时，危险权限（如 `Bash(*)`, `Agent(*)`, `PowerShell(iex:*)`）会被剥离并存储在此处，以便后续恢复。
+
+### Circuit Breaker 行为
+
+ExitPlanMode 包含电路断路器机制，防止通过 ExitPlanMode 绕过自动模式：
+
+```typescript
+// 如果 prePlanMode 是 auto 类模式但现在门控关闭，则恢复到 'default'
+if (feature('TRANSCRIPT_CLASSIFIER')) {
+  const prePlanRaw = appState.toolPermissionContext.prePlanMode ?? 'default'
+  if (
+    prePlanRaw === 'auto' &&
+    !(permissionSetupModule?.isAutoModeGateEnabled() ?? false)
+  ) {
+    // 恢复到 'default' 而非 'auto'
+  }
+}
+```
+
+### planWasEdited 输出字段
+
+ExitPlanMode 的输出包含此字段，指示用户是否编辑了计划：
+
+```typescript
+planWasEdited: boolean  // 用户是否编辑了计划（CCR UI 或 Ctrl+G）
+```
+
+### Ultraplan 功能
+
+CCR（Cloud Code Remote）的超级规划功能：
+
+- 使用 `tengu_ultraplan_model` GrowthBook 配置（默认 Opus 4.6）
+- 30 分钟超时
+- 权限模式: `'plan'`
+- 两个执行目标: `'local'`（回传执行）或 `'remote'`（CCR 中执行）
+
+### Plan 文件恢复机制
+
+Plan 文件可以在 CCR 会话期间增量持久化到 transcript snapshots：
+
+```typescript
+export async function persistFileSnapshotIfRemote(): Promise<void>
+```
+
+### plansDirectory 安全验证
+
+如果用户设置的 plansDirectory 超出项目根目录，会静默回退到 `~/.claude/plans/`。
+
+### GrowthBook Feature Flags
+
+| Flag | 说明 |
+|------|------|
+| `tengu_plan_mode_interview_phase` | Interview phase |
+| `tengu_pewter_ledger` | Plan size control (trim/cut/cap) |
+| `tengu_auto_mode_config.enabled` | Auto mode availability |
+| `tengu_ultraplan_model` | Ultraplan 使用的模型 |
+
+---
+
 ## 测试验证
 
 验证 Plan Mode 配置：

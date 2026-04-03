@@ -184,7 +184,7 @@ when_to_use: 当你需要问候时使用
 paths:
   - "*.ts"
   - "*.js"
-allowed_tools:
+tools:
   - Bash
   - Read
 version: "1.0.0"
@@ -216,20 +216,21 @@ agents/
 name: reviewer
 description: 代码审查 Agent
 model: sonnet
-allowed_tools:
+tools:
   - Read
   - Glob
   - Grep
   - Bash(git *)
-disallowed_tools:
+disallowedTools:
   - Bash(rm *)
   - Write(/etc/**)
-system_prompt: 你是一个严格的代码审查员...
 ---
 
 # 代码审查 Agent
 
 Agent 的详细说明和使用指南。
+
+系统提示来自 markdown 正文，不是 frontmatter 中的 system_prompt。
 
 ## 功能特点
 
@@ -245,9 +246,9 @@ Agent frontmatter 字段说明：
 | `name` | string | Agent 名称 |
 | `description` | string | 描述 |
 | `model` | string | 默认模型 |
-| `allowed_tools` | string[] | 允许的工具 |
-| `disallowed_tools` | string[] | 禁用的工具 |
-| `system_prompt` | string | 系统提示词 |
+| `tools` | string[] | 允许的工具 |
+| `disallowedTools` | string[] | 禁用的工具 |
+| 系统提示 | - | 来自 markdown 正文内容，不是 frontmatter 字段 |
 
 ---
 

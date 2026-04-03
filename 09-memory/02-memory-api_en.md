@@ -559,6 +559,7 @@ Total 45 memory-related telemetry events:
 | Event | Timing | Fields |
 |------|--------|--------|
 | `tengu_sm_compact_flag_check` | Feature check | tengu_session_memory, tengu_sm_compact, should_use |
+| `tengu_sm_compact_config` | Configuration check | - |
 | `tengu_sm_compact_no_session_memory` | No session memory | - |
 | `tengu_sm_compact_empty_template` | Memory is empty template | - |
 | `tengu_sm_compact_summarized_id_not_found` | Summarized ID not found | - |
@@ -594,12 +595,14 @@ Total 45 memory-related telemetry events:
 | `TEAMMEM` | Team memory feature |
 | `KAIROS` | Daily log mode |
 | `EXTRACT_MEMORIES` | Extract memories background agent |
+| `MEMORY_SHAPE_TELEMETRY` | Memory recall shape telemetry |
 | `tengu_coral_fern` | Search past context (`buildSearchingPastContextSection`) |
 | `tengu_moth_copse` | Skip MEMORY.md index writing instructions |
 | `tengu_passport_quail` | Extract memories background agent activation |
 | `tengu_slate_thimble` | Force activation of extract for non-interactive sessions |
 | `tengu_herring_clock` | Team memory disable telemetry |
 | `tengu_onyx_plover` | autoDream configuration switch |
+| `tengu_dunwich_bell` | Memory Survey feature gate |
 
 ---
 

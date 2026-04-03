@@ -327,6 +327,90 @@ Verify generated files.
 
 ---
 
+## Undocumented Features
+
+### Variable Substitution
+
+| Variable | Description | Scope |
+|----------|-------------|-------|
+| `${CLAUDE_SKILL_DIR}` | Skill's own directory path | File and plugin skills |
+| `${CLAUDE_SESSION_ID}` | Current session identifier | All skill types |
+| `${CLAUDE_PLUGIN_ROOT}` | Plugin root directory | Plugin skills |
+| `${CLAUDE_PLUGIN_DATA}` | Plugin data directory | Plugin skills |
+
+### Undocumented Frontmatter Fields
+
+| Field | Description |
+|-------|-------------|
+| `hide-from-slash-command-tool` | Controls visibility in SlashCommand tool |
+| `immediate` | When true, bypasses queue and executes immediately |
+| `isSensitive` | When true, args are redacted from history |
+| `kind: 'workflow'` | Marks as workflow-backed, shows badge in autocomplete |
+| `availability` | Declares available auth environments ('claude-ai' or 'console') |
+| `disableNonInteractive` | Disables execution in non-interactive mode |
+| `skills` | List of skills to preload for agents |
+
+### Shell Command Blocks
+
+```markdown
+!`shell command`                    // Inline execution
+
+```!bash
+echo "shell command"
+```
+```
+
+Shell blocks execute during skill loading to prepare context.
+
+### Skill Permission Auto-Grant
+
+Skills using only "safe" properties are auto-granted permission:
+
+```typescript
+const SAFE_SKILL_PROPERTIES = new Set([
+  'type', 'progressMessage', 'contentLength', 'argNames', 'model',
+  'effort', 'source', 'pluginInfo', 'disableNonInteractive', 'skillRoot',
+  'context', 'agent', 'getPromptForCommand', 'frontmatterKeys',
+  'name', 'description', 'hasUserSpecifiedDescription', 'isEnabled',
+  'isHidden', 'aliases', 'isMcp', 'argumentHint', 'whenToUse', 'paths',
+  'version', 'disableModelInvocation', 'userInvocable', 'loadedFrom',
+  'immediate', 'userFacingName'
+])
+```
+
+### Remote Skills (Experimental)
+
+Feature flag: `EXPERIMENTAL_SKILL_SEARCH` + `USER_TYPE === 'ant'`
+
+Remote skills with `_canonical_` prefix are loaded from AKI/GCS.
+
+### Bundled Skill File Extraction
+
+Bundled skills can specify files to extract to disk on first invocation:
+
+```typescript
+files?: Record<string, string>  // { "path": "content" }
+```
+
+### model: inherit
+
+Syntax to explicitly use parent model:
+
+```yaml
+model: inherit  # Use the model of the invoking skill
+```
+
+### effort Values
+
+effort can be a string or positive integer:
+
+```yaml
+effort: low      # String
+effort: 42        # Integer
+```
+
+---
+
 ## Skill Format Reference
 
 | Field | Description | Required |
@@ -338,14 +422,18 @@ Verify generated files.
 | `arguments` | Parameter definitions | Optional |
 | `argument-hint` | Parameter example format | Optional |
 | `context` | `inline` or `fork` | Optional |
-| `model` | Specify model | Optional |
-| `effort` | `low`/`medium`/`high` | Optional |
+| `model` | Specify model, `inherit` for parent model | Optional |
+| `effort` | `low`/`medium`/`high` or positive integer | Optional |
 | `agent` | Agent type for fork mode | Optional |
 | `shell` | Shell type for execution | Optional |
 | `hide-from-slash-command-tool` | Hide from /skills list | Optional |
 | `disableModelInvocation` | Disable model invocation | Optional |
 | `paths` | Path pattern activation | Optional |
 | `files` | Related files | Optional |
+| `immediate` | Bypass queue and execute immediately | Optional |
+| `isSensitive` | Redact args from history | Optional |
+| `availability` | Environment restriction | Optional |
+| `disableNonInteractive` | Disable non-interactive mode | Optional |
 
 ### Complete Example
 

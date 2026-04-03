@@ -22,7 +22,7 @@
 ---
 name: code-review
 agent: reviewer
-tools:
+allowed-tools:
   - Read
   - Grep
   - Glob

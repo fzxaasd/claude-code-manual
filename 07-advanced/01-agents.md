@@ -226,15 +226,15 @@ built-in < plugin < user < project < flag < managed
 
 ---
 
-## Agent 文件格式
-
-### YAML Frontmatter 格式
+## Agent YAML Frontmatter 字段详解
 
 ```markdown
 ---
+# 必需字段
 name: reviewer
 description: 代码审查专家
-whenToUse: 当需要进行代码审查时使用
+
+# 工具配置
 tools:
   - Read
   - Grep
@@ -243,36 +243,186 @@ tools:
 disallowedTools:
   - Bash(rm *)
   - Bash(sudo *)
-model: sonnet
-effort: medium
-mcpServers:
-  - github
-skills:
+
+# 模型与性能
+model: sonnet           # 指定模型，或 "inherit" 继承父 Agent
+effort: medium          # 努力级别: low/medium/high 或整数
+
+# 权限模式
+permissionMode: acceptEdits  # default/plan/acceptEdits/dontAsk/bypassPermissions/auto
+
+# MCP 配置
+mcpServers:             # MCP 服务器配置
+  - github              # 引用已有服务器
+  - slack               # 或内联定义: { slack: { command: "npx", args: [...] } }
+requiredMcpServers:     # 必需的 MCP 服务器（仅内置 Agent 支持）
+  - database
+
+# 执行控制
+maxTurns: 50            # 最大 agentic 轮次
+background: false      # 始终后台运行
+isolation: worktree    # worktree(外部) 或 worktree/remote(ant)
+
+# 技能预加载
+skills:                 # 预加载的技能列表
   - code-review
-maxTurns: 50
-background: false
-initialPrompt: 请仔细审查代码的每个细节
-color: blue
+  - security-check
+
+# 提示词配置
+initialPrompt: 请仔细审查代码的每个细节  # 添加到首轮用户消息
+
+# 记忆配置
+memory: project         # user/project/local - 持久化记忆范围
+
+# Agent 级别 Hooks
+hooks:                  # Session 级别的 hooks
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./hooks/security-check.sh"
+          timeout: 5
+
+# 显示配置
+color: blue             # Agent 在 UI 中的显示颜色
+
+# 特殊选项
+omitClaudeMd: false     # 跳过 CLAUDE.md 层级（Explore/Plan 默认 true）
 ---
-
-# 代码审查 Agent
-
-你是一个专业的代码审查专家，负责审查代码质量和最佳实践。
-
-## 审查标准
-
-### 1. 代码质量
-- 可读性
-- 可维护性
-- 性能考虑
-
-### 2. 安全检查
-- 注入风险
-- 敏感信息暴露
-- 权限控制
 ```
 
-### JSON 配置格式
+### 必需字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `name` | string | Agent 唯一标识符 |
+| `description` | string | Agent 功能描述 |
+
+### 工具配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `tools` | string[] | 允许的工具列表（白名单） |
+| `disallowedTools` | string[] | 禁止的工具列表（黑名单） |
+
+**规则语法**：
+- `ToolName` - 整个工具
+- `ToolName(operation)` - 特定操作
+- `ToolName(!operation)` - 排除操作
+
+### 模型与性能
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `model` | string | 指定模型，或 `inherit` 继承父 Agent |
+| `effort` | string \| number | 努力级别: `low`/`medium`/`high` 或整数 |
+
+### 权限模式
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `permissionMode` | string | 见下方权限模式列表 |
+
+**PermissionMode 列表**：
+- `default` - 每次询问用户
+- `plan` - Plan Mode，只读模式
+- `acceptEdits` - 自动接受所有编辑
+- `dontAsk` - 静默允许/拒绝
+- `bypassPermissions` - 绕过所有权限检查
+- `auto` - 自动模式（ant-only）
+
+### MCP 配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `mcpServers` | array | MCP 服务器列表（引用或内联） |
+| `requiredMcpServers` | string[] | Agent 可用的必需服务器模式 |
+
+```yaml
+# 引用已有服务器
+mcpServers:
+  - github
+  - filesystem
+
+# 内联配置
+mcpServers:
+  - slack:
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-slack"]
+```
+
+### 执行控制
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `maxTurns` | number | 最大 agentic 轮次后停止 |
+| `background` | boolean | 始终后台运行 |
+| `isolation` | string | `worktree`(外部) 或 `worktree`/`remote`(ant) |
+
+### 技能预加载
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `skills` | string[] | Agent 启动时预加载的技能列表 |
+
+### 提示词配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `initialPrompt` | string | 添加到首轮用户消息的前缀 |
+
+### 记忆配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `memory` | string | 持久化记忆范围: `user`/`project`/`local` |
+
+### Agent Hooks
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `hooks` | object | Session 级别的 hooks，Agent 启动时注册 |
+
+**支持的事件**：`PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `UserPromptEdit`, `MessageCreate`, `AgentStart`, `AgentEnd`
+
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./hooks/security-check.sh"
+          timeout: 5
+  AgentEnd:
+    - matcher: "*"
+      hooks:
+        - type: agent
+          prompt: "验证任务完成情况"
+          timeout: 60
+```
+
+### 显示配置
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `color` | string | Agent 在 UI 中的显示颜色 |
+
+### 特殊选项
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `omitClaudeMd` | boolean | 跳过 CLAUDE.md 层级（节省 token） |
+
+### 注意事项
+
+1. **`system_prompt` 不是 frontmatter 字段** - Markdown 文件的提示词来自文件正文内容
+2. **`allowed_tools` 已废弃** - 请使用 `tools`
+3. **`disallowed_tools` 已废弃** - 请使用 `disallowedTools`
+4. **`requiredMcpServers` 仅内置 Agent 支持** - 不支持通过用户配置设置
+
+---
+
+## Agent 文件格式（旧版参考）
 
 ```json
 // settings.json
@@ -602,6 +752,149 @@ claude --agent reviewer -p "审查这段代码"
 
 ```bash
 claude --debug agent
+```
+
+---
+
+## 未文档化的 Agent 功能
+
+### Fork Subagent Feature (`FORK_SUBAGENT`)
+
+当启用 `FORK_SUBAGENT` feature 时，省略 `subagent_type` 会触发隐式 fork：
+- Fork agents 继承父级的完整对话上下文
+- 使用 `permissionMode: 'bubble'`
+- 默认 `maxTurns: 200`
+- Fork 子级有严格的输出格式要求 (Scope:, Result:, etc.)
+
+### Coordinator Mode (`COORDINATOR_MODE`)
+
+主 agent 成为协调者编排 worker agents：
+- Workers 通过 `Agent(subagent_type: "worker")` spawn
+- 使用 `SEND_MESSAGE_TOOL_NAME` 继续 workers
+- Workers 工具访问基于 `ASYNC_AGENT_ALLOWED_TOOLS`
+- 可选提供 scratchpad 目录给 workers
+
+### Agent Swarms / Teams (`ENABLE_AGENT_SWARMS`)
+
+多 agent 系统包括：
+- **TeamCreateTool**: 创建团队 + 任务列表
+- **spawnTeammate()**: 在 tmux/iTerm2 窗格或进程内 spawn teammates
+- **进程内 teammates**: 使用 AsyncLocalStorage 在同一 Node.js 进程中运行
+- **Mailbox 系统**: 基于文件的 agent 间通信
+- **权限桥接**: teammates 可以向 leader 请求权限
+
+### criticalSystemReminder_EXPERIMENTAL
+
+在每个用户轮次重新注入的简短消息：
+
+```typescript
+criticalSystemReminder_EXPERIMENTAL?: string
+```
+
+由 `VERIFICATION_AGENT` 使用：
+```typescript
+criticalSystemReminder_EXPERIMENTAL:
+  'CRITICAL: This is a VERIFICATION-ONLY task...'
+```
+
+### Verification Agent Nudge (`tengu_hive_evidence`)
+
+当完成 3+ 任务而没有验证步骤时，系统会提示启动验证 agent：
+
+**触发条件**：
+1. `VERIFICATION_AGENT` feature 已启用
+2. `tengu_hive_evidence` feature 已启用
+3. 主会话（非子 agent）
+4. 刚完成 3+ 个任务
+5. 这些任务中没有验证步骤
+
+**提示消息**：
+```
+NOTE: You just closed out 3+ tasks and none of them was a verification step.
+Before writing your final summary, spawn the verification agent (subagent_type="verification").
+You cannot self-assign PARTIAL by listing caveats in your summary — only the verifier issues a verdict.
+```
+
+**涉及的源文件**：
+- `src/tools/TodoWriteTool/TodoWriteTool.ts` - V1 会话提示
+- `src/tools/TaskUpdateTool/TaskUpdateTool.ts` - V2 会话提示
+
+### Agent Memory Snapshots
+
+具有 `memory: 'user'` 的 agents 可以有 memory snapshots：
+- 快照存储在 `~/.claude/agent-memory/` (user)
+- `.claude/agent-memory/` (project)
+- `.claude/agent-memory-local/` (local)
+
+### omitClaudeMd Flag
+
+排除 CLAUDE.md 层级从 agent 的上下文中以节省 tokens：
+- Kill-switch: `tengu_slim_subagent_claudemd`
+
+### Auto-Background Feature
+
+通过 feature flag 或环境变量启用后，agents 可以在 2 分钟后自动后台化：
+```typescript
+if (isEnvTruthy(process.env.CLAUDE_AUTO_BACKGROUND_TASKS) ||
+    getFeatureValue_CACHED_MAY_BE_STALE('tengu_auto_background_agents', false)) {
+  return 120_000;  // 2 minutes
+}
+```
+
+### Async Agent 工具限制
+
+Async agents 有硬编码的工具白名单：
+```typescript
+export const ASYNC_AGENT_ALLOWED_TOOLS = new Set([
+  FILE_READ_TOOL_NAME,
+  WEB_SEARCH_TOOL_NAME,
+  TODO_WRITE_TOOL_NAME,
+  GREP_TOOL_NAME,
+  WEB_FETCH_TOOL_NAME,
+  GLOB_TOOL_NAME,
+  ...SHELL_TOOL_NAMES,
+  FILE_EDIT_TOOL_NAME,
+  FILE_WRITE_TOOL_NAME,
+  NOTEBOOK_EDIT_TOOL_NAME,
+  SKILL_TOOL_NAME,
+  SYNTHETIC_OUTPUT_TOOL_NAME,
+  TOOL_SEARCH_TOOL_NAME,
+  ENTER_WORKTREE_TOOL_NAME,
+  EXIT_WORKTREE_TOOL_NAME,
+])
+```
+
+Async agents 不能使用 `AgentTool`（会导致递归）。
+
+### Agent 定义未文档化字段
+
+```typescript
+interface BaseAgentDefinition {
+  criticalSystemReminder_EXPERIMENTAL?: string
+  pendingSnapshotUpdate?: { snapshotTimestamp: string }
+  requiredMcpServers?: string[]
+  omitClaudeMd?: boolean
+  background?: boolean
+  initialPrompt?: string
+  color?: string
+}
+```
+
+### AgentTool 运行时参数
+
+```typescript
+{
+  description: string,
+  prompt: string,
+  subagent_type?: string,
+  model?: 'sonnet' | 'opus' | 'haiku',
+  run_in_background?: boolean,
+  name?: string,           // teammate 名称
+  team_name?: string,      // 团队名称
+  mode?: PermissionMode,   // spawn 权限模式
+  isolation?: 'worktree' | 'remote',
+  cwd?: string,            // KAIROS 专用
+}
 ```
 
 ---

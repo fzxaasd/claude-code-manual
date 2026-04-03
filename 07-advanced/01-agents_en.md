@@ -226,15 +226,15 @@ built-in < plugin < user < project < flag < managed
 
 ---
 
-## Agent File Format
-
-### YAML Frontmatter Format
+## Agent YAML Frontmatter Fields
 
 ```markdown
 ---
+# Required fields
 name: reviewer
 description: Code review expert
-whenToUse: Use this when you need code review
+
+# Tool configuration
 tools:
   - Read
   - Grep
@@ -243,36 +243,186 @@ tools:
 disallowedTools:
   - Bash(rm *)
   - Bash(sudo *)
-model: sonnet
-effort: medium
-mcpServers:
-  - github
-skills:
+
+# Model and performance
+model: sonnet           # Specify model, or "inherit" to use parent agent
+effort: medium          # Effort level: low/medium/high or integer
+
+# Permission mode
+permissionMode: acceptEdits  # default/plan/acceptEdits/dontAsk/bypassPermissions/auto
+
+# MCP configuration
+mcpServers:             # MCP server configuration
+  - github              # Reference existing server
+  - slack               # Or inline: { slack: { command: "npx", args: [...] } }
+requiredMcpServers:     # Required MCP servers (built-in agents only)
+  - database
+
+# Execution control
+maxTurns: 50            # Maximum agentic turns before stopping
+background: false       # Always run in background
+isolation: worktree     # worktree (external) or worktree/remote (ant)
+
+# Skills preloading
+skills:                 # Skills to preload
   - code-review
-maxTurns: 50
-background: false
-initialPrompt: Please review every detail of the code carefully
-color: blue
+  - security-check
+
+# Prompt configuration
+initialPrompt: Please review every detail carefully  # Prepended to first user turn
+
+# Memory configuration
+memory: project         # user/project/local - persistent memory scope
+
+# Agent-level hooks
+hooks:                  # Session-scoped hooks
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./hooks/security-check.sh"
+          timeout: 5
+
+# Display configuration
+color: blue             # Agent display color
+
+# Special options
+omitClaudeMd: false     # Skip CLAUDE.md hierarchy (Explore/Plan default true)
 ---
-
-# Code Review Agent
-
-You are a professional code review expert, responsible for reviewing code quality and best practices.
-
-## Review Standards
-
-### 1. Code Quality
-- Readability
-- Maintainability
-- Performance considerations
-
-### 2. Security Check
-- Injection risks
-- Sensitive information exposure
-- Permission control
 ```
 
-### JSON Configuration Format
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Agent unique identifier |
+| `description` | string | Agent functional description |
+
+### Tool Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tools` | string[] | Allowed tools (whitelist) |
+| `disallowedTools` | string[] | Prohibited tools (blacklist) |
+
+**Rule Syntax**:
+- `ToolName` - Entire tool
+- `ToolName(operation)` - Specific operation
+- `ToolName(!operation)` - Exclude operation
+
+### Model and Performance
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `model` | string | Specify model, or `inherit` to use parent agent |
+| `effort` | string \| number | Effort level: `low`/`medium`/`high` or integer |
+
+### Permission Mode
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `permissionMode` | string | See PermissionMode list below |
+
+**PermissionMode Options**:
+- `default` - Ask user each time
+- `plan` - Read-only Plan Mode
+- `acceptEdits` - Auto-accept all edits
+- `dontAsk` - Silently allow/deny
+- `bypassPermissions` - Bypass all permission checks
+- `auto` - Auto mode (ant-only)
+
+### MCP Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `mcpServers` | array | MCP servers (reference or inline) |
+| `requiredMcpServers` | string[] | Required server patterns for agent availability |
+
+```yaml
+# Reference existing servers
+mcpServers:
+  - github
+  - filesystem
+
+# Inline configuration
+mcpServers:
+  - slack:
+      command: npx
+      args: ["-y", "@modelcontextprotocol/server-slack"]
+```
+
+### Execution Control
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxTurns` | number | Stop after maximum agentic turns |
+| `background` | boolean | Always run in background |
+| `isolation` | string | `worktree` (external) or `worktree`/`remote` (ant) |
+
+### Skills Preloading
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `skills` | string[] | Skills to preload when agent starts |
+
+### Prompt Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `initialPrompt` | string | Prefix prepended to first user message |
+
+### Memory Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `memory` | string | Persistent memory scope: `user`/`project`/`local` |
+
+### Agent Hooks
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `hooks` | object | Session-scoped hooks, registered when agent starts |
+
+**Supported events**: `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `UserPromptEdit`, `MessageCreate`, `AgentStart`, `AgentEnd`
+
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./hooks/security-check.sh"
+          timeout: 5
+  AgentEnd:
+    - matcher: "*"
+      hooks:
+        - type: agent
+          prompt: "Verify task completion"
+          timeout: 60
+```
+
+### Display Configuration
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `color` | string | Agent display color in UI |
+
+### Special Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `omitClaudeMd` | boolean | Skip CLAUDE.md hierarchy (saves tokens) |
+
+### Important Notes
+
+1. **`system_prompt` is NOT a frontmatter field** - Markdown files use body content
+2. **`allowed_tools` is deprecated** - Use `tools`
+3. **`disallowed_tools` is deprecated** - Use `disallowedTools`
+4. **`requiredMcpServers` only for built-in agents** - Not configurable via user settings
+
+---
+
+## Agent File Format (Legacy Reference)
 
 ```json
 // settings.json
@@ -602,6 +752,149 @@ claude --agent reviewer -p "Review this code"
 
 ```bash
 claude --debug agent
+```
+
+---
+
+## Undocumented Agent Features
+
+### Fork Subagent Feature (`FORK_SUBAGENT`)
+
+When `FORK_SUBAGENT` feature is enabled, omitting `subagent_type` triggers implicit fork:
+- Fork agents inherit parent's full conversation context
+- Uses `permissionMode: 'bubble'`
+- Default `maxTurns: 200`
+- Fork children have strict output format requirements (Scope:, Result:, etc.)
+
+### Coordinator Mode (`COORDINATOR_MODE`)
+
+Main agent becomes coordinator orchestrating worker agents:
+- Workers spawned via `Agent(subagent_type: "worker")`
+- Uses `SEND_MESSAGE_TOOL_NAME` to continue workers
+- Workers have tool access based on `ASYNC_AGENT_ALLOWED_TOOLS`
+- Can optionally provide scratchpad directory to workers
+
+### Agent Swarms / Teams (`ENABLE_AGENT_SWARMS`)
+
+Multi-agent system includes:
+- **TeamCreateTool**: Creates team + task list
+- **spawnTeammate()**: Spawns teammates in tmux/iTerm2 panes or in-process
+- **In-process teammates**: Uses AsyncLocalStorage in same Node.js process
+- **Mailbox system**: File-based inter-agent communication
+- **Permission bridging**: Teammates can request permissions from leader
+
+### criticalSystemReminder_EXPERIMENTAL
+
+Short message re-injected at every user turn:
+
+```typescript
+criticalSystemReminder_EXPERIMENTAL?: string
+```
+
+Used by `VERIFICATION_AGENT`:
+```typescript
+criticalSystemReminder_EXPERIMENTAL:
+  'CRITICAL: This is a VERIFICATION-ONLY task...'
+```
+
+### Verification Agent Nudge (`tengu_hive_evidence`)
+
+When completing 3+ tasks without a verification step, the system prompts to spawn the verification agent:
+
+**Trigger Conditions**:
+1. `VERIFICATION_AGENT` feature enabled
+2. `tengu_hive_evidence` feature enabled
+3. Main session (not sub-agent)
+4. Just completed 3+ tasks
+5. None of those tasks were verification steps
+
+**Prompt Message**:
+```
+NOTE: You just closed out 3+ tasks and none of them was a verification step.
+Before writing your final summary, spawn the verification agent (subagent_type="verification").
+You cannot self-assign PARTIAL by listing caveats in your summary — only the verifier issues a verdict.
+```
+
+**Source Files**:
+- `src/tools/TodoWriteTool/TodoWriteTool.ts` - V1 session nudge
+- `src/tools/TaskUpdateTool/TaskUpdateTool.ts` - V2 session nudge
+
+### Agent Memory Snapshots
+
+Agents with `memory: 'user'` can have memory snapshots:
+- Snapshots stored in `~/.claude/agent-memory/` (user)
+- `.claude/agent-memory/` (project)
+- `.claude/agent-memory-local/` (local)
+
+### omitClaudeMd Flag
+
+Excludes CLAUDE.md hierarchy from agent's context to save tokens:
+- Kill-switch: `tengu_slim_subagent_claudemd`
+
+### Auto-Background Feature
+
+After enabling via feature flag or environment variable, agents can auto-background after 2 minutes:
+```typescript
+if (isEnvTruthy(process.env.CLAUDE_AUTO_BACKGROUND_TASKS) ||
+    getFeatureValue_CACHED_MAY_BE_STALE('tengu_auto_background_agents', false)) {
+  return 120_000;  // 2 minutes
+}
+```
+
+### Async Agent Tool Restrictions
+
+Async agents have hardcoded tool allowlist:
+```typescript
+export const ASYNC_AGENT_ALLOWED_TOOLS = new Set([
+  FILE_READ_TOOL_NAME,
+  WEB_SEARCH_TOOL_NAME,
+  TODO_WRITE_TOOL_NAME,
+  GREP_TOOL_NAME,
+  WEB_FETCH_TOOL_NAME,
+  GLOB_TOOL_NAME,
+  ...SHELL_TOOL_NAMES,
+  FILE_EDIT_TOOL_NAME,
+  FILE_WRITE_TOOL_NAME,
+  NOTEBOOK_EDIT_TOOL_NAME,
+  SKILL_TOOL_NAME,
+  SYNTHETIC_OUTPUT_TOOL_NAME,
+  TOOL_SEARCH_TOOL_NAME,
+  ENTER_WORKTREE_TOOL_NAME,
+  EXIT_WORKTREE_TOOL_NAME,
+])
+```
+
+Async agents cannot use `AgentTool` (would cause recursion).
+
+### Agent Definition Undocumented Fields
+
+```typescript
+interface BaseAgentDefinition {
+  criticalSystemReminder_EXPERIMENTAL?: string
+  pendingSnapshotUpdate?: { snapshotTimestamp: string }
+  requiredMcpServers?: string[]
+  omitClaudeMd?: boolean
+  background?: boolean
+  initialPrompt?: string
+  color?: string
+}
+```
+
+### AgentTool Runtime Parameters
+
+```typescript
+{
+  description: string,
+  prompt: string,
+  subagent_type?: string,
+  model?: 'sonnet' | 'opus' | 'haiku',
+  run_in_background?: boolean,
+  name?: string,           // teammate name
+  team_name?: string,      // team name
+  mode?: PermissionMode,   // spawn permission mode
+  isolation?: 'worktree' | 'remote',
+  cwd?: string,            // KAIROS only
+}
 ```
 
 ---

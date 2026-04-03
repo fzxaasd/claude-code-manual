@@ -491,6 +491,234 @@ export ANTHROPIC_API_KEY=xxx
 
 ---
 
+## 团队邮箱系统 (Team Mailbox)
+
+### 1. 邮箱位置与结构
+
+```
+~/.claude/teams/{team_name}/inboxes/{agent_name}.json
+```
+
+每个 Agent 有一个独立的邮箱文件，用于团队成员之间的消息传递。
+
+### 2. 消息类型
+
+| 消息类型 | 用途 | 方向 |
+|----------|------|------|
+| `idle_notification` | Agent 空闲通知 | Worker -> Leader |
+| `task_assignment` | 任务分配 | Leader -> Worker |
+| `permission_request` | 权限请求 | Worker -> Leader |
+| `sandbox_permission_request` | 沙箱网络权限请求 | Worker -> Leader |
+| `permission_response` | 权限响应 | Leader -> Worker |
+| `sandbox_permission_response` | 沙箱权限响应 | Leader -> Worker |
+| `shutdown_request` | 关闭请求 | Leader -> Worker |
+| `shutdown_approved` | 关闭确认 | Worker -> Leader |
+| `shutdown_rejected` | 关闭拒绝 | Worker -> Leader |
+| `plan_approval_request` | 计划审批请求 | Worker -> Leader |
+| `plan_approval_response` | 计划审批响应 | Leader -> Worker |
+| `mode_set_request` | 权限模式变更 | Leader -> Worker |
+| `team_permission_update` | 团队权限更新广播 | Leader -> Workers |
+
+### 3. 消息格式
+
+```typescript
+// 标准消息结构
+interface TeammateMessage {
+  from: string           // 发送者 Agent ID
+  text: string           // 消息内容（JSON 字符串）
+  timestamp: string      // ISO 时间戳
+  read: boolean          // 是否已读
+  color?: string         // 发送者颜色标记
+  summary?: string       // 5-10 词摘要（UI 预览用）
+}
+```
+
+### 4. Peer DM 可见性
+
+当 Agent 向其他成员发送私信时，该消息的摘要会包含在空闲通知中：
+
+```typescript
+// 从最后一条助手消息提取 peer DM 摘要
+"[to {agent_name}] {summary}"
+```
+
+这使得 Leader 可以追踪团队成员之间的通信状态。
+
+---
+
+## 执行后端 (Execution Backends)
+
+### 1. 后端类型
+
+| 后端 | 说明 | 使用场景 |
+|------|------|----------|
+| `tmux` | 传统 tmux 面板管理 | 标准终端环境 |
+| `iterm2` | iTerm2 原生分屏 | iTerm2 用户 |
+| `in-process` | 同 Node.js 进程的隔离上下文 | 轻量级/测试 |
+
+### 2. tmux 后端
+
+- 使用 tmux pane 进行 Agent 可视化
+- 支持 pane 布局重平衡
+- 支持 pane 隐藏/显示
+- 可配置外部 session socket
+
+### 3. iTerm2 后端
+
+- 使用 iTerm2 原生 split panes
+- 需要安装 `it2` CLI 工具
+- 提供 pane 边框颜色和标题设置
+
+### 4. in-process 后端
+
+- 在同一 Node.js 进程中运行
+- 使用隔离的上下文（AsyncLocalStorage）
+- 适合测试和轻量级场景
+- 支持 AbortController 进行生命周期管理
+
+### 5. 后端配置
+
+```json
+// settings.json 中配置执行后端
+{
+  "swarm": {
+    "backend": "tmux"  // 或 "iterm2", "in-process"
+  }
+}
+```
+
+---
+
+## Agent 邮箱配置
+
+### 1. 邮箱设置位置
+
+```
+~/.claude/teams/{team}/inboxes/{agent_name}.json
+```
+
+### 2. 环境变量
+
+Agent 通过以下环境变量识别身份：
+
+| 环境变量 | 说明 |
+|----------|------|
+| `CLAUDE_CODE_TEAM_NAME` | 团队名称 |
+| `CLAUDE_CODE_AGENT_ID` | Agent 唯一标识 (格式: agentName@teamName) |
+| `CLAUDE_CODE_AGENT_NAME` | Agent 名称 |
+| `CLAUDE_CODE_AGENT_COLOR` | UI 显示颜色 |
+
+### 3. Team Lead 识别
+
+Team Lead 没有设置 `CLAUDE_CODE_AGENT_ID` 环境变量，或者其值为 `team-lead`。其他成员通过此特征识别 Leader。
+
+---
+
+## 权限同步系统 (Permission Sync)
+
+### 1. 权限请求流程
+
+```
+Worker 遇到权限提示
+    ↓
+Worker 发送 permission_request 到 Leader 邮箱
+    ↓
+Leader 轮询邮箱检测到请求
+    ↓
+用户通过 Leader UI 审批/拒绝
+    ↓
+Leader 发送 permission_response 到 Worker 邮箱
+    ↓
+Worker 继续执行
+```
+
+### 2. 文件系统结构
+
+```
+~/.claude/teams/{team_name}/
+├── permissions/
+│   ├── pending/           # 待处理的请求
+│   │   └── {request_id}.json
+│   └── resolved/          # 已处理的请求（自动清理）
+│       └── {request_id}.json
+└── inboxes/
+    └── {agent_name}.json
+```
+
+### 3. 权限请求消息格式
+
+```typescript
+interface PermissionRequestMessage {
+  type: 'permission_request'
+  request_id: string
+  agent_id: string        // Worker 的 agent_id
+  tool_name: string       // 需要权限的工具名
+  tool_use_id: string     // 原始 toolUseID
+  description: string    // 人类可读的描述
+  input: Record<string, unknown>
+  permission_suggestions: unknown[]
+}
+```
+
+### 4. 权限响应消息格式
+
+```typescript
+// 成功响应
+{
+  type: 'permission_response',
+  request_id: string,
+  subtype: 'success',
+  response: {
+    updated_input?: Record<string, unknown>
+    permission_updates?: unknown[]
+  }
+}
+
+// 拒绝响应
+{
+  type: 'permission_response',
+  request_id: string,
+  subtype: 'error',
+  error: string
+}
+```
+
+### 5. Sandbox 权限
+
+当沙箱运行时检测到非允许主机的网络访问时：
+
+```typescript
+interface SandboxPermissionRequestMessage {
+  type: 'sandbox_permission_request'
+  requestId: string
+  workerId: string
+  workerName: string
+  workerColor?: string
+  hostPattern: { host: string }
+  createdAt: number
+}
+```
+
+### 6. 团队权限更新广播
+
+Leader 可以向所有成员广播权限更新：
+
+```typescript
+interface TeamPermissionUpdateMessage {
+  type: 'team_permission_update'
+  permissionUpdate: {
+    type: 'addRules'
+    rules: Array<{ toolName: string; ruleContent?: string }>
+    behavior: 'allow' | 'deny' | 'ask'
+    destination: 'session'
+  }
+  directoryPath: string
+  toolName: string
+}
+```
+
+---
+
 ## 质量保证
 
 ### 1. 代码质量

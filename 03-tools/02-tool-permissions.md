@@ -99,8 +99,10 @@ ToolName(pattern) # 匹配特定调用模式
 ### 来源优先级
 
 ```
-userSettings > projectSettings > localSettings > flagSettings > policySettings
+policySettings (最高) > flagSettings > localSettings > projectSettings > userSettings > pluginSettings (最低)
 ```
+
+**注意**：从**低优先级到高优先级**遍历配置，后面的覆盖前面的。
 
 ### 执行顺序
 

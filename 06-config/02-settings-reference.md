@@ -400,13 +400,12 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 **sshConfigs 结构**:
 ```typescript
 {
-  name: string,           // 配置名称
-  host: string,           // SSH 主机
-  port?: number,          // SSH 端口，默认 22
-  user?: string,          // SSH 用户
-  identityFile?: string,  // SSH 私钥路径
-  jumpHost?: string,     // 跳板机
-  timeout?: number,       // 连接超时(毫秒)
+  id: string,                   // 唯一标识符
+  name: string,                 // 配置名称
+  sshHost: string,              // SSH 主机
+  sshPort?: number,             // SSH 端口，默认 22
+  sshIdentityFile?: string,     // SSH 私钥路径
+  startDirectory?: string,     // 启动目录
 }
 ```
 

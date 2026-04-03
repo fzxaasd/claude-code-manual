@@ -591,6 +591,103 @@ Interview Phase (ants users) unaffected by Pewter Ledger because:
 
 ---
 
+## Undocumented Features
+
+### useAutoModeDuringPlan Setting
+
+Controls whether auto mode semantics are used during Plan Mode:
+
+```typescript
+// settings.json
+{
+  "useAutoModeDuringPlan": true  // default true
+}
+```
+
+### skipAutoPermissionPrompt Setting
+
+Controls auto mode opt-in dialog behavior:
+
+```typescript
+{
+  "skipAutoPermissionPrompt": true  // skip auto mode opt-in dialog
+}
+```
+
+### prePlanMode and strippedDangerousRules
+
+Internal permission context fields:
+
+```typescript
+type ToolPermissionContext = {
+  readonly strippedDangerousRules?: ToolPermissionRulesBySource
+  readonly shouldAvoidPermissionPrompts?: boolean
+  readonly awaitAutomatedChecksBeforeDialog?: boolean
+  readonly prePlanMode?: PermissionMode  // permission mode before entering Plan Mode
+}
+```
+
+**`prePlanMode`**: Stores the permission mode before entering Plan Mode, used by ExitPlanMode to restore the original mode.
+
+**`strippedDangerousRules`**: When auto mode is used during Plan Mode, dangerous permissions (like `Bash(*)`, `Agent(*)`, `PowerShell(iex:*)`) are stripped and stored here for later restoration.
+
+### Circuit Breaker Behavior
+
+ExitPlanMode includes a circuit breaker mechanism to prevent bypassing auto mode via ExitPlanMode:
+
+```typescript
+// If prePlanMode was auto-like but gate is now off, restore to 'default'
+if (feature('TRANSCRIPT_CLASSIFIER')) {
+  const prePlanRaw = appState.toolPermissionContext.prePlanMode ?? 'default'
+  if (
+    prePlanRaw === 'auto' &&
+    !(permissionSetupModule?.isAutoModeGateEnabled() ?? false)
+  ) {
+    // Restore to 'default' instead of 'auto'
+  }
+}
+```
+
+### planWasEdited Output Field
+
+ExitPlanMode output includes this field indicating whether the user edited the plan:
+
+```typescript
+planWasEdited: boolean  // User edited the plan (CCR UI or Ctrl+G)
+```
+
+### Ultraplan Feature
+
+CCR (Cloud Code Remote) super planning feature:
+
+- Uses `tengu_ultraplan_model` GrowthBook config (defaults to Opus 4.6)
+- 30 minute timeout
+- Permission mode: `'plan'`
+- Two execution targets: `'local'` (teleport back) or `'remote'` (execute in CCR)
+
+### Plan File Recovery Mechanism
+
+Plan files can be incrementally persisted to transcript snapshots during CCR sessions:
+
+```typescript
+export async function persistFileSnapshotIfRemote(): Promise<void>
+```
+
+### plansDirectory Security Validation
+
+If user sets plansDirectory outside project root, it silently falls back to `~/.claude/plans/`.
+
+### GrowthBook Feature Flags
+
+| Flag | Description |
+|------|------------|
+| `tengu_plan_mode_interview_phase` | Interview phase |
+| `tengu_pewter_ledger` | Plan size control (trim/cut/cap) |
+| `tengu_auto_mode_config.enabled` | Auto mode availability |
+| `tengu_ultraplan_model` | Model used for ultraplan |
+
+---
+
 ## Testing Verification
 
 Verify Plan Mode configuration:

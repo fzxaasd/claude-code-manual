@@ -327,6 +327,90 @@ context: fork
 
 ---
 
+## 未文档化的功能
+
+### 变量替换
+
+| 变量 | 说明 | 作用域 |
+|------|------|--------|
+| `${CLAUDE_SKILL_DIR}` | 技能自己的目录路径 | 文件和插件技能 |
+| `${CLAUDE_SESSION_ID}` | 当前会话标识符 | 所有技能类型 |
+| `${CLAUDE_PLUGIN_ROOT}` | 插件根目录 | 插件技能 |
+| `${CLAUDE_PLUGIN_DATA}` | 插件数据目录 | 插件技能 |
+
+### 未文档化的 frontmatter 字段
+
+| 字段 | 说明 |
+|------|------|
+| `hide-from-slash-command-tool` | 控制 SlashCommand 工具中的可见性 |
+| `immediate` | true 时绕过队列立即执行 |
+| `isSensitive` | true 时从会话历史中删除参数 |
+| `kind: 'workflow'` | 标记为 workflow-backed，在自动补全中显示徽章 |
+| `availability` | 声明可用的认证环境 ('claude-ai' 或 'console') |
+| `disableNonInteractive` | 禁用非交互模式执行 |
+| `skills` | Agent 预加载的技能列表 |
+
+### Shell 命令块
+
+```markdown
+!`shell command`                    // 内联执行
+
+```!bash
+echo "shell command"
+```
+```
+
+Shell 块在技能加载期间执行，用于准备上下文。
+
+### Skill 权限自动授权
+
+使用"安全"属性的技能会自动授予权限：
+
+```typescript
+const SAFE_SKILL_PROPERTIES = new Set([
+  'type', 'progressMessage', 'contentLength', 'argNames', 'model',
+  'effort', 'source', 'pluginInfo', 'disableNonInteractive', 'skillRoot',
+  'context', 'agent', 'getPromptForCommand', 'frontmatterKeys',
+  'name', 'description', 'hasUserSpecifiedDescription', 'isEnabled',
+  'isHidden', 'aliases', 'isMcp', 'argumentHint', 'whenToUse', 'paths',
+  'version', 'disableModelInvocation', 'userInvocable', 'loadedFrom',
+  'immediate', 'userFacingName'
+])
+```
+
+### Remote Skills (实验性)
+
+特性标志: `EXPERIMENTAL_SKILL_SEARCH` + `USER_TYPE === 'ant'`
+
+具有 `_canonical_` 前缀的远程技能从 AKI/GCS 加载。
+
+### Bundled Skill 文件提取
+
+Bundled 技能可以指定首次调用时提取到磁盘的文件：
+
+```typescript
+files?: Record<string, string>  // { "path": "content" }
+```
+
+### model: inherit
+
+显式使用父级模型的语法：
+
+```yaml
+model: inherit  # 使用调用技能的模型
+```
+
+### effort 值
+
+effort 可以是字符串或正整数：
+
+```yaml
+effort: low      # 字符串
+effort: 42        # 整数
+```
+
+---
+
 ## 技能格式参考
 
 | 字段 | 说明 | 必需 |
@@ -338,14 +422,18 @@ context: fork
 | `arguments` | 参数定义 | 可选 |
 | `argument-hint` | 参数示例格式 | 可选 |
 | `context` | `inline` 或 `fork` | 可选 |
-| `model` | 指定模型 | 可选 |
-| `effort` | `low`/`medium`/`high` | 可选 |
+| `model` | 指定模型，`inherit` 使用父级模型 | 可选 |
+| `effort` | `low`/`medium`/`high` 或正整数 | 可选 |
 | `agent` | fork 模式时的 agent 类型 | 可选 |
 | `shell` | 执行 shell 类型 | 可选 |
 | `hide-from-slash-command-tool` | 从 /skills 列表隐藏 | 可选 |
 | `disableModelInvocation` | 禁用模型调用 | 可选 |
 | `paths` | 路径模式激活 | 可选 |
 | `files` | 相关文件 | 可选 |
+| `immediate` | 绕过队列立即执行 | 可选 |
+| `isSensitive` | 从历史中删除参数 | 可选 |
+| `availability` | 可用环境限制 | 可选 |
+| `disableNonInteractive` | 禁用非交互模式 | 可选 |
 
 ### 完整示例
 

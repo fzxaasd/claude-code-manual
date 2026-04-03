@@ -692,6 +692,118 @@ Options:
 
 ---
 
+## Bridge vs Remote 系统区别
+
+源码中存在两个远程相关的系统：
+
+| 特性 | Bridge (src/bridge/) | Remote (src/remote/) |
+|------|---------------------|---------------------|
+| **用途** | CCR Remote Control（远程控制桥接） | Remote Session Manager（远程会话管理） |
+| **协议** | SSE + HTTP PUT | WebSocket (`/v1/sessions/ws/{id}/subscribe`) |
+| **方向** | claude.ai → 本地 REPL | 通用 WebSocket 会话订阅 |
+| **认证** | OAuth + Trusted Device Token | Token-based |
+| **入口** | `claude remote-control` | RemoteSessionManager |
+
+### RemoteSessionManager 简介
+
+基于 `src/remote/RemoteSessionManager.ts`:
+
+```typescript
+export class RemoteSessionManager {
+  // WebSocket 连接管理
+  subscribe(sessionId: string): Promise<void>
+  unsubscribe(): void
+
+  // 会话状态
+  getStatus(): SessionStatus
+  onStatusChange(callback: (status: SessionStatus) => void): void
+}
+```
+
+**使用场景**：需要远程查看/交互会话时，通过 WebSocket 订阅实时更新。
+
+---
+
+## 未文档化的功能
+
+### 未文档化的 GrowthBook Features
+
+| Feature Key | 说明 |
+|-------------|------|
+| `tengu_bridge_initial_history_cap` | 重播的最大初始消息数 (默认 200) |
+| `tengu_cobalt_harbor` | CCR auto-connect 默认 (ant-only) |
+| `tengu_ccr_bridge_multi_session` | 每个环境多个 sessions |
+| `tengu_ccr_bridge_multi_environment` | 每个 host:dir 多个环境 |
+
+### 未文档化的环境变量
+
+| 变量 | 作用域 | 说明 |
+|------|--------|------|
+| `CLAUDE_BRIDGE_SESSION_INGRESS_URL` | Ant-only | 覆盖 session ingress URL |
+| `CLAUDE_CODE_SESSION_ACCESS_TOKEN` | Process-wide | 单会话 OAuth token 回退 |
+| `CLAUDE_TRUSTED_DEVICE_TOKEN` | Testing | 覆盖 trusted device token |
+| `CLAUDE_BRIDGE_USE_CCR_V2` | CCR v2 | 强制 standalone bridge 使用 CCR v2 transport |
+
+### heartbeatWork 响应字段
+
+文档未记录的响应字段：
+```typescript
+{
+  lease_extended: boolean,
+  state: string,
+  last_heartbeat: string,    // ISO 时间戳
+  ttl_seconds: number         // 剩余 TTL
+}
+```
+
+### BridgeState 类型
+
+```typescript
+export type BridgeState = 'ready' | 'connected' | 'reconnecting' | 'failed'
+```
+
+### Essential Traffic 检查
+
+Trusted Device Token enrollment 受 `isEssentialTrafficOnly()` 检查保护 - 在 essential traffic 模式下跳过 enrollment。
+
+### Fault Injection System (Ant-only)
+
+用于手动测试 bridge 恢复路径的开发功能：
+- `/bridge-kick <subcommand>` slash command
+- `injectFault()` - 队列 fault 用于测试
+- `fireClose()` - 测试 ws_closed → reconnect 升级
+- `forceReconnect()` - 触发 reconnectEnvironmentWithSession
+
+### Session ID 兼容层
+
+```typescript
+toCompatSessionId(cse_* → session_*)  // v1 compat API
+toInfraSessionId(session_* → cse_*)  // infrastructure 层调用
+setCseShimGate()  // 动态 kill switch 注入
+```
+
+### Token Refresh Scheduler
+
+```typescript
+scheduleFromExpiresIn()  // 使用显式 TTL 调度刷新
+cancel() / cancelAll()   // 取消调度的刷新
+```
+
+### CCRClient 常量
+
+```typescript
+MAX_CONSECUTIVE_AUTH_FAILURES = 10  // 放弃前的认证失败阈值
+STREAM_EVENT_FLUSH_INTERVAL_MS = 100  // 文本增量批处理窗口
+```
+
+### OAuth 401 Retry Logic
+
+```typescript
+withOAuthRetry()  // 401 时尝试 token 刷新
+```
+
+---
+
 ## 与旧文档对比
 
 ### 已删除的虚构内容

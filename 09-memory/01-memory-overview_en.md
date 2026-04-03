@@ -267,7 +267,7 @@ Based on `MEMORY_DRIFT_CAVEAT` (`memoryTypes.ts:201-202`):
 
 ---
 
-## Trusting Information in Memory
+## Before Recommending from Memory
 
 Based on `TRUSTING_RECALL_SECTION` (`memoryTypes.ts:240-256`):
 
@@ -286,6 +286,52 @@ Specific functions, files, or flags mentioned in Memory are **declarations**, no
 Memory summarizing repo state (like activity logs, architecture snapshots) is **frozen in time**.
 
 If user asks about "recent" or "current" state, prefer `git log` or reading code over memory snapshots.
+
+---
+
+## Memory Type Values
+
+Based on `MEMORY_TYPE_VALUES` (`memoryTypes.ts`):
+
+```typescript
+export const MEMORY_TYPE_VALUES = [
+  'User',
+  'Project',
+  'Local',
+  'Managed',
+  'AutoMem',
+  ...(feature('TEAMMEM') ? (['TeamMem'] as const) : []),
+] as const
+```
+
+| Type | Description |
+|------|-------------|
+| User | User-level memory |
+| Project | Project-level memory |
+| Local | Local-only memory |
+| Managed | Managed-level memory |
+| AutoMem | Auto memory |
+| TeamMem | Team memory (requires TEAMMEM feature) |
+
+---
+
+## Session Memory Configuration
+
+Based on `src/services/SessionMemory/sessionMemoryUtils.ts`:
+
+### Trigger Thresholds
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `minimumMessageTokensToInit` | 10000 | Minimum tokens to initialize |
+| `minimumTokensBetweenUpdate` | 5000 | Minimum tokens between updates |
+| `toolCallsBetweenUpdates` | 3 | Minimum tool calls between updates |
+
+**Important Rule**: `minimumTokensBetweenUpdate` threshold is **always required**, even if other conditions are met.
+
+### Manual Trigger
+
+`/summary` command can manually trigger session memory extraction, bypassing threshold checks.
 
 ---
 
@@ -486,6 +532,77 @@ isUsingOAuth()                  // Requires first-party OAuth
 3. **OAuth Authentication**:
    - Requires `CLAUDE_AI_INFERENCE_SCOPE` + `CLAUDE_AI_PROFILE_SCOPE`
    - Token auto-refresh
+
+---
+
+## Undocumented Features
+
+### autoMemoryDirectory Security Restriction
+
+**Important**: `.claude/settings.json` (projectSettings) **cannot** set `autoMemoryDirectory` because a malicious repo could set `autoMemoryDirectory: "~/.ssh"` to gain silent write access. Only policy, flag, local, and user settings can configure this directory.
+
+### CLAUDE_CODE_DISABLE_AUTO_MEMORY Behavior
+
+`CLAUDE_CODE_DISABLE_AUTO_MEMORY` has special behavior:
+- `=1` or `=true`: Disable auto memory
+- `=0` or `=false`: **Force enable** auto memory (ignores other settings)
+- Not set: Use default behavior
+
+### Agent Memory Snapshots
+
+Agent Memory has a complete snapshot synchronization system for cross-machine sync:
+- Snapshots stored in `.claude/agent-memory-snapshots/<agentType>/`
+- `checkAgentMemorySnapshot()` - Check snapshot
+- `initializeFromSnapshot()` - Initialize from snapshot
+- `replaceFromSnapshot()` - Replace with snapshot
+- `markSnapshotSynced()` - Mark as synced
+
+### autoDream Lock Mechanism
+
+autoDream uses file locking to prevent concurrent conflicts:
+- Lock file location: `<memoryDir>/.consolidate-lock`
+- PID-based locking
+- 1 hour stale protection (`HOLDER_STALE_MS = 60 * 60 * 1000`)
+- Lock rollback on failure
+
+### Session Memory
+
+Session Memory is a completely separate system from Auto Memory:
+- Maintains notes about current conversation in `<sessionMemoryDir>/session-memory.md`
+- Runs on a forked subagent
+- Uses thresholds from `tengu_sm_config` GrowthBook feature
+- Defaults: `minimumMessageTokensToInit: 10000`, `minimumTokensBetweenUpdate: 5000`, `toolCallsBetweenUpdates: 3`
+
+### Memory Shape Telemetry
+
+Enabled via `MEMORY_SHAPE_TELEMETRY` feature flag, logs memory recall patterns.
+
+### Additional Secret Scanning Rules
+
+Beyond the documented rules, there are additional undocumented scanning rules:
+
+| Rule Name | Pattern |
+|-----------|---------|
+| `azure-ad-client-secret` | Azure AD client secrets |
+| `digitalocean-pat` | DigitalOcean PATs |
+| `digitalocean-access-token` | DigitalOcean access tokens |
+| `anthropic-admin-api-key` | Admin API Keys (`sk-ant-admin01-*`) |
+| `github-app-token` | GitHub App Tokens (`ghu_*`, `ghs_*`) |
+| `github-oauth` | OAuth Tokens (`gho_*`) |
+| `github-refresh-token` | Refresh Tokens (`ghr_*`) |
+| `gitlab-pat` | GitLab PATs |
+| `gitlab-deploy-token` | GitLab deploy tokens |
+| `twilio-api-key` | Twilio API keys |
+| `databricks-api-token` | Databricks tokens |
+| `hashicorp-tf-api-token` | Terraform Cloud tokens |
+| `pulumi-api-token` | Pulumi tokens |
+| `postman-api-token` | Postman API keys |
+| `grafana-cloud-api-token` | Grafana Cloud tokens |
+| `grafana-service-account-token` | Grafana service account tokens |
+| `sentry-org-token` | Sentry organization tokens |
+| `stripe-access-token` | Stripe keys (`sk_*`, `rk_*`) |
+| `shopify-access-token` | Shopify access tokens |
+| `shopify-shared-secret` | Shopify shared secrets |
 
 ---
 

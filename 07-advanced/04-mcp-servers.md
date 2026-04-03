@@ -42,10 +42,11 @@ const TransportSchema = z.enum([
   'sse-ide',      // IDE 扩展专用 SSE
   'http',         // HTTP 请求
   'ws',           // WebSocket
-  'ws-ide',       // IDE 扩展专用 WebSocket
-  'sdk',          // SDK 内部传输 (IDE 集成)
-  'claudeai-proxy' // Claude.ai Proxy 服务器
+  'sdk'           // SDK 内部传输 (IDE 集成)
 ])
+
+// 注意: 'ws-ide' 和 'claudeai-proxy' 不属于 TransportSchema，
+// 它们有各自独立的配置模式（见下方专门章节）
 ```
 
 ### 1. stdio 服务器
@@ -167,7 +168,30 @@ interface McpSdkServerConfig {
 // 不通过标准网络传输，在同一进程内直接调用
 ```
 
-### 6. Claude.ai 代理
+### 6. IDE SSE 服务器 (sse-ide)
+
+```typescript
+interface McpSSEIDEServerConfig {
+  type: 'sse-ide'
+  url: string
+  ideName: string
+  ideRunningInWindows?: boolean  // Windows 环境标志（未文档化）
+}
+```
+
+### 7. IDE WebSocket 服务器 (ws-ide)
+
+```typescript
+interface McpWebSocketIDEServerConfig {
+  type: 'ws-ide'
+  url: string
+  ideName: string
+  authToken?: string              // IDE WebSocket 认证令牌（未文档化）
+  ideRunningInWindows?: boolean   // Windows 环境标志（未文档化）
+}
+```
+
+### 8. Claude.ai 代理
 
 ```typescript
 interface McpClaudeAIProxyServerConfig {
@@ -531,7 +555,7 @@ type ServerResource = Resource & {
 /mcp reconnect <server-name>
 ```
 
-**注意**：`claude mcp test` 和 `claude mcp get` 命令不存在。MCP 管理通过交互式界面 (`/mcp`) 进行。
+**注意**：`claude mcp test` 命令不存在（通过交互式 `/mcp` 界面测试）。`claude mcp get` 用于获取服务器详情。
 
 ---
 
@@ -652,3 +676,68 @@ cat ~/.claude/mcp.json
 # 查看 MCP 状态
 claude --debug mcp
 ```
+
+---
+
+## 未文档化的功能
+
+### MCP 相关环境变量
+
+| 环境变量 | 默认值 | 说明 |
+|---------|--------|------|
+| `MCP_TOOL_TIMEOUT` | 100000000 (ms) | MCP 工具调用超时时间 |
+| `MCP_CLIENT_SECRET` | - | OAuth 客户端密钥（安全存储） |
+| `MCP_OAUTH_CLIENT_METADATA_URL` | - | OAuth 客户端元数据 URL（FedStart 支持） |
+| `CLAUDE_CODE_ENABLE_XAA` | - | 启用 XAA (SEP-990) 跨应用访问 |
+| `ENABLE_CLAUDEAI_MCP_SERVERS` | - | 启用/禁用 claude.ai MCP 服务器获取 |
+
+### headersHelper 安全特性
+
+`headersHelper` 脚本在以下情况会被阻止：
+- 项目/本地 MCP 服务器
+- 非 CI/CD 模式
+- 工作区信任未建立
+
+传递的环境变量：
+- `CLAUDE_CODE_MCP_SERVER_NAME`
+- `CLAUDE_CODE_MCP_SERVER_URL`
+
+### 服务器配置优先级
+
+MCP 服务器配置优先级（从高到低）：
+1. `local` (最高)
+2. `project` (仅已批准服务器)
+3. `user`
+4. `plugin` (最低)
+5. `claude.ai` 连接器
+
+### Channel 权限系统
+
+通过 `tengu_harbor_permissions` GrowthBook feature 启用：
+
+```typescript
+// 权限响应格式
+/^\s*(y|yes|n|no)\s+([a-km-z]{5})\s*$/i
+// 例如: "yes tbxkq" - 5字母 ID 系统
+```
+
+### 动态 MCP 配置
+
+MCP 服务器可通过以下方式动态配置：
+- `--mcp-config` CLI 标志（JSON 文件）
+- `mcp_set_servers` 控制消息
+- SDK V2 `Query.setMcpServers()`
+
+### 内置默认禁用服务器
+
+某些 MCP 服务器是内置的，默认禁用：
+- 需要通过 `enabledMcpServers` 显式启用
+- 由 `CHICAGO_MCP` feature flag 控制
+
+### URL 模式匹配
+
+企业策略 URL 模式匹配规则：
+- 仅 `*` 作为通配符
+- `.*` 会变成字面量 `.*`
+- 不支持 `\*` 转义
+

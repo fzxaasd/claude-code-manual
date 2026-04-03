@@ -559,6 +559,7 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 | 事件 | 时机 | 字段 |
 |------|------|------|
 | `tengu_sm_compact_flag_check` | 功能检查 | tengu_session_memory, tengu_sm_compact, should_use |
+| `tengu_sm_compact_config` | 配置检查 | - |
 | `tengu_sm_compact_no_session_memory` | 无 session memory | - |
 | `tengu_sm_compact_empty_template` | memory 为空模板 | - |
 | `tengu_sm_compact_summarized_id_not_found` | 找不到已摘要 ID | - |
@@ -594,12 +595,14 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 | `TEAMMEM` | 团队记忆功能 |
 | `KAIROS` | 每日日志模式 |
 | `EXTRACT_MEMORIES` | 提取记忆后台代理 |
+| `MEMORY_SHAPE_TELEMETRY` | 记忆召回模式遥测 |
 | `tengu_coral_fern` | 搜索过去上下文 (`buildSearchingPastContextSection`) |
 | `tengu_moth_copse` | 跳过 MEMORY.md 索引写入说明 |
 | `tengu_passport_quail` | 提取记忆后台代理激活 |
 | `tengu_slate_thimble` | 非交互会话强制激活提取 |
 | `tengu_herring_clock` | 团队记忆禁用遥测 |
 | `tengu_onyx_plover` | autoDream 配置开关 |
+| `tengu_dunwich_bell` | Memory Survey 功能开关 |
 
 ---
 

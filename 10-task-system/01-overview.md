@@ -87,6 +87,19 @@ export type TaskStateBase = {
   outputOffset: number    // 输出偏移量
   notified: boolean       // 是否已通知
 }
+
+// Tasks V2 TaskSchema (src/utils/tasks.ts)
+export type TaskSchema = {
+  id: string
+  subject: string
+  description: string
+  activeForm?: string     // 进行中的动作描述
+  owner?: string          // 任务所有者
+  status: TaskStatus
+  blocks?: string[]       // 被此任务阻塞的任务
+  blockedBy?: string[]    // 阻塞此任务的任务
+  metadata?: Record<string, unknown>  // 自定义元数据
+}
 ```
 
 ---
@@ -148,7 +161,7 @@ const inputSchema = z.strictObject({
 
 ### Tasks V2 系统 (feature-gated)
 
-当 `CLAUDE_CODE_ENABLE_TASKS=true` 或非交互会话时，TodoWriteTool 被禁用，启用 Tasks V2：
+当 `CLAUDE_CODE_ENABLE_TASKS=true` 或**交互会话**时，启用 Tasks V2，TodoWriteTool 被禁用：
 
 ```typescript
 // 源码 src/utils/tasks.ts
@@ -156,9 +169,11 @@ function isTodoV2Enabled(): boolean {
   if (isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_TASKS)) {
     return true
   }
-  return !getIsNonInteractiveSession()
+  return !getIsNonInteractiveSession()  // 在交互会话中返回 true
 }
 ```
+
+**注意**：Tasks V2 在**交互会话**中启用，在非交互会话中禁用（除非设置了 `CLAUDE_CODE_ENABLE_TASKS=true`）。
 
 Tasks V2 包含: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListTool`
 
@@ -217,8 +232,10 @@ output: {
 |------|-----|------|
 | `recurringFrac` | 0.1 (10%) | 循环任务 jitter |
 | `recurringCapMs` | 15分钟 | 抖动上限 |
+| `recurringMaxAgeMs` | 7天 | 循环任务最大存活时间 |
 | `oneShotMaxMs` | 90秒 | 单次任务最多提前 |
-| one-shot | 随机分钟 | :00/:30 前后随机 |
+| `oneShotFloorMs` | 0 | 单次任务最少延迟 |
+| `oneShotMinuteMod` | 30 | 单次任务分钟取模（:00/:30 前后随机） |
 
 ### 使用示例
 

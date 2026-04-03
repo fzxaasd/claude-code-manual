@@ -491,6 +491,234 @@ export ANTHROPIC_API_KEY=xxx
 
 ---
 
+## Team Mailbox System
+
+### 1. Location and Structure
+
+```
+~/.claude/teams/{team_name}/inboxes/{agent_name}.json
+```
+
+Each agent has an individual mailbox file for inter-team member communication.
+
+### 2. Message Types
+
+| Message Type | Purpose | Direction |
+|--------------|---------|------------|
+| `idle_notification` | Agent idle notification | Worker -> Leader |
+| `task_assignment` | Task assignment | Leader -> Worker |
+| `permission_request` | Permission request | Worker -> Leader |
+| `sandbox_permission_request` | Sandbox network permission | Worker -> Leader |
+| `permission_response` | Permission response | Leader -> Worker |
+| `sandbox_permission_response` | Sandbox permission response | Leader -> Worker |
+| `shutdown_request` | Shutdown request | Leader -> Worker |
+| `shutdown_approved` | Shutdown confirmed | Worker -> Leader |
+| `shutdown_rejected` | Shutdown rejected | Worker -> Leader |
+| `plan_approval_request` | Plan approval request | Worker -> Leader |
+| `plan_approval_response` | Plan approval response | Leader -> Worker |
+| `mode_set_request` | Permission mode change | Leader -> Worker |
+| `team_permission_update` | Team permission broadcast | Leader -> Workers |
+
+### 3. Message Format
+
+```typescript
+// Standard message structure
+interface TeammateMessage {
+  from: string           // Sender agent ID
+  text: string           // Message content (JSON string)
+  timestamp: string      // ISO timestamp
+  read: boolean          // Whether read
+  color?: string         // Sender's color tag
+  summary?: string       // 5-10 word summary for UI preview
+}
+```
+
+### 4. Peer DM Visibility
+
+When an agent sends a direct message to another member, the message summary is included in idle notifications:
+
+```typescript
+// Extract peer DM summary from the last assistant message
+"[to {agent_name}] {summary}"
+```
+
+This allows the Leader to track communication status between team members.
+
+---
+
+## Execution Backends
+
+### 1. Backend Types
+
+| Backend | Description | Use Case |
+|---------|-------------|----------|
+| `tmux` | Traditional tmux pane management | Standard terminal |
+| `iterm2` | iTerm2 native split panes | iTerm2 users |
+| `in-process` | Isolated context in same Node.js process | Lightweight/testing |
+
+### 2. tmux Backend
+
+- Uses tmux pane for agent visualization
+- Supports pane layout rebalancing
+- Supports pane hide/show
+- Configurable external session socket
+
+### 3. iTerm2 Backend
+
+- Uses iTerm2 native split panes
+- Requires `it2` CLI tool installation
+- Provides pane border color and title settings
+
+### 4. In-Process Backend
+
+- Runs in the same Node.js process
+- Uses isolated context (AsyncLocalStorage)
+- Suitable for testing and lightweight scenarios
+- Supports AbortController for lifecycle management
+
+### 5. Backend Configuration
+
+```json
+// Configure execution backend in settings.json
+{
+  "swarm": {
+    "backend": "tmux"  // or "iterm2", "in-process"
+  }
+}
+```
+
+---
+
+## Agent Mailbox Settings
+
+### 1. Mailbox Location
+
+```
+~/.claude/teams/{team}/inboxes/{agent_name}.json
+```
+
+### 2. Environment Variables
+
+Agents identify themselves through these environment variables:
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `CLAUDE_CODE_TEAM_NAME` | Team name |
+| `CLAUDE_CODE_AGENT_ID` | Agent unique ID (format: agentName@teamName) |
+| `CLAUDE_CODE_AGENT_NAME` | Agent name |
+| `CLAUDE_CODE_AGENT_COLOR` | UI display color |
+
+### 3. Team Lead Identification
+
+The Team Lead does not have the `CLAUDE_CODE_AGENT_ID` environment variable set, or its value is `team-lead`. Other members identify the Leader by this characteristic.
+
+---
+
+## Permission Sync System
+
+### 1. Permission Request Flow
+
+```
+Worker encounters permission prompt
+    ↓
+Worker sends permission_request to Leader mailbox
+    ↓
+Leader polls mailbox and detects request
+    ↓
+User approves/rejects via Leader UI
+    ↓
+Leader sends permission_response to Worker mailbox
+    ↓
+Worker continues execution
+```
+
+### 2. File System Structure
+
+```
+~/.claude/teams/{team_name}/
+├── permissions/
+│   ├── pending/           # Pending requests
+│   │   └── {request_id}.json
+│   └── resolved/          # Resolved requests (auto-cleanup)
+│       └── {request_id}.json
+└── inboxes/
+    └── {agent_name}.json
+```
+
+### 3. Permission Request Message Format
+
+```typescript
+interface PermissionRequestMessage {
+  type: 'permission_request'
+  request_id: string
+  agent_id: string        // Worker's agent_id
+  tool_name: string       // Tool name requiring permission
+  tool_use_id: string     // Original toolUseID
+  description: string    // Human-readable description
+  input: Record<string, unknown>
+  permission_suggestions: unknown[]
+}
+```
+
+### 4. Permission Response Message Format
+
+```typescript
+// Success response
+{
+  type: 'permission_response',
+  request_id: string,
+  subtype: 'success',
+  response: {
+    updated_input?: Record<string, unknown>
+    permission_updates?: unknown[]
+  }
+}
+
+// Error response
+{
+  type: 'permission_response',
+  request_id: string,
+  subtype: 'error',
+  error: string
+}
+```
+
+### 5. Sandbox Permissions
+
+When sandbox runtime detects network access to a non-allowed host:
+
+```typescript
+interface SandboxPermissionRequestMessage {
+  type: 'sandbox_permission_request'
+  requestId: string
+  workerId: string
+  workerName: string
+  workerColor?: string
+  hostPattern: { host: string }
+  createdAt: number
+}
+```
+
+### 6. Team Permission Update Broadcast
+
+Leader can broadcast permission updates to all members:
+
+```typescript
+interface TeamPermissionUpdateMessage {
+  type: 'team_permission_update'
+  permissionUpdate: {
+    type: 'addRules'
+    rules: Array<{ toolName: string; ruleContent?: string }>
+    behavior: 'allow' | 'deny' | 'ask'
+    destination: 'session'
+  }
+  directoryPath: string
+  toolName: string
+}
+```
+
+---
+
 ## Quality Assurance
 
 ### 1. Code Quality

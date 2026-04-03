@@ -108,10 +108,12 @@ Automatically starts recording when terminal gains focus, stops when focus is lo
 - Event tracking: `focusTriggered`, `silenceTimedOut`, `focusFlushedChars`
 
 **Hold-to-talk detection details**:
-- Recording starts immediately on first keypress (no delay)
-- Uses auto-repeat detection to control release timer
+- **Bare-char binding** (e.g., space): Requires 5 rapid key presses to activate (`HOLD_THRESHOLD = 5`)
+  - Keys within 120ms count as rapid sequence (`RAPID_KEY_GAP_MS = 120`)
+  - Shows "keep holding..." after 2nd press (`WARMUP_THRESHOLD = 2`)
+- **Modifier combos** (e.g., `meta+k`): Activates on first press, 2s timeout (`MODIFIER_FIRST_PRESS_FALLBACK_MS = 2000`)
 - Release timeout 200ms (`RELEASE_TIMEOUT_MS = 200`)
-- Modifier combos activate directly, no key-count detection needed
+- Supports full-width space (CJK IME) recognized as space
 
 ### Key Configuration
 
@@ -142,7 +144,9 @@ Hold the specified key to start recording, release to stop.
 
 ### STT Service
 
-Uses Deepgram Nova 3 model (`deepgram-nova3`) for speech recognition.
+Uses Deepgram for speech recognition.
+
+**Nova 3 Model**: Controlled by GrowthBook feature `tengu_cobalt_frost`, not enabled by default.
 
 **Keyword Enhancement**: Automatically sends programming terms (MCP, symlink, grep, regex, etc.), project names, git branches, and recent filenames to STT as prompts.
 
@@ -203,6 +207,14 @@ In Focus mode, each final transcript is injected immediately (not accumulated).
 ### Remote Session Detection
 
 Detects `CLAUDE_CODE_REMOTE` environment variable, automatically disables voice.
+
+### Homespace Environment Detection
+
+`isRunningOnHomespace()` function detects if running on Homespace (Ant internal cloud environment), automatically disables voice recording.
+
+### Language Hint Counter
+
+`voiceLangHintShownCount` and `voiceLangHintLastLanguage` track language hint display count, hints shown at most `LANG_HINT_MAX_SHOWS` times.
 
 ### Linux Audio Implementation
 
