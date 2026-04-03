@@ -591,8 +591,6 @@ echo $VAR_NAME
 
 ### Connection Timeout
 
-### Connection Timeout
-
 MCP server config has no `timeout` field. Timeout is controlled via environment variables:
 
 | Environment Variable | Default | Description |

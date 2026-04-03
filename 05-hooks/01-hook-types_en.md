@@ -743,7 +743,7 @@ Using HTTP Hooks for these events will be ignored.
 
 ---
 
-## Undocumented Features
+## Undocumented Hook Features
 
 ### PostToolUse updatedMCPToolOutput
 
@@ -836,6 +836,83 @@ SessionEnd Hook has special timeout configuration:
 | Environment Variable | Default |
 |---------------------|---------|
 | `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` | 1500ms |
+
+### SessionStart: initialUserMessage Response
+
+Allows setting the initial user message for the session:
+
+```typescript
+{
+  hookEventName: "SessionStart",
+  initialUserMessage: string  // Set initial user message
+}
+```
+
+### SessionStart: watchPaths Response
+
+Allows registering file paths to watch (for FileChanged Hook):
+
+```typescript
+{
+  hookEventName: "SessionStart",
+  watchPaths: string[]  // Register watch paths
+}
+```
+
+### CwdChanged/FileChanged: watchPaths Response
+
+Allows dynamically updating the watch list:
+
+```typescript
+{
+  hookEventName: "CwdChanged" | "FileChanged",
+  watchPaths: string[]  // Update watch paths
+}
+```
+
+### Function Hooks (TypeScript Only)
+
+TypeScript callback hooks with session scope, executed in memory. Cannot be persisted to settings.json:
+
+```typescript
+addFunctionHook(
+  setAppState,
+  sessionId,
+  'PreToolUse',
+  'Bash',
+  (messages, signal) => {
+    // Return true to allow, false to block
+    return true;
+  },
+  "Permission denied message"
+);
+```
+
+### Callback Hooks
+
+Internal hooks for SDK users:
+
+```typescript
+type HookCallback = {
+  type: 'callback'
+  callback: (input: HookInput, toolUseID: string | null, abort: AbortSignal | undefined) =>
+    Promise<HookJSONOutput>
+  timeout?: number
+  internal?: boolean  // Excluded from metrics
+}
+```
+
+### Hook Exit Code Full Table
+
+| Exit Code | Semantic | Applicable Hooks |
+|-----------|----------|------------------|
+| 0 | Success/Continue | All Hooks |
+| 1 | Non-blocking error | All Hooks |
+| 2 | Blocking error | PreToolUse, Stop, SubagentStop, PreCompact, ConfigChange, TeammateIdle, TaskCreated, TaskCompleted, PermissionRequest*, ElicitationResult* |
+
+**Notes**:
+- `PostToolUse` **does not support** exit code 2 blocking (tool has already executed, cannot block)
+- `PermissionRequest` and `ElicitationResult` can block operations via JSON response
 
 ---
 
