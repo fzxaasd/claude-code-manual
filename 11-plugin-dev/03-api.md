@@ -519,14 +519,14 @@ interface AdditionalWorkingDirectory {
 
 ```typescript
 interface LoadedPlugin {
-  id: string
   name: string
-  version?: string
-  description?: string
-  source: 'user' | 'project' | 'local' | 'managed'
-  repository?: string
-  isBuiltin: boolean
-  sha?: string  // Git commit SHA
+  manifest: PluginManifest
+  path: string
+  source: string
+  repository: string    // 仓库标识符，通常与 source 相同
+  enabled?: boolean
+  isBuiltin?: boolean   // 内置插件为 true
+  sha?: string          // Git commit SHA（来自 marketplace 条目 source）
 
   // 组件路径
   commandsPath?: string
@@ -540,12 +540,10 @@ interface LoadedPlugin {
 
   // 组件元数据
   commandsMetadata?: Record<string, CommandMetadata>
-  hooksConfig?: HooksConfig
-  lspServers?: LspServerConfig[]
+  hooksConfig?: HooksSettings
+  mcpServers?: Record<string, McpServerConfig>
+  lspServers?: Record<string, LspServerConfig>
   settings?: Record<string, unknown>
-
-  // MCP 配置
-  mcpServers?: McpServerConfig
 }
 ```
 
@@ -555,12 +553,10 @@ interface LoadedPlugin {
 
 ```typescript
 interface PluginRepository {
-  type: 'github' | 'git' | 'npm' | 'url'
   url: string
-  name?: string
-  branch?: string
-  path?: string  // marketplace.json 路径
-  sparsePaths?: string[]  // 稀疏克隆路径
+  branch: string
+  lastUpdated?: string
+  commitSha?: string
 }
 ```
 
@@ -570,15 +566,15 @@ interface PluginRepository {
 
 ```typescript
 type MarketplaceSource =
-  | { source: 'url'; url: string; sha?: string }
+  | { source: 'url'; url: string; headers?: Record<string, string> }
   | { source: 'github'; repo: string; sparsePaths?: string[]; path?: string; ref?: string }
   | { source: 'git'; url: string; sparsePaths?: string[]; path?: string; ref?: string }
-  | { source: 'npm'; package: string; version?: string; registry?: string }
+  | { source: 'npm'; package: string }
   | { source: 'file'; path: string }
   | { source: 'directory'; path: string }
-  | { source: 'hostPattern'; pattern: string; pluginSource: MarketplaceSource }
-  | { source: 'pathPattern'; pattern: string; pluginSource: MarketplaceSource }
-  | { source: 'settings'; settings: PluginManifest }
+  | { source: 'hostPattern'; hostPattern: string }
+  | { source: 'pathPattern'; pathPattern: string }
+  | { source: 'settings'; name: string; plugins: SettingsMarketplacePlugin[]; owner?: PluginAuthor }
 ```
 
 ---

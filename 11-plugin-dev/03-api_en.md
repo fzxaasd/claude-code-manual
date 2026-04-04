@@ -498,14 +498,14 @@ Complete type after plugin loading:
 
 ```typescript
 interface LoadedPlugin {
-  id: string
   name: string
-  version?: string
-  description?: string
-  source: 'user' | 'project' | 'local' | 'managed'
-  repository?: string
-  isBuiltin: boolean
-  sha?: string
+  manifest: PluginManifest
+  path: string
+  source: string
+  repository: string    // Repository identifier, usually same as source
+  enabled?: boolean
+  isBuiltin?: boolean   // true for built-in plugins
+  sha?: string          // Git commit SHA (from marketplace entry source)
 
   // Component paths
   commandsPath?: string
@@ -519,12 +519,10 @@ interface LoadedPlugin {
 
   // Component metadata
   commandsMetadata?: Record<string, CommandMetadata>
-  hooksConfig?: HooksConfig
-  lspServers?: LspServerConfig[]
+  hooksConfig?: HooksSettings
+  mcpServers?: Record<string, McpServerConfig>
+  lspServers?: Record<string, LspServerConfig>
   settings?: Record<string, unknown>
-
-  // MCP configuration
-  mcpServers?: McpServerConfig
 }
 ```
 
@@ -532,12 +530,10 @@ interface LoadedPlugin {
 
 ```typescript
 interface PluginRepository {
-  type: 'github' | 'git' | 'npm' | 'url'
   url: string
-  name?: string
-  branch?: string
-  path?: string
-  sparsePaths?: string[]
+  branch: string
+  lastUpdated?: string
+  commitSha?: string
 }
 ```
 
@@ -547,15 +543,15 @@ interface PluginRepository {
 
 ```typescript
 type MarketplaceSource =
-  | { source: 'url'; url: string; sha?: string }
+  | { source: 'url'; url: string; headers?: Record<string, string> }
   | { source: 'github'; repo: string; sparsePaths?: string[]; path?: string; ref?: string }
   | { source: 'git'; url: string; sparsePaths?: string[]; path?: string; ref?: string }
-  | { source: 'npm'; package: string; version?: string; registry?: string }
+  | { source: 'npm'; package: string }
   | { source: 'file'; path: string }
   | { source: 'directory'; path: string }
-  | { source: 'hostPattern'; pattern: string; pluginSource: MarketplaceSource }
-  | { source: 'pathPattern'; pattern: string; pluginSource: MarketplaceSource }
-  | { source: 'settings'; settings: PluginManifest }
+  | { source: 'hostPattern'; hostPattern: string }
+  | { source: 'pathPattern'; pathPattern: string }
+  | { source: 'settings'; name: string; plugins: SettingsMarketplacePlugin[]; owner?: PluginAuthor }
 ```
 
 ---

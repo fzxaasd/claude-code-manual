@@ -16,8 +16,7 @@ Companion (Buddy) is a desktop companion system that interacts with users throug
 
 | File | Component | Description |
 |------|-----------|-------------|
-| `CompanionSprite.tsx` | React Component | ASCII sprite + speech bubble rendering |
-| `CompanionFloatingBubble` | React Component | Full-screen mode floating bubble |
+| `CompanionSprite.tsx` | React Component | ASCII sprite + speech bubble rendering (includes `CompanionFloatingBubble`) |
 | `companion.ts` | Generation Logic | Mulberry32 PRNG-based companion generation |
 | `types.ts` | Type Definitions | Species, rarity, and attribute definitions |
 | `sprites.ts` | ASCII Art | ASCII sprites for each species |
@@ -141,7 +140,16 @@ Uses `userId` as the seed to ensure each user generates the same companion.
 ### roll() Function
 
 ```typescript
-export function roll(userId: string): CompanionBones
+export function roll(userId: string): Roll
+```
+
+Where the `Roll` type is defined as:
+
+```typescript
+type Roll = {
+  bones: CompanionBones
+  inspirationSeed: number
+}
 ```
 
 Process:
@@ -197,10 +205,10 @@ Set `companionMuted: true` to disable the companion.
 Companion reaction generation system:
 
 ```typescript
-export function fireCompanionObserver(prompt: string): Promise<void>
+fireCompanionObserver(messages: Message[], onReaction: (reaction: string) => void): Promise<void>
 ```
 
-Uses LLM to generate the companion's reaction to user input.
+Uses LLM to generate the companion's reaction to user input. This function is called in `REPL.tsx`, where the first argument is the current message array and the second argument is a callback used to update `AppState.companionReaction`.
 
 ---
 

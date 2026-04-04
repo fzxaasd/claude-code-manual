@@ -48,7 +48,7 @@ export CLAUDE_CODE_MESSAGING_SOCKET
 
 ```typescript
 // 保存 teammate 模式的当前状态快照
-snapshotTeammateState()
+captureTeammateModeSnapshot()
 ```
 
 ### 5. iTerm2/Terminal.app 备份恢复
@@ -58,8 +58,8 @@ snapshotTeammateState()
 ```typescript
 // 仅交互式会话
 if (isInteractive) {
-  restoreITerm2Backup()
-  restoreTerminalAppBackup()
+  checkAndRestoreITerm2Backup()
+  checkAndRestoreTerminalBackup()
 }
 ```
 
@@ -75,20 +75,20 @@ setCwd()
 捕获 hook 配置以检测篡改：
 
 ```typescript
-snapshotHooksConfig()
+captureHooksConfigSnapshot()
 // 存储当前 hooks 配置用于后续验证
 ```
 
-### 7. FileChanged 监视器
+### 8. FileChanged 监视器
 
 初始化文件系统监视器：
 
 ```typescript
-initFileChangedWatcher()
+initializeFileChangedWatcher()
 // 监视文件变更事件
 ```
 
-### 8. Git Worktree 创建
+### 9. Git Worktree 创建
 
 如果使用 `--worktree` 标志：
 
@@ -97,7 +97,7 @@ claude --worktree --tmux
 # 先创建 worktree，然后启动 tmux session
 ```
 
-### 9. 后台作业启动
+### 10. 后台作业启动
 
 | 后台任务 | 说明 |
 |----------|------|
@@ -107,7 +107,7 @@ claude --worktree --tmux
 | Attribution Hooks | 来源钩子 |
 | Team Memory Sync | 团队记忆同步 |
 
-### 10. Sinks 初始化
+### 11. Sinks 初始化
 
 初始化分析/错误日志 sinks：
 
@@ -123,7 +123,7 @@ initSinks()
 ```typescript
 // 跳过条件：--bare 标志
 // 获取 Logo v2 活动信息
-fetchReleaseNotes()
+checkForReleaseNotes()
 ```
 
 ### 12. Permission Mode 绕过验证
