@@ -127,7 +127,7 @@ paths:                              # 路径模式匹配后激活
 ```yaml
 ---
 model: "sonnet"                    # 指定模型（可选）
-effort: "high"                    # effort 级别（可选）
+effort: "high"                    # effort 级别（可选）: low/medium/high/max 或正整数
 disable-model-invocation: true     # 禁用模型自动调用（可选）
 ---
 ```

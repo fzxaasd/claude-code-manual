@@ -744,12 +744,20 @@ HTTP Hook 不支持以下事件：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `type` | string | hook 类型: command/prompt/agent/http |
-| `command` | string | 要执行的命令 (command type) |
+| `type` | string | Hook 类型: command/prompt/agent/http |
+| `command` | string | Command to execute (command type) |
 | `prompt` | string | LLM prompt (prompt type) |
-| `agent` | string | Agent 名称 (agent type) |
+| `agent` | string | Agent name (agent type) |
 | `url` | string | HTTP URL (http type) |
-| `method` | string | HTTP 方法 (http type, 默认 POST) |
+
+**注意**：
+- `prompt` 和 `agent` 类型使用 `prompt` 字段（不是 `agent` 字段名）
+- HTTP 类型始终 POST（不存在 `method` 字段）
+- `async`/`asyncRewake` 仅适用于 `command` 类型
+- `model` 适用于 `prompt` 和 `agent` 类型
+- `shell` 适用于 `command` 类型
+- `statusMessage` 适用于所有类型
+- `headers`/`allowedEnvVars` 适用于 `http` 类型 |
 | `async` | boolean | 异步执行，不阻塞工具 |
 | `once` | boolean | 仅执行一次后移除 |
 | `asyncRewake` | boolean | 异步钩子出错时唤醒模型 (隐含 async) |

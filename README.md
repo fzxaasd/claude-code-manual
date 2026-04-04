@@ -146,8 +146,10 @@
 | [Plan Mode](./07-advanced/07-plan-mode.md) | 规划模式 | ✅ |
 | [Voice Mode](./07-advanced/09-voice-mode.md) | 语音模式 | ✅ |
 | [Bridge Remote](./07-advanced/08-bridge-remote.md) | 远程连接 | ✅ |
-| [Companion/Buddy 系统](./companion-buddy-system.md) | 桌面伴侣系统 | ✅ |
+| [Setup 初始化流程](./setup-initialization-flow.md) | Setup 初始化流程 |
+| [Server/Remote/Coordinator](./server-remote-coordinator.md) | Server/Remote/Coordinator 架构 |
 | [UpstreamProxy 系统](./upstream-proxy-system.md) | CCR MITM 代理 | ✅ |
+| [Companion/Buddy 系统](./companion-buddy-system.md) | 桌面伴侣系统 | ✅ |
 
 ### 第八部分：最佳实践
 
@@ -212,7 +214,8 @@
 | Hook 类型 | 27 |
 | Skill frontmatter 字段 | 16 |
 | 配置层级 | 6 |
-| 进阶功能模块 | 9 |
+| 进阶功能模块 | 14 |
+
 
 ---
 

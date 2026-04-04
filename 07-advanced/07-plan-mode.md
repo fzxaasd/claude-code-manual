@@ -1,6 +1,6 @@
 # 7.7 Plan Mode (计划模式)
 
-> 基于源码 `src/tools/EnterPlanModeTool/`, `src/tools/ExitPlanModeTool/`, `src/utils/planModeV2.ts`, `src/utils/plans.ts` 深度分析
+> 基于源码 `src/tools/EnterPlanModeTool/`, `src/tools/EnterPlanModeTool/`, `src/utils/planModeV2.ts`, `src/utils/plans.ts` 深度分析
 
 ## 核心概念
 
@@ -69,7 +69,7 @@ interface EnterPlanModeTool {
 队友 (isTeammate()) 返回 false — 无需本地用户交互
 非队友返回 true — 需要用户确认才能退出
 
-基于 `src/tools/ExitPlanModeTool/ExitPlanModeV2Tool.ts`：
+基于 `src/tools/EnterPlanModeTool/ExitPlanModeV2Tool.ts`：
 
 ```typescript
 interface ExitPlanModeV2Tool {

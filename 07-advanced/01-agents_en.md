@@ -26,8 +26,8 @@ Based on standalone files under `src/tools/AgentTool/built-in/`:
 | `planAgent.ts` | PLAN_AGENT | Task planning |
 | `claudeCodeGuideAgent.ts` | CLAUDE_CODE_GUIDE_AGENT | Claude Code usage guide |
 | `verificationAgent.ts` | VERIFICATION_AGENT | Verification agent |
-| `forkSubagent.ts` | FORK_AGENT | Fork sub-agent |
-| `coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator worker node |
+| `built-in/forkSubagent.ts` → `forkSubagent.ts` | FORK_AGENT | Fork sub-agent (actually at AgentTool/ root, not built-in/ subdir) |
+| `src/coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator worker node (lazy-loaded, not in built-in/ dir) |
 
 ```typescript
 export function getBuiltInAgents(): AgentDefinition[] {

@@ -273,7 +273,7 @@ hooks/
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/pre-check.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-check.sh",
             "timeout": 5,
             "if": "Bash(git commit)"
           }
@@ -286,7 +286,7 @@ hooks/
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/post-check.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-check.sh",
             "async": true
           }
         ]
@@ -322,17 +322,13 @@ hooks/
 
 ## 环境变量
 
-插件可使用的模板变量：
+插件可使用的模板变量（已在源码 `src/utils/hooks.ts`, `src/utils/plugins/pluginOptionsStorage.ts` 等验证）：
 
 | 变量 | 说明 |
 |------|------|
-| `${PLUGIN_DIR}` | 插件根目录 |
-| `${SKILL_DIR}` | 技能目录 |
-| `${HOOK_DIR}` | Hooks 目录 |
-| `${AGENT_DIR}` | Agent 目录 |
-| `${COMMAND_DIR}` | Commands 目录 |
 | `${CLAUDE_PLUGIN_ROOT}` | 版本化的插件安装目录（更新时重建） |
 | `${CLAUDE_PLUGIN_DATA}` | 持久化数据目录（更新后保留） |
+| `${CLAUDE_SKILL_DIR}` | 具体技能的子目录（与 PLUGIN_ROOT 不同，一个插件可有多个 skills） |
 | `${user_config.KEY}` | userConfig 中定义的变量 |
 
 ---

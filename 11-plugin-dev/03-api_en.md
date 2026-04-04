@@ -265,17 +265,16 @@ interface AgentHook {
   statusMessage?: string // Custom status message
 }
 
-// Type 4: HTTP request
+// Type 4: HTTP request (always uses POST)
 interface HttpHook {
   type: 'http'
-  url: string           // Request URL
-  method?: string       // HTTP method
-  body?: unknown        // Request body
+  url: string           // URL to POST the hook input JSON to
   headers?: Record<string, string> // Request headers
   allowedEnvVars?: string[] // Allowed environment variables
-  if?: string           // Conditional rule
-  once?: boolean        // Whether to run once
   statusMessage?: string // Custom status message
+  once?: boolean        // Whether to run once
+  if?: string           // Conditional rule
+  timeout?: number      // Timeout (seconds)
 }
 ```
 

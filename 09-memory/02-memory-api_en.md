@@ -270,7 +270,7 @@ const getAutoMemPath = memoize((): string => { ... }, () => getProjectRoot())
 
 **Path Resolution**:
 1. `CLAUDE_COWORK_MEMORY_PATH_OVERRIDE` environment variable
-2. `settings.autoMemoryDirectory` (priority: policySettings > flagSettings > localSettings > userSettings)
+2. `settings.autoMemoryDirectory` (priority: policySettings > flagSettings > localSettings > userSettings; ⚠️ projectSettings intentionally excluded for security)
 3. `{memoryBase}/projects/{sanitized-git-root}/memory/`
 
 **Note**: Internally cached, invalidated by `getProjectRoot()`
@@ -500,7 +500,7 @@ Verification before using memories:
 
 ### telemetry Events
 
-Total 45 memory-related telemetry events:
+Total ~43 memory-related telemetry events:
 
 #### 1. Memdir (Auto Memory) Events
 
@@ -580,7 +580,7 @@ Total 45 memory-related telemetry events:
 
 | Event | Timing | Fields |
 |------|--------|--------|
-| `tengu_agent_memory_loaded` | Agent memory loaded | agent_type, scope, source |
+| `tengu_agent_memory_loaded` | Agent memory loaded | agent_type (internal users only), scope, source |
 
 #### 8. Memory Survey Events
 

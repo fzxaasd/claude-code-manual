@@ -255,12 +255,14 @@ const COWORK_PLUGINS_DIR = 'cowork_plugins'
 
 ### 危险模式拒绝
 
-以下路径模式会被拒绝：
+以下路径模式会被拒绝（来自 `validateMemoryPath()` in `paths.ts`，非 agentMemory 模块自身）：
 - 相对路径 (`../foo`)
 - 根/近根路径 (长度 < 3)
 - Windows 驱动器根 (`C:\`)
 - UNC 路径 (`\\server\share`)
 - 空字节 (`\0`)
+
+> **注意**: agentMemory 模块本身使用更简单的 `normalize()` + 前缀匹配检查，完整路径验证由 `paths.ts` 的 `validateMemoryPath()` 提供。
 
 ### Agent Type 路径处理
 

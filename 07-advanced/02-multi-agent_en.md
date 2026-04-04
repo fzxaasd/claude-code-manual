@@ -27,7 +27,9 @@
 
 ### Define Sub-agent
 
-Agents must be defined via Markdown files in the `.claude/agents/` directory:
+Agents can be defined via Markdown files or JSON format:
+
+**Option 1: Markdown files** (recommended) in the `.claude/agents/` directory:
 
 ```markdown
 ---
@@ -46,7 +48,7 @@ model: sonnet
 You are a professional code reviewer...
 ```
 
-**Note**: Agents cannot be defined in `settings.json`. They must use Markdown files.
+JSON format is also supported via `settings.json` (`agents` field) or `--agents` CLI parameter (source: `parseAgentFromJson` / `parseAgentsFromJson`).
 
 ### Data Transfer Between Agents
 
@@ -553,4 +555,4 @@ model: sonnet
 You execute specific development tasks...
 ```
 
-**Note**: Agents must be defined via Markdown files. They cannot be configured in `settings.json`.
+**Note**: Markdown files are the recommended way to define agents. JSON format is also supported (via `agents` field in settings.json or `--agents` CLI parameter).

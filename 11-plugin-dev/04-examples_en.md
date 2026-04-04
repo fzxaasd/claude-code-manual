@@ -173,7 +173,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: "${HOOK_DIR}/security-check.sh"
+          command: "${CLAUDE_PLUGIN_ROOT}/hooks/security-check.sh"
           timeout: 5
 color: blue
 ---
@@ -247,7 +247,7 @@ exit 0
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/security-hook.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/security-hook.sh",
             "timeout": 5
           }
         ]
@@ -259,7 +259,7 @@ exit 0
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/pre-commit-check.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-commit-check.sh",
             "timeout": 30
           }
         ]

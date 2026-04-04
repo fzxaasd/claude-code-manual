@@ -270,7 +270,7 @@ const getAutoMemPath = memoize((): string => { ... }, () => getProjectRoot())
 
 **路径解析**:
 1. `CLAUDE_COWORK_MEMORY_PATH_OVERRIDE` 环境变量
-2. `settings.autoMemoryDirectory` (优先级: policySettings > flagSettings > localSettings > userSettings)
+2. `settings.autoMemoryDirectory` (优先级: policySettings > flagSettings > localSettings > userSettings，⚠️ 故意排除 projectSettings 以防恶意仓库设置路径)
 3. `{memoryBase}/projects/{sanitized-git-root}/memory/`
 
 **注意**: 内部缓存，按 `getProjectRoot()` 失效
@@ -500,7 +500,7 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 
 ### telemetry 事件
 
-总计 45 个 memory 相关 telemetry 事件：
+总计约 43 个 memory 相关 telemetry 事件：
 
 #### 1. Memdir (Auto Memory) 事件
 
@@ -580,7 +580,7 @@ const coworkExtraGuidelines = process.env.CLAUDE_COWORK_MEMORY_EXTRA_GUIDELINES
 
 | 事件 | 时机 | 字段 |
 |------|------|------|
-| `tengu_agent_memory_loaded` | agent memory 加载 | agent_type, scope, source |
+| `tengu_agent_memory_loaded` | agent memory 加载 | agent_type (仅内部用户), scope, source |
 
 #### 8. Memory Survey 事件
 

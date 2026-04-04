@@ -302,7 +302,7 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 "enabledPlugins": {
   "formatter@anthropic-tools": true
 },
-"strictPluginOnlyCustomization": ["skills", "hooks"]
+"strictPluginOnlyCustomization": ["skills", "agents", "hooks", "mcp"]
 ```
 
 ### 9. Worktree Configuration

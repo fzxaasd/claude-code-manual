@@ -84,12 +84,12 @@ plugin-name/
   "name": "my-plugin",
   "version": "1.0.0",
   "description": "插件描述",
-  "author": "Author Name",
+  "author": { "name": "Author Name", "email": "author@example.com" },
   "homepage": "https://github.com/author/plugin",
   "repository": "https://github.com/author/plugin",
   "license": "MIT",
   "keywords": ["testing", "mcp"],
-  "skills": [{ "name": "my-skill", "path": "skills/my-skill" }],
+  "skills": ["./skills/my-skill"],
   "agents": [{ "name": "my-agent", "path": "agents/my-agent.md" }],
   "commands": {
     "build": { "source": "commands/build.md", "description": "Build project" },
@@ -201,7 +201,7 @@ when_to_use: 当你需要...时使用
 
 ```json
 {
-  "strictPluginOnlyCustomization": ["skills", "agents", "hooks"]
+  "strictPluginOnlyCustomization": ["skills", "agents", "hooks", "mcp"]
 }
 ```
 

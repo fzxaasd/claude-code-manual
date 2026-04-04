@@ -43,7 +43,6 @@ Complete field definitions based on `src/utils/plugins/schemas.ts`:
   "license": "MIT",
   "keywords": ["productivity", "development"],
   "dependencies": ["helper-plugin@marketplace"],
-  "strict": true,
   "commands": "./commands",
   "agents": "./agents",
   "hooks": "./hooks",
@@ -313,7 +312,7 @@ interface PluginManifest {
   hooks?: HooksConfig
   skills?: SkillPath | SkillPath[]       // directory paths
   outputStyles?: StylePath | StylePath[]
-  strict?: boolean
+  // strict is NOT in PluginManifest, only in MarketplaceManifest entries
 
   // === Service configuration ===
   mcpServers?: McpConfig | McpBPath | RelativeJsonPath

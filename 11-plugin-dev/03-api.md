@@ -280,11 +280,11 @@ interface AgentHook {
 // 类型 4: HTTP 请求
 interface HttpHook {
   type: 'http'
-  url: string           // 请求 URL
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  url: string           // 请求 URL（始终使用 POST）
   headers?: Record<string, string>  // 请求头
-  body?: unknown        // 请求体
   allowedEnvVars?: string[]  // 允许注入的环境变量
+  statusMessage?: string   // 自定义状态消息
+  once?: boolean          // 只执行一次
   if?: string           // 条件规则
   timeout?: number      // 超时时间（秒）
 }

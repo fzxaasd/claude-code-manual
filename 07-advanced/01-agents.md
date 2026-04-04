@@ -26,8 +26,8 @@ Claude Code 有三种 Agent 来源：
 | `planAgent.ts` | PLAN_AGENT | 任务规划 |
 | `claudeCodeGuideAgent.ts` | CLAUDE_CODE_GUIDE_AGENT | Claude Code 使用指南 |
 | `verificationAgent.ts` | VERIFICATION_AGENT | 验证 Agent |
-| `forkSubagent.ts` | FORK_AGENT | Fork 子 Agent |
-| `coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator 工作节点 |
+| `built-in/forkSubagent.ts` → `forkSubagent.ts` | FORK_AGENT | Fork 子 Agent（实际位于 AgentTool/ 根目录，非 built-in/ 子目录） |
+| `src/coordinator/workerAgent.ts` | COORDINATOR_WORKER_AGENT | Coordinator 工作节点（动态加载，非 built-in/ 目录） |
 
 ```typescript
 export function getBuiltInAgents(): AgentDefinition[] {

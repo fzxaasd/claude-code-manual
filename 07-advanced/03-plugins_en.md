@@ -216,7 +216,7 @@ This is a skill provided by the plugin.
 
 ```json
 {
-  "strictPluginOnlyCustomization": ["skills", "agents", "hooks"]
+  "strictPluginOnlyCustomization": ["skills", "agents", "hooks", "mcp"]
 }
 ```
 

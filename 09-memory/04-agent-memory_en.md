@@ -255,12 +255,14 @@ const COWORK_PLUGINS_DIR = 'cowork_plugins'
 
 ### Dangerous Pattern Rejection
 
-The following path patterns are rejected:
+The following path patterns are rejected (from `validateMemoryPath()` in `paths.ts`, not agentMemory module itself):
 - Relative paths (`../foo`)
 - Root/near-root paths (length < 3)
 - Windows drive roots (`C:\`)
 - UNC paths (`\\server\share`)
 - Null bytes (`\0`)
+
+> **Note**: The agentMemory module uses simpler `normalize()` + prefix matching. Full path validation is provided by `validateMemoryPath()` in `paths.ts`.
 
 ### Agent Type Path Sanitization
 

@@ -27,7 +27,9 @@
 
 ### 定义子 Agent
 
-Agent 必须通过 Markdown 文件定义，存放在 `.claude/agents/` 目录：
+Agent 可通过 Markdown 文件或 JSON 格式定义：
+
+**方式一：Markdown 文件**（推荐），存放在 `.claude/agents/` 目录：
 
 ```markdown
 ---
@@ -46,7 +48,7 @@ model: sonnet
 你是一个专业的代码审查专家...
 ```
 
-不支持在 `settings.json` 中定义 agents。
+也支持在 `settings.json` 中通过 JSON 格式定义 agents（源码 `parseAgentFromJson` / `parseAgentsFromJson`），或通过 `--agents` CLI 参数传入。
 
 ### Agent 间数据传递
 
@@ -553,4 +555,4 @@ model: sonnet
 你负责执行具体的开发任务...
 ```
 
-**注意**: agents 必须通过 Markdown 文件定义，不支持在 `settings.json` 中配置。
+**注意**: 推荐通过 Markdown 文件定义 agents。也支持 JSON 格式（settings.json 的 `agents` 字段或 `--agents` CLI 参数）。

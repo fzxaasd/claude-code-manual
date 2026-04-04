@@ -4,11 +4,15 @@
 
 ## 核心概念
 
-### 技能来源
+### 技能加载顺序
+
+源码 `src/commands.ts` 中 `loadAllCommands` 的实际合并顺序：
 
 ```
-policySettings > userSettings > projectSettings > bundled > plugin
+bundled → builtinPlugin → skillDir(managed/user/project/legacy) → workflow → plugin → COMMANDS()
 ```
+
+**注意**：这是合并顺序（后加载的覆盖同名技能），不是优先级。`skillDirCommands` 内部按 managed → user → project → additionalDirs → legacy 加载。
 
 | 来源 | 路径 | 说明 |
 |------|------|------|
@@ -86,10 +90,12 @@ hooks:                        # 可选，内置 Hooks
 
 技能的具体描述和使用说明...
 
-支持 `!` 块执行命令：
-```!bash
+支持 `!` 块执行命令（注意：`!` 后不跟语言名）：
+```!
 echo "执行 shell 命令"
 ```
+
+内联格式：`!`echo "inline command"`
 ```
 
 ---
@@ -126,8 +132,8 @@ allowed-tools:
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `model` | string | 指定模型 |
-| `effort` | 'low' \| 'medium' \| 'high' | effort 级别 |
-| `context` | string | 额外上下文；`fork`=子 Agent 执行 |
+| `effort` | 'low' \| 'medium' \| 'high' \| 'max' \| number | effort 级别 |
+| `context` | 'inline' \| 'fork' | 执行模式；`fork`=子 Agent 执行 |
 | `agent` | string | 使用的 Agent 名称 |
 | `skills` | string | agent 预加载技能列表 |
 | `shell` | 'bash' \| 'powershell' | 默认 shell |
@@ -216,14 +222,14 @@ paths:                             # 数组
 | `disableModelInvocation` | boolean | 是否禁用模型调用 |
 | `context` | 'inline' \| 'fork' | 执行模式 |
 | `agent` | string | 使用的 Agent 名称 |
-| `files` | string[] | 关联文件 |
+| `files` | Record\<string, string\> | 关联文件（路径→内容映射） |
 | `hooks` | HooksSettings | 内置 Hooks |
 
 ### 技能列表
 
 | 技能 | 命令 | 别名 | 功能 | Feature Flag / 触发条件 | 备注 |
 |------|------|------|------|-------------------------|------|
-| updateConfig | `/updateConfig` | updateConfig | 更新配置 | 默认启用 | |
+| update-config | `/update-config` | updateConfig | 更新配置 | 默认启用 | |
 | keybindings-help | `/keybindings-help` | keybindings | 快捷键 | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - 仅模型可调用 |
 | verify | `/verify` | verify | 验证 | `USER_TYPE === 'ant'` | ANT-only |
 | debug | `/debug` | debug | 调试 | 默认启用 | |

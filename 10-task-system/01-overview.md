@@ -95,8 +95,8 @@ export type TaskSchema = {
   description: string
   activeForm?: string     // 进行中的动作描述
   owner?: string          // 任务所有者
-  status: TaskStatus
-  blocks?: string[]       // 被此任务阻塞的任务
+  status: 'pending' | 'in_progress' | 'completed'  // ⚠️ Tasks V2 使用独立的状态枚
+  blocks: string[]       // 被此任务阻塞的任务
   blockedBy?: string[]    // 阻塞此任务的任务
   metadata?: Record<string, unknown>  // 自定义元数据
 }
@@ -187,7 +187,7 @@ Tasks V2 包含: `TaskCreateTool`, `TaskUpdateTool`, `TaskGetTool`, `TaskListToo
 interface TaskOutputToolInput {
   task_id: string      // 任务 ID
   block?: boolean      // 等待任务完成
-  timeout?: number     // 超时时间（秒）
+  timeout?: number     // 超时时间（毫秒），默认 30000，最大 600000
 }
 ```
 

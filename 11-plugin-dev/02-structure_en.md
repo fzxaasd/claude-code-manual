@@ -286,7 +286,7 @@ hooks/
         "hooks": [
           {
             "type": "command",
-            "command": "${HOOK_DIR}/post-check.sh",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-check.sh",
             "async": true
           }
         ]
@@ -322,17 +322,13 @@ hooks/
 
 ## Environment Variables
 
-Template variables available to plugins:
+Template variables available to plugins (verified in `src/utils/hooks.ts`, `src/utils/plugins/pluginOptionsStorage.ts`):
 
 | Variable | Description |
 |------|-------------|
-| `${PLUGIN_DIR}` | Plugin root directory |
-| `${SKILL_DIR}` | Skills directory |
-| `${HOOK_DIR}` | Hooks directory |
-| `${AGENT_DIR}` | Agents directory |
-| `${COMMAND_DIR}` | Commands directory |
 | `${CLAUDE_PLUGIN_ROOT}` | Version-scoped plugin install dir (recreated on update) |
 | `${CLAUDE_PLUGIN_DATA}` | Persistent data directory (survives updates) |
+| `${CLAUDE_SKILL_DIR}` | Individual skill's subdirectory (differs from PLUGIN_ROOT; one plugin can have multiple skills) |
 | `${user_config.KEY}` | Variables defined in userConfig |
 
 ---
