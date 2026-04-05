@@ -353,7 +353,7 @@ echo "$input" >> ~/.claude/permission_audit.log
 **Q: 规则不生效**
 ```json
 // 检查优先级顺序
-// userSettings > projectSettings > localSettings
+// policySettings > flagSettings > localSettings > projectSettings > userSettings
 // 确保高优先级来源的规则正确配置
 ```
 
@@ -362,7 +362,7 @@ echo "$input" >> ~/.claude/permission_audit.log
 ## 最佳实践
 
 1. **最小权限原则**: 仅授予必要权限
-2. **分层配置**: localSettings < projectSettings < userSettings
+2. **分层配置**: userSettings < projectSettings < localSettings < flagSettings < policySettings
 3. **定期审计**: 记录权限请求
 4. **危险命令黑名单**: rm -rf, sudo 等
 5. **模式具体化**: 避免使用 `*` 通配符

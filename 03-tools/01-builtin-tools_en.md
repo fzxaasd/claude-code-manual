@@ -24,6 +24,7 @@ Claude Code's tool system consists of **core tools** and **conditional tools**.
 | AskUserQuestionTool | AskUserQuestionTool | Ask user questions |
 | SkillTool | SkillTool | Invoke skills |
 | ExitPlanModeV2Tool | ExitPlanModeV2Tool | Exit plan mode |
+| EnterPlanModeTool | EnterPlanModeTool | Enter plan mode (deferred) |
 | SendUserMessageTool | SendUserMessageTool | Send message to user |
 | ListMcpResourcesTool | ListMcpResourcesTool | List MCP resources |
 | ReadMcpResourceTool | ReadMcpResourceTool | Read MCP resources |
@@ -275,8 +276,8 @@ interface BashInput {
 **Search/Read classification**:
 ```typescript
 // These commands are recognized as read-only operations
-BASH_SEARCH_COMMANDS = ['find', 'grep', 'rg', 'ag', 'ack', 'locate', 'which']
-BASH_READ_COMMANDS = ['cat', 'head', 'tail', 'less', 'more', 'wc', 'stat', 'file']
+BASH_SEARCH_COMMANDS = ['find', 'grep', 'rg', 'ag', 'ack', 'locate', 'which', 'whereis']
+BASH_READ_COMMANDS = ['cat', 'head', 'tail', 'less', 'more', 'wc', 'stat', 'file', 'strings', 'jq', 'awk', 'cut', 'sort', 'uniq', 'tr']
 BASH_LIST_COMMANDS = ['ls', 'tree', 'du']
 ```
 
@@ -394,7 +395,7 @@ Fetch web page content.
 ```typescript
 interface WebFetchInput {
   url: string              // Web URL
-  prompt?: string         // Extraction prompt
+  prompt: string            // Extraction prompt (required)
 }
 ```
 
@@ -658,6 +659,7 @@ The following tools exist in source code but are not documented:
 | `VerifyPlanExecutionTool` | `CLAUDE_CODE_VERIFY_PLAN=true` | Plan verification |
 | `MCPTool` | MCP tools | MCP tool wrapper |
 | `McpAuthTool` | MCP auth | MCP authentication |
+| `SyntheticOutputTool` | Hook structured output | Structured output (internal special tool, runtime name `StructuredOutput`, used for Hook JSON Schema results) |
 
 ---
 

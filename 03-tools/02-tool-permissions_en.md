@@ -353,7 +353,7 @@ echo "$input" >> ~/.claude/permission_audit.log
 **Q: Rules not taking effect**
 ```json
 // Check priority order
-// userSettings > projectSettings > localSettings
+// policySettings > flagSettings > localSettings > projectSettings > userSettings
 // Ensure rules in higher priority sources are correctly configured
 ```
 
@@ -362,7 +362,7 @@ echo "$input" >> ~/.claude/permission_audit.log
 ## Best Practices
 
 1. **Principle of Least Privilege**: Only grant necessary permissions
-2. **Layered Configuration**: localSettings < projectSettings < userSettings
+2. **Layered Configuration**: userSettings < projectSettings < localSettings < flagSettings < policySettings
 3. **Regular Auditing**: Log permission requests
 4. **Dangerous Command Blacklist**: rm -rf, sudo, etc.
 5. **Specific Patterns**: Avoid using `*` wildcards

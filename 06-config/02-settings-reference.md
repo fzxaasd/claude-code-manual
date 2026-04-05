@@ -76,14 +76,35 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
     "additionalDirectories": ["path"]
   },
 
-  // === 自动模式 (TRANSCRIPT_CLASSIFIER feature-gated) ===
-  "disableAutoMode": "disable",  // 禁用自动模式（ANT 用户）
-
   // === Hooks ===
   "hooks": {
     "PreToolUse": [...],
     "PostToolUse": [...],
-    "UserPromptSubmit": [...]
+    "PostToolUseFailure": [...],
+    "Notification": [...],
+    "UserPromptSubmit": [...],
+    "SessionStart": [...],
+    "SessionEnd": [...],
+    "Stop": [...],
+    "StopFailure": [...],
+    "SubagentStart": [...],
+    "SubagentStop": [...],
+    "PreCompact": [...],
+    "PostCompact": [...],
+    "PermissionRequest": [...],
+    "PermissionDenied": [...],
+    "Setup": [...],
+    "TeammateIdle": [...],
+    "TaskCreated": [...],
+    "TaskCompleted": [...],
+    "Elicitation": [...],
+    "ElicitationResult": [...],
+    "ConfigChange": [...],
+    "WorktreeCreate": [...],
+    "WorktreeRemove": [...],
+    "InstructionsLoaded": [...],
+    "CwdChanged": [...],
+    "FileChanged": [...]
   },
   "disableAllHooks": false,
   "allowManagedHooksOnly": false,
@@ -360,13 +381,14 @@ policySettings (managed) > flagSettings > localSettings > projectSettings > user
 
 | 字段 | 类型 | 默认 | 说明 |
 |------|------|------|------|
-| `defaultShell` | string | - | 默认 shell |
+| `defaultShell` | 'bash' \| 'powershell' | - | 默认 shell |
 | `claudeMdExcludes` | string[] | - | 排除加载的 CLAUDE.md 路径（glob 模式） |
 | `fastModePerSessionOptIn` | boolean | false | Fast mode 不跨会话持久化 |
 | `classifierPermissionsEnabled` | boolean | - | ⚠️ Bash(prompt:...) AI 分类权限（TRANSCRIPT_CLASSIFIER feature-gated，ANT 用户） |
 | `voiceEnabled` | boolean | - | ⚠️ 语音模式（需 VOICE_MODE feature） |
 | `channelsEnabled` | boolean | - | ⚠️ 团队/企业渠道通知（需 KAIROS_CHANNELS feature） |
 | `forceLoginMethod` | 'claudeai' \\| 'console' | - | 强制登录方式 |
+| `forceLoginOrgUUID` | string | - | OAuth 登录的组织 UUID |
 | `companyAnnouncements` | string[] | - | 公司公告 |
 | `feedbackSurveyRate` | number | - | 反馈调查频率 |
 | `plansDirectory` | string | ~/.claude/plans/ | 计划文件目录 |

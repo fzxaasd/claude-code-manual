@@ -36,7 +36,7 @@ Configure MCP servers in `settings.json`:
 }
 ```
 
-**Note**: MCP server configuration supports **6 transport types**, not just stdio.
+**Note**: MCP server configuration supports **8 transport types** (where `ws-ide` and `claudeai-proxy` are internal types), not just stdio.
 
 ---
 
@@ -46,6 +46,7 @@ Source: `src/services/mcp/types.ts`
 
 ```typescript
 export const TransportSchema = z.enum(['stdio', 'sse', 'sse-ide', 'http', 'ws', 'sdk'])
+// Note: The full McpServerConfigSchema also includes 'ws-ide' and 'claudeai-proxy' internal types
 ```
 
 #### 1. stdio (Local Process)
@@ -148,6 +149,12 @@ HTTP POST polling connection:
 }
 ```
 
+**Fields**:
+- `url` (required): HTTP endpoint URL
+- `headers` (optional): HTTP request headers
+- `headersHelper` (optional): Helper request header file path
+- `oauth` (optional): OAuth 2.0 configuration (same as SSE's oauth field)
+
 #### 5. ws (WebSocket)
 
 WebSocket connection:
@@ -166,6 +173,11 @@ WebSocket connection:
 }
 ```
 
+**Fields**:
+- `url` (required): WebSocket endpoint URL
+- `headers` (optional): HTTP request headers
+- `headersHelper` (optional): Helper request header file path
+
 #### 6. sdk (SDK Mode)
 
 MCP server implemented using Claude Code SDK:
@@ -180,6 +192,50 @@ MCP server implemented using Claude Code SDK:
   }
 }
 ```
+
+#### 7. ws-ide (IDE WebSocket, Internal Type)
+
+IDE extension WebSocket connection (internal type, typically not user-configured):
+
+```json
+{
+  "mcpServers": {
+    "ide-ws-connection": {
+      "type": "ws-ide",
+      "url": "ws://localhost:3100/ws",
+      "ideName": "Cursor",
+      "authToken": "optional-token",
+      "ideRunningInWindows": false
+    }
+  }
+}
+```
+
+**Fields**:
+- `url` (required): WebSocket endpoint
+- `ideName` (required): IDE name
+- `authToken` (optional): Authentication token
+- `ideRunningInWindows` (optional): Windows identifier
+
+#### 8. claudeai-proxy (Claude.ai Proxy, Internal Type)
+
+Claude.ai proxy server (internal type, for Claude.ai integration):
+
+```json
+{
+  "mcpServers": {
+    "claudeai-proxy-server": {
+      "type": "claudeai-proxy",
+      "url": "https://proxy.example.com/mcp",
+      "id": "server-id"
+    }
+  }
+}
+```
+
+**Fields**:
+- `url` (required): Proxy endpoint URL
+- `id` (required): Server identifier
 
 ### MCP CLI Commands
 

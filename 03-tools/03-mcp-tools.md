@@ -36,7 +36,7 @@ Claude Code ←→ MCP Server ←→ External Service
 }
 ```
 
-**注意**: MCP 服务器配置支持 **6 种传输类型**，不仅仅是 stdio。
+**注意**: MCP 服务器配置支持 **8 种传输类型**（其中 `ws-ide` 和 `claudeai-proxy` 为内部类型），不仅仅是 stdio。
 
 ---
 
@@ -46,6 +46,7 @@ Claude Code ←→ MCP Server ←→ External Service
 
 ```typescript
 export const TransportSchema = z.enum(['stdio', 'sse', 'sse-ide', 'http', 'ws', 'sdk'])
+// 注意：完整的 McpServerConfigSchema 还包含 'ws-ide' 和 'claudeai-proxy' 两种内部类型
 ```
 
 #### 1. stdio (本地进程)
@@ -148,6 +149,12 @@ IDE extension 专用 SSE 连接：
 }
 ```
 
+**字段**:
+- `url` (必填): HTTP 端点 URL
+- `headers` (可选): HTTP 请求头
+- `headersHelper` (可选): 辅助请求头文件路径
+- `oauth` (可选): OAuth 2.0 配置（同 SSE 的 oauth 字段）
+
 #### 5. ws (WebSocket)
 
 通过 WebSocket 连接：
@@ -166,6 +173,11 @@ IDE extension 专用 SSE 连接：
 }
 ```
 
+**字段**:
+- `url` (必填): WebSocket 端点 URL
+- `headers` (可选): HTTP 请求头
+- `headersHelper` (可选): 辅助请求头文件路径
+
 #### 6. sdk (SDK 模式)
 
 使用 Claude Code SDK 实现的 MCP 服务器：
@@ -180,6 +192,50 @@ IDE extension 专用 SSE 连接：
   }
 }
 ```
+
+#### 7. ws-ide (IDE WebSocket, 内部类型)
+
+IDE 扩展专用 WebSocket 连接（内部类型，通常不由用户直接配置）：
+
+```json
+{
+  "mcpServers": {
+    "ide-ws-connection": {
+      "type": "ws-ide",
+      "url": "ws://localhost:3100/ws",
+      "ideName": "Cursor",
+      "authToken": "optional-token",
+      "ideRunningInWindows": false
+    }
+  }
+}
+```
+
+**字段**:
+- `url` (必填): WebSocket 端点
+- `ideName` (必填): IDE 名称
+- `authToken` (可选): 认证令牌
+- `ideRunningInWindows` (可选): Windows 标识
+
+#### 8. claudeai-proxy (Claude.ai 代理, 内部类型)
+
+Claude.ai 代理服务器（内部类型，用于 Claude.ai 集成）：
+
+```json
+{
+  "mcpServers": {
+    "claudeai-proxy-server": {
+      "type": "claudeai-proxy",
+      "url": "https://proxy.example.com/mcp",
+      "id": "server-id"
+    }
+  }
+}
+```
+
+**字段**:
+- `url` (必填): 代理端点 URL
+- `id` (必填): 服务器标识
 
 ### MCP CLI 命令
 

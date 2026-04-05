@@ -206,15 +206,15 @@ graph LR
 
 ### View Skills Loading
 
+Skill loading information is output via `logForDebugging`. Enable debug logging by setting the environment variable:
+
 ```bash
-claude --debug skills
+CLAUDE_CODE_DEBUG=1 claude
 ```
 
 ### View Agent Invocations
 
-```bash
-claude --debug agent
-```
+Agent-related logs are also output via `logForDebugging`, using the same debug environment variable.
 
 ### Test Combinations
 

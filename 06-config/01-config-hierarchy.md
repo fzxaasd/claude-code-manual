@@ -37,7 +37,7 @@ pluginSettings (最低基础层) → userSettings → projectSettings → localS
 
 ```typescript
 // src/utils/settings/constants.ts
-export const SETTING_SOURCES = ['user', 'project', 'local', 'flag', 'policy'] as const
+export const SETTING_SOURCES = ['userSettings', 'projectSettings', 'localSettings', 'flagSettings', 'policySettings'] as const
 ```
 
 > **注意**：pluginSettings 不是 SETTING_SOURCES 的一部分，而是通过 `getPluginSettingsBase()` 单独加载。
@@ -184,14 +184,16 @@ Hooks、allowedMcpServers 等数组字段会合并：
 
 ### 3. 特殊覆盖字段
 
-部分字段不合并，直接覆盖：
+部分字段使用特殊合并策略：
 
 | 字段 | 行为 |
 |------|------|
-| `permissions.deny` | 合并（交集更严格） |
-| `permissions.allow` | 合并（并集更宽松） |
-| `hooks` | 合并 |
-| `env` | 合并（环境变量追加） |
+| `permissions.deny` | 拼接去重（所有 deny 规则合并） |
+| `permissions.allow` | 拼接去重（所有 allow 规则合并） |
+| `hooks` | 拼接去重（所有 hooks 合并） |
+| `env` | 深度合并（环境变量追加） |
+
+> **注意**: 所有数组字段（包括 permissions.allow/deny/ask、hooks 等）在配置合并时使用相同的"拼接去重"策略（源码 `settingsMergeCustomizer`），即 `uniq([...targetArray, ...sourceArray])`。不存在交集/差集合并。运行时 deny 规则总是优先于 allow 规则。
 
 ---
 

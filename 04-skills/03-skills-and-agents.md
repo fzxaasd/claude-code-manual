@@ -206,15 +206,15 @@ graph LR
 
 ### 查看 Skills 加载
 
-```bash
-claude --debug skills
-```
-
-### 查看 Agents 调用
+Skills 加载信息通过 `logForDebugging` 输出。设置环境变量启用调试日志：
 
 ```bash
-claude --debug agent
+CLAUDE_CODE_DEBUG=1 claude
 ```
+
+### 查看 Agent 调用
+
+Agent 相关日志同样通过 `logForDebugging` 输出，使用相同的调试环境变量。
 
 ### 测试组合
 

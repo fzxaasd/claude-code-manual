@@ -68,9 +68,9 @@ when_to_use: |                     # Critical! Tells model when to auto-invoke
 ```yaml
 ---
 argument-hint: "\"param1\" \"param2\""  # Parameter example format
-arguments:                            # Parameter list
-  - param1: Parameter 1 description
-  - param2: Parameter 2 description
+arguments:                            # Parameter list (space-separated string or string array)
+  - param1
+  - param2
 ---
 ```
 
@@ -221,8 +221,8 @@ when_to_use: |
   Examples: 'run migration', 'create users table migration', 'migrate users'
 argument-hint: "\"up\" or \"down\" [migration_name]"
 arguments:
-  - direction: "up or down"
-  - name: "Migration name (optional)"
+  - direction
+  - name
 allowed-tools:
   Bash(psql:*)
   Bash(psql -h *)
@@ -353,12 +353,12 @@ Verify generated files.
 ```markdown
 !`shell command`                    // Inline execution
 
-```!bash
+```!
 echo "shell command"
 ```
 ```
 
-Shell blocks execute during skill loading to prepare context.
+Shell blocks execute during skill loading to prepare context. Note: The `!` block syntax is `` ```! `` followed directly by a newline (no language name) — any language name would be executed as part of the command.
 
 ### Skill Permission Auto-Grant
 
@@ -425,7 +425,7 @@ effort: 42        # Integer
 | `agent` | Agent type for fork mode | Optional |
 | `shell` | Shell type for execution | Optional |
 | `hide-from-slash-command-tool` | Hide from /skills list | Optional |
-| `disableModelInvocation` | Disable model invocation | Optional |
+| `disable-model-invocation` | Disable model invocation | Optional |
 | `paths` | Path pattern activation | Optional |
 | `files` | Related files | Optional |
 | `immediate` | Bypass queue and execute immediately | Optional |

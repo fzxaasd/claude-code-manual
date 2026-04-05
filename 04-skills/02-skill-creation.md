@@ -68,9 +68,9 @@ when_to_use: |                     # 关键！告诉模型何时自动调用
 ```yaml
 ---
 argument-hint: "\"参数1\" \"参数2\""  # 参数示例格式
-arguments:                            # 参数列表
-  - param1: 参数1说明
-  - param2: 参数2说明
+arguments:                            # 参数列表（空格分隔的字符串或字符串数组）
+  - param1
+  - param2
 ---
 ```
 
@@ -221,8 +221,8 @@ when_to_use: |
   示例：'执行迁移', '创建用户表迁移', 'migrate users'
 argument-hint: "\"up\" 或 \"down\" [migration_name]"
 arguments:
-  - direction: "up 或 down"
-  - name: "迁移名称（可选）"
+  - direction
+  - name
 allowed-tools:
   Bash(psql:*)
   Bash(psql -h *)
@@ -359,12 +359,12 @@ context: fork
 ```markdown
 !`shell command`                    // 内联执行
 
-```!bash
+```!
 echo "shell command"
 ```
 ```
 
-Shell 块在技能加载期间执行，用于准备上下文。
+Shell 块在技能加载期间执行，用于准备上下文。注意：`!` 块语法是 `` ```! `` 后直接换行（不加语言名），否则语言名会被当作命令的一部分执行。
 
 ### Skill 权限自动授权
 
@@ -431,7 +431,7 @@ effort: 42        # 整数
 | `agent` | fork 模式时的 agent 类型 | 可选 |
 | `shell` | 执行 shell 类型 | 可选 |
 | `hide-from-slash-command-tool` | 从 /skills 列表隐藏 | 可选 |
-| `disableModelInvocation` | 禁用模型调用 | 可选 |
+| `disable-model-invocation` | 禁用模型调用 | 可选 |
 | `paths` | 路径模式激活 | 可选 |
 | `files` | 相关文件 | 可选 |
 | `immediate` | 绕过队列立即执行 | 可选 |

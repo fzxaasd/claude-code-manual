@@ -56,8 +56,8 @@ argument-hint: "参数提示"       # 可选，参数示例
 agent: agent-name              # 可选，使用的 Agent 名称
 skills: skill-name              # 可选，agent 预加载技能列表
 model: sonnet                   # 可选，指定模型
-effort: medium                  # 可选，low/medium/high
-context: inline                 # 可选，额外上下文或 fork
+effort: medium                  # 可选，low/medium/high/max 或正整数
+context: inline                 # 可选，inline（默认）或 fork（子 Agent 执行）
 
 # === 条件激活 ===
 paths:                         # 可选，路径模式
@@ -90,7 +90,7 @@ hooks:                        # 可选，内置 Hooks
 
 技能的具体描述和使用说明...
 
-支持 `!` 块执行命令（注意：`!` 后不跟语言名）：
+支持 `!` 块执行命令（注意：`!` 后直接换行，不跟语言名，否则语言名会被当作命令的一部分执行）：
 ```!
 echo "执行 shell 命令"
 ```
@@ -227,25 +227,25 @@ paths:                             # 数组
 
 ### 技能列表
 
-| 技能 | 命令 | 别名 | 功能 | Feature Flag / 触发条件 | 备注 |
-|------|------|------|------|-------------------------|------|
-| update-config | `/update-config` | updateConfig | 更新配置 | 默认启用 | |
-| keybindings-help | `/keybindings-help` | keybindings | 快捷键 | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - 仅模型可调用 |
-| verify | `/verify` | verify | 验证 | `USER_TYPE === 'ant'` | ANT-only |
-| debug | `/debug` | debug | 调试 | 默认启用 | |
-| lorem-ipsum | `/lorem-ipsum` | loremIpsum | 生成占位文本 | `USER_TYPE === 'ant'` | ANT-only |
-| skillify | `/skillify` | skillify | 转换为技能 | `USER_TYPE === 'ant'` | ANT-only |
-| remember | `/remember` | remember | 记忆 | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
-| simplify | `/simplify` | simplify | 简化文本 | 默认启用 | |
-| batch | `/batch` | batch | 批量处理 | 默认启用 | |
-| stuck | `/stuck` | stuck | 卡住帮助 | `USER_TYPE === 'ant'` | ANT-only |
-| loop | `/loop` | loop | 循环任务 | `AGENT_TRIGGERS` | ⚠️ 运行时还需 `isKairosCronEnabled()` 检查 |
-| schedule | `/schedule` | schedule | 远程调度 | `AGENT_TRIGGERS_REMOTE` 注册 + 运行时 `tengu_surreal_dali` + `allow_remote_sessions` | 需要 claude.ai OAuth 认证 |
-| claude-api | `/claude-api` | claudeApi | Claude API | `BUILDING_CLAUDE_APPS` | |
-| dream | `/dream` | dream | Dream Mode | `KAIROS` 或 `KAIROS_DREAM` | |
-| hunter | `/hunter` | hunter | Code Hunter | `REVIEW_ARTIFACT` | |
-| claude-in-chrome | `/claude-in-chrome` | claudeInChrome | Chrome 扩展 | `auto (shouldAutoEnableClaudeInChrome)` | |
-| run-skill-generator | `/run-skill-generator` | runSkillGenerator | 技能生成器 | `RUN_SKILL_GENERATOR` | |
+| 技能 | 命令 | 功能 | Feature Flag / 触发条件 | 备注 |
+|------|------|------|-------------------------|------|
+| update-config | `/update-config` | 更新配置 | 默认启用 | |
+| keybindings-help | `/keybindings-help` | 快捷键 | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - 仅模型可调用 |
+| verify | `/verify` | 验证 | `USER_TYPE === 'ant'` | ANT-only |
+| debug | `/debug` | 调试 | 默认启用 | ⚠️ disableModelInvocation: true - 仅用户可调用 |
+| lorem-ipsum | `/lorem-ipsum` | 生成占位文本 | `USER_TYPE === 'ant'` | ANT-only |
+| skillify | `/skillify` | 转换为技能 | `USER_TYPE === 'ant'` | ANT-only, ⚠️ disableModelInvocation: true |
+| remember | `/remember` | 记忆 | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
+| simplify | `/simplify` | 简化文本 | 默认启用 | |
+| batch | `/batch` | 批量处理 | 默认启用 | ⚠️ disableModelInvocation: true - 仅用户可调用 |
+| stuck | `/stuck` | 卡住帮助 | `USER_TYPE === 'ant'` | ANT-only |
+| loop | `/loop` | 循环任务 | `AGENT_TRIGGERS` | ⚠️ 运行时还需 `isKairosCronEnabled()` 检查 |
+| schedule | `/schedule` | 远程调度 | `AGENT_TRIGGERS_REMOTE` 注册 + 运行时 `tengu_surreal_dali` + `allow_remote_sessions` | 需要 claude.ai OAuth 认证 |
+| claude-api | `/claude-api` | Claude API | `BUILDING_CLAUDE_APPS` | |
+| dream | `/dream` | Dream Mode | `KAIROS` 或 `KAIROS_DREAM` | |
+| hunter | `/hunter` | Code Hunter | `REVIEW_ARTIFACT` | |
+| claude-in-chrome | `/claude-in-chrome` | Chrome 扩展 | `auto (shouldAutoEnableClaudeInChrome)` | |
+| run-skill-generator | `/run-skill-generator` | 技能生成器 | `RUN_SKILL_GENERATOR` | |
 
 > **注意**: `dream`、`hunter`、`runSkillGenerator` 的源码文件不存在于开源仓库中。它们通过 `require('./xxx.js')` 动态加载，由构建系统注入，仅在对应 feature flag 启用时可用。
 
@@ -302,15 +302,17 @@ agent: general-purpose
 
 | 变量 | 说明 |
 |------|------|
-| `$ARGUMENTS` | 传入的参数 |
-| `$1, $2, ...` | 按位置引用参数 |
+| `$ARGUMENTS` | 传入的完整参数字符串 |
+| `$ARGUMENTS[0]`, `$ARGUMENTS[1]`, ... | 按索引引用参数 |
+| `$0`, `$1`, `$2`, ... | 按位置引用参数（简写） |
+| `$arg_name` | 按名称引用参数（需在 `arguments` 中定义） |
 
 ### Shell 块
 
 ```markdown
 技能内容...
 
-```!bash
+```!
 echo "执行 shell"
 ```
 ```

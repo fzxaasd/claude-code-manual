@@ -52,8 +52,8 @@ argument-hint: "Parameter hint" # Optional, parameter examples
 agent: agent-name              # Optional, agent name to use
 skills: skill-name              # Optional, agent preloaded skill list
 model: sonnet                   # Optional, specify model
-effort: medium                  # Optional, low/medium/high
-context: inline                 # Optional, extra context or fork
+effort: medium                  # Optional, low/medium/high/max or positive integer
+context: inline                 # Optional, inline (default) or fork (sub-agent execution)
 
 # === Conditional Activation ===
 paths:                         # Optional, path patterns
@@ -86,8 +86,8 @@ hooks:                        # Optional, built-in Hooks
 
 Specific description and usage instructions...
 
-Supports `!` blocks for command execution:
-```!bash
+Supports `!` blocks for command execution (note: `!` is followed directly by a newline, not a language name — any language name would be executed as part of the command):
+```!
 echo "Execute shell command"
 ```
 ```
@@ -126,8 +126,8 @@ allowed-tools:
 | Field | Type | Description |
 |-------|------|-------------|
 | `model` | string | Specify model |
-| `effort` | 'low' \| 'medium' \| 'high' | Effort level |
-| `context` | string | Extra context; `fork`=sub-agent execution |
+| `effort` | 'low' \| 'medium' \| 'high' \| 'max' \| number | Effort level |
+| `context` | 'inline' \| 'fork' | Execution mode; `fork`=sub-agent execution |
 | `agent` | string | Agent name to use |
 | `skills` | string | Agent preloaded skill list |
 | `shell` | 'bash' \| 'powershell' | Default shell |
@@ -216,30 +216,30 @@ Built-in skills are registered via `registerBundledSkill()`, supporting these fi
 | `disableModelInvocation` | boolean | Whether to disable model invocation |
 | `context` | 'inline' \| 'fork' | Execution mode |
 | `agent` | string | Agent name to use |
-| `files` | string[] | Related files |
+| `files` | Record\<string, string\> | Related files (path → content mapping) |
 | `hooks` | HooksSettings | Built-in Hooks |
 
 ### Skills List
 
-| Skill | Command | Alias | Function | Feature Flag / Trigger | Notes |
-|-------|---------|-------|----------|------------------------|-------|
-| updateConfig | `/updateConfig` | updateConfig | Update config | Enabled by default | |
-| keybindings-help | `/keybindings-help` | keybindings | Keybindings | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - Model only |
-| verify | `/verify` | verify | Verify | `USER_TYPE === 'ant'` | ANT-only |
-| debug | `/debug` | debug | Debug | Enabled by default | |
-| lorem-ipsum | `/lorem-ipsum` | loremIpsum | Generate placeholder text | `USER_TYPE === 'ant'` | ANT-only |
-| skillify | `/skillify` | skillify | Convert to skill | `USER_TYPE === 'ant'` | ANT-only |
-| remember | `/remember` | remember | Memory | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
-| simplify | `/simplify` | simplify | Simplify text | Enabled by default | |
-| batch | `/batch` | batch | Batch processing | Enabled by default | |
-| stuck | `/stuck` | stuck | Stuck help | `USER_TYPE === 'ant'` | ANT-only |
-| loop | `/loop` | loop | Loop task | `AGENT_TRIGGERS` | ⚠️ Also requires `isKairosCronEnabled()` at runtime |
-| schedule | `/schedule` | schedule | Remote scheduling | `AGENT_TRIGGERS_REMOTE` registered + runtime `tengu_surreal_dali` + `allow_remote_sessions` | Requires claude.ai OAuth |
-| claude-api | `/claude-api` | claudeApi | Claude API | `BUILDING_CLAUDE_APPS` | |
-| dream | `/dream` | dream | Dream Mode | `KAIROS` or `KAIROS_DREAM` | |
-| hunter | `/hunter` | hunter | Code Hunter | `REVIEW_ARTIFACT` | |
-| claude-in-chrome | `/claude-in-chrome` | claudeInChrome | Chrome extension | `auto (shouldAutoEnableClaudeInChrome)` | |
-| run-skill-generator | `/run-skill-generator` | runSkillGenerator | Skill generator | `RUN_SKILL_GENERATOR` | |
+| Skill | Command | Function | Feature Flag / Trigger | Notes |
+|-------|---------|----------|------------------------|-------|
+| update-config | `/update-config` | Update config | Enabled by default | |
+| keybindings-help | `/keybindings-help` | Keybindings | `isKeybindingCustomizationEnabled()` | ⚠️ userInvocable: false - Model only |
+| verify | `/verify` | Verify | `USER_TYPE === 'ant'` | ANT-only |
+| debug | `/debug` | Debug | Enabled by default | ⚠️ disableModelInvocation: true - User only |
+| lorem-ipsum | `/lorem-ipsum` | Generate placeholder text | `USER_TYPE === 'ant'` | ANT-only |
+| skillify | `/skillify` | Convert to skill | `USER_TYPE === 'ant'` | ANT-only, ⚠️ disableModelInvocation: true |
+| remember | `/remember` | Memory | `USER_TYPE === 'ant'` + `isAutoMemoryEnabled()` | ANT-only |
+| simplify | `/simplify` | Simplify text | Enabled by default | |
+| batch | `/batch` | Batch processing | Enabled by default | ⚠️ disableModelInvocation: true - User only |
+| stuck | `/stuck` | Stuck help | `USER_TYPE === 'ant'` | ANT-only |
+| loop | `/loop` | Loop task | `AGENT_TRIGGERS` | ⚠️ Also requires `isKairosCronEnabled()` at runtime |
+| schedule | `/schedule` | Remote scheduling | `AGENT_TRIGGERS_REMOTE` registered + runtime `tengu_surreal_dali` + `allow_remote_sessions` | Requires claude.ai OAuth |
+| claude-api | `/claude-api` | Claude API | `BUILDING_CLAUDE_APPS` | |
+| dream | `/dream` | Dream Mode | `KAIROS` or `KAIROS_DREAM` | |
+| hunter | `/hunter` | Code Hunter | `REVIEW_ARTIFACT` | |
+| claude-in-chrome | `/claude-in-chrome` | Chrome extension | `auto (shouldAutoEnableClaudeInChrome)` | |
+| run-skill-generator | `/run-skill-generator` | Skill generator | `RUN_SKILL_GENERATOR` | |
 
 > **Note**: Source files for `dream`, `hunter`, and `runSkillGenerator` do not exist in the open-source repository. They are loaded via dynamic `require('./xxx.js')` and injected at build time, only available when their respective feature flags are enabled.
 
@@ -296,15 +296,17 @@ agent: general-purpose
 
 | Variable | Description |
 |----------|-------------|
-| `$ARGUMENTS` | Passed arguments |
-| `$1, $2, ...` | Reference arguments by position |
+| `$ARGUMENTS` | Full arguments string passed |
+| `$ARGUMENTS[0]`, `$ARGUMENTS[1]`, ... | Reference arguments by index |
+| `$0`, `$1`, `$2`, ... | Reference arguments by position (shorthand) |
+| `$arg_name` | Reference arguments by name (requires `arguments` definition) |
 
 ### Shell Blocks
 
 ```markdown
 Skill content...
 
-```!bash
+```!
 echo "Execute shell"
 ```
 ```
