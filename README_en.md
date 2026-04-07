@@ -146,8 +146,11 @@ All documents are verified against source code:
 | [Plan Mode](./07-advanced/07-plan-mode.md) | Plan mode | ✅ |
 | [Voice Mode](./07-advanced/09-voice-mode.md) | Voice mode | ✅ |
 | [Bridge Remote](./07-advanced/08-bridge-remote.md) | Remote connection | ✅ |
-| [Companion/Buddy](./companion-buddy-system_en.md) | Desktop companion system | ✅ |
-| [UpstreamProxy](./upstream-proxy-system_en.md) | CCR MITM proxy | ✅ |
+| [Companion/Buddy](./07-advanced/10-companion-buddy_en.md) | Desktop companion system | ✅ |
+| [Server/Remote/Coordinator](./07-advanced/11-server-remote-coordinator_en.md) | Server/Remote/Coordinator architecture | ✅ |
+| [Setup Initialization](./07-advanced/12-setup-initialization_en.md) | Setup initialization flow | ✅ |
+| [UpstreamProxy](./07-advanced/13-upstream-proxy_en.md) | CCR MITM proxy | ✅ |
+| [Components & Screens](./07-advanced/14-components-screens_en.md) | Undocumented UI components | ✅ |
 
 ### Part 8: Best Practices
 
@@ -212,7 +215,7 @@ All core systems verified via scripts:
 | Hook Types | 27 |
 | Skill Frontmatter Fields | 16 |
 | Config Layers | 6 |
-| Advanced Feature Modules | 9 |
+| Advanced Feature Modules | 14 |
 
 ---
 
