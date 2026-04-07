@@ -228,8 +228,6 @@ built-in < plugin < user < project < flag < managed
 | policy | `policySettings` | Enterprise policy managed |
 
 > Note: `built-in` and `plugin` are not part of `SettingSource` type. They belong to the extended `AgentSource` type.
-| flag | `flagSettings` | `--agents` CLI argument |
-| policy | `policySettings` | Enterprise policy managed |
 
 ---
 

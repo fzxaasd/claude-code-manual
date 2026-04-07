@@ -733,8 +733,7 @@ Using HTTP Hooks for these events will be ignored.
 | `command` | string | Command to execute (command type) |
 | `prompt` | string | LLM prompt (prompt type) |
 | `agent` | string | Agent name (agent type) |
-| `url` | string | HTTP URL (http type) |
-| `method` | string | HTTP method (http type, default POST) |
+| `url` | string | HTTP URL (http type, always POST) |
 | `async` | boolean | Async execution, non-blocking tool |
 | `once` | boolean | Remove after single execution |
 | `asyncRewake` | boolean | Wake model when async hook errors (implies async) |
