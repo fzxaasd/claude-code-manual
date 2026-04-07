@@ -25,7 +25,7 @@ Claude Code has 6 configuration sources:
 
 ## Priority Rules for Different Configuration Types
 
-**Note**: Source `SETTING_SOURCES` array defines 5 sources (lowest to highest): `user` / `project` / `local` / `flag` / `policy`. `pluginSettings` is a special base layer loaded via `getPluginSettingsBase()`, loaded first in `loadSettingsFromDisk()` as the lowest priority base.
+**Note**: Source `SETTING_SOURCES` array defines 5 sources (lowest to highest): `userSettings` / `projectSettings` / `localSettings` / `flagSettings` / `policySettings`. `pluginSettings` is a special base layer loaded via `getPluginSettingsBase()`, loaded first in `loadSettingsFromDisk()` as the lowest priority base.
 
 All configuration types (Hooks, Permissions, General Settings) use the same priority order:
 
@@ -37,7 +37,7 @@ pluginSettings (lowest base) → userSettings → projectSettings → localSetti
 
 ```typescript
 // src/utils/settings/constants.ts
-export const SETTING_SOURCES = ['user', 'project', 'local', 'flag', 'policy'] as const
+export const SETTING_SOURCES = ['userSettings', 'projectSettings', 'localSettings', 'flagSettings', 'policySettings'] as const
 ```
 
 > **Note**: pluginSettings is not part of SETTING_SOURCES, loaded separately via `getPluginSettingsBase()`.
@@ -188,8 +188,8 @@ Some fields do not merge but override directly:
 
 | Field | Behavior |
 |-------|----------|
-| `permissions.deny` | Merge (intersection is more restrictive) |
-| `permissions.allow` | Merge (union is more permissive) |
+| `permissions.deny` | Merge (concat + dedupe via `uniq()`) |
+| `permissions.allow` | Merge (concat + dedupe via `uniq()`) |
 | `hooks` | Merge |
 | `env` | Merge (environment variables appended) |
 
